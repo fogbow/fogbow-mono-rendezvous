@@ -16,9 +16,6 @@ public class RendezvousTest {
     	List<String> valor = r.whoIsAlive();
     	Assert.assertEquals(1, valor.size());
     	Assert.assertEquals("abc", valor);
-    	r.iAmAlive("leticia");
-    	Assert.assertEquals(2, valor.size());
-    	Assert.assertEquals("abc", valor.get(1));
 	}
     
     @Test
@@ -85,5 +82,15 @@ public class RendezvousTest {
     	Assert.assertEquals("2ndElement", r.whoIsAlive().get(1));
     }
     
-    
+    @Test
+    public void testwhoIsAlive10Elements() {
+    	Rendezvous r = new RendezvousImpl();
+    	for(int i = 0;i < 10;i++) {
+    		r.iAmAlive("Element" + (i+1));
+    	}
+    	
+    	for(int i = 0;i < 10;i++) {
+    		Assert.assertEquals("Element" + (i+1), r.whoIsAlive().get(i)); 
+    	}
+    }
 }
