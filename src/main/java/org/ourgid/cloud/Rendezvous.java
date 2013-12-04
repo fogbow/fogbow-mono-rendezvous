@@ -7,5 +7,5 @@ public interface Rendezvous {
 	void iAmAlive(String id);
 	
 	List<String> whoIsAlive();
-
+	
 }
