@@ -15,9 +15,9 @@ public class RendezvousTest {
 	public void testImAliveSingleElement() {
     	Rendezvous r = new RendezvousImpl();
     	r.iAmAlive("abc");
-    	List<String> Element = r.whoIsAlive();
-    	Assert.assertEquals(1, Element.size());
-    	Assert.assertEquals("abc", Element);
+    	List<String> element = r.whoIsAlive();
+    	Assert.assertEquals(1, element.size());
+    	Assert.assertEquals("abc", element);
 	}
     
     
@@ -27,16 +27,18 @@ public class RendezvousTest {
     	for(int i = 0; i < 10; i++) {
     		String s = "Element " + i;
     		r.iAmAlive(s);
-    		List <String> ElementList = r.whoIsAlive();
-    		Assert.assertTrue(ElementList.contains(s));
+    		List <String> elementList = r.whoIsAlive();
+    		Assert.assertTrue(elementList.contains(s));
     	}
     }
     
-    @Test (expected = IllegalArgumentException.class)
+    @Test 
     public void testContainsSameIDs() {
     	Rendezvous r = new RendezvousImpl();
     	r.iAmAlive("id");
     	r.iAmAlive("id");
+    	List <String> elementList = r.whoIsAlive();
+    	Assert.assertTrue(elementList.size() == 1);
     }
     
     @Test(expected = IllegalArgumentException.class)
@@ -48,8 +50,8 @@ public class RendezvousTest {
     @Test
     public void testwhoIsAliveEmpty() {
     	Rendezvous r = new RendezvousImpl();
-    	List<String> ElementList = r.whoIsAlive();
-    	Assert.assertTrue(ElementList.size() == 0);
+    	List<String> elementList = r.whoIsAlive();
+    	Assert.assertTrue(elementList.size() == 0);
     }
     
     @Test
