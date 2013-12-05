@@ -9,7 +9,8 @@ import org.ourgid.cloud.RendezvousImpl;
 
 public class RendezvousTest {
 	
-	private final static int TIMEOUT = 10;
+	private final static int TIMEOUT = 10000;
+	private final static int TIMEOUTGRACE = 500;
 	
     @Test
 	public void testImAliveSingleElement() {
@@ -17,9 +18,8 @@ public class RendezvousTest {
     	r.iAmAlive("abc");
     	List<String> element = r.whoIsAlive();
     	Assert.assertEquals(1, element.size());
-    	Assert.assertEquals("abc", element);
+    	Assert.assertEquals("abc", element.get(0));
 	}
-    
     
     @Test
     public void testImAliveManyElements() {
@@ -38,7 +38,7 @@ public class RendezvousTest {
     	r.iAmAlive("id");
     	r.iAmAlive("id");
     	List <String> elementList = r.whoIsAlive();
-    	Assert.assertTrue(elementList.size() == 1);
+    	Assert.assertEquals(1, elementList.size());
     }
     
     @Test(expected = IllegalArgumentException.class)
@@ -48,14 +48,15 @@ public class RendezvousTest {
     }
    
     @Test
-    public void testwhoIsAliveEmpty() {
+    public void testWhoIsAliveEmpty() {
     	Rendezvous r = new RendezvousImpl();
     	List<String> elementList = r.whoIsAlive();
-    	Assert.assertTrue(elementList.size() == 0);
+    	Assert.assertEquals(0, elementList.size());
+    
     }
     
     @Test
-    public void testwhoIsAliveSingleElement() {
+    public void testWhoIsAliveSingleElement() {
     	Rendezvous r = new RendezvousImpl();
     	r.iAmAlive("OnlyElement");
     	Assert.assertEquals(1, r.whoIsAlive().size());
@@ -63,7 +64,7 @@ public class RendezvousTest {
     }
     
     @Test
-    public void testwhoIsAliveManyElements() {
+    public void testWhoIsAliveManyElements() {
     	Rendezvous r = new RendezvousImpl();
     	for(int i = 0; i < 10; i++) {
     		r.iAmAlive("Element" + (i+1));
@@ -75,10 +76,10 @@ public class RendezvousTest {
     }
     
     @Test
-    public void testWhoisAliveAfterTime(int time) throws InterruptedException {
-    	Rendezvous r = new RendezvousImpl();
+    public void testWhoisAliveAfterTime() throws InterruptedException {
+    	Rendezvous r = new RendezvousImpl(TIMEOUT);
     	r.iAmAlive("id");
-		Thread.sleep(time);
+		Thread.sleep(TIMEOUT + TIMEOUTGRACE);
     	Assert.assertEquals(0, r.whoIsAlive().size());
     }
     
@@ -86,11 +87,11 @@ public class RendezvousTest {
     public void testWhoisAliveAfterTimeManyElements() throws InterruptedException {
     	Rendezvous r = new RendezvousImpl(TIMEOUT);
     	r.iAmAlive("id");
-		Thread.sleep(TIMEOUT/2);
+		Thread.sleep(TIMEOUT/2 + TIMEOUTGRACE);
     	r.iAmAlive("id2");
-		Thread.sleep(TIMEOUT/2 + 1);
+		Thread.sleep(TIMEOUT/2 + TIMEOUTGRACE);
 		Assert.assertEquals(1, r.whoIsAlive().size());
-		Thread.sleep(TIMEOUT/2 + 1);
+		Thread.sleep(TIMEOUT/2 + TIMEOUTGRACE);
 		Assert.assertEquals(0, r.whoIsAlive().size());
     }
 }
