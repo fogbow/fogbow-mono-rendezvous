@@ -6,18 +6,23 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class RendezvousImpl implements Rendezvous {
-	private int timeOut;
-	List<String> aliveIDs = new ArrayList<String>();
-	List<Long> timeAlive = new ArrayList<Long>();
-	Timer timer = new Timer();
-
-	public RendezvousImpl(int timeOut) {
+	
+	private static final long TIMEOUT_DEFAULT = 3 * 60 * 1000;
+	private static final long PERIOD = 50;
+	
+	private long timeOut;
+	private List<String> aliveIDs = new ArrayList<String>();
+	private List<Long> timeAlive = new ArrayList<Long>();
+	private Timer timer = new Timer();
+	
+	public RendezvousImpl(long timeOut) {
+		if(timeOut < 0) throw new IllegalArgumentException();
 		this.timeOut = timeOut;
 		collectsNotAlive();
 	}
 
 	public RendezvousImpl() {
-
+		this(TIMEOUT_DEFAULT);
 	}
 
 	public void iAmAlive(String id) {
@@ -28,7 +33,7 @@ public class RendezvousImpl implements Rendezvous {
 			aliveIDs.add(id);
 			timeAlive.add(System.currentTimeMillis());
 		} else {
-			timeAlive.add(aliveIDs.indexOf(id), System.currentTimeMillis());
+			timeAlive.set(aliveIDs.indexOf(id), System.currentTimeMillis());
 		}
 	}
 
@@ -48,6 +53,6 @@ public class RendezvousImpl implements Rendezvous {
 					}
 				}
 			}
-		}, 0, 50);
+		}, 0, PERIOD);
 	}
 }

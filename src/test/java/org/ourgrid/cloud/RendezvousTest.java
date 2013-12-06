@@ -10,7 +10,12 @@ import org.ourgid.cloud.RendezvousImpl;
 public class RendezvousTest {
 	
 	private final static int TIMEOUT = 10000;
-	private final static int TIMEOUTGRACE = 500;
+	private final static int TIMEOUT_GRACE = 500;
+	
+	@Test (expected = IllegalArgumentException.class)
+	public void testRendezvousConstructor() {
+		new RendezvousImpl(-100);
+	}
 	
     @Test
 	public void testImAliveSingleElement() {
@@ -79,7 +84,7 @@ public class RendezvousTest {
     public void testWhoisAliveAfterTime() throws InterruptedException {
     	Rendezvous r = new RendezvousImpl(TIMEOUT);
     	r.iAmAlive("id");
-		Thread.sleep(TIMEOUT + TIMEOUTGRACE);
+		Thread.sleep(TIMEOUT + TIMEOUT_GRACE);
     	Assert.assertEquals(0, r.whoIsAlive().size());
     }
     
@@ -87,11 +92,38 @@ public class RendezvousTest {
     public void testWhoisAliveAfterTimeManyElements() throws InterruptedException {
     	Rendezvous r = new RendezvousImpl(TIMEOUT);
     	r.iAmAlive("id");
-		Thread.sleep(TIMEOUT/2 + TIMEOUTGRACE);
+		Thread.sleep(TIMEOUT/2 + TIMEOUT_GRACE);
     	r.iAmAlive("id2");
-		Thread.sleep(TIMEOUT/2 + TIMEOUTGRACE);
+		Thread.sleep(TIMEOUT/2 + TIMEOUT_GRACE);
 		Assert.assertEquals(1, r.whoIsAlive().size());
-		Thread.sleep(TIMEOUT/2 + TIMEOUTGRACE);
+		Thread.sleep(TIMEOUT/2 + TIMEOUT_GRACE);
 		Assert.assertEquals(0, r.whoIsAlive().size());
+    }
+    
+    @Test
+    public void testConcurrentIAmAlive() throws InterruptedException {
+    	Rendezvous r = new RendezvousImpl(TIMEOUT);
+    	for(int i = 0; i < 10; i++) {
+    		r.iAmAlive("Element" + i);
+    		Thread.sleep(100);
+    	}
+    	for(int i = 0; i < 10; i++) {
+    		r.iAmAlive("Element" + i);
+    		Thread.sleep(100);
+    	}
+    	Assert.assertEquals(10, r.whoIsAlive().size());
+    	Thread.sleep(TIMEOUT + 500);
+    	Assert.assertEquals(0, r.whoIsAlive().size());
+    }
+    
+    @Test
+    public void testDuplicateIsItAlive() throws InterruptedException {
+    	Rendezvous r = new RendezvousImpl(TIMEOUT);
+    	r.iAmAlive("Element");
+    	r.iAmAlive("Element");
+    	Thread.sleep(TIMEOUT + TIMEOUT_GRACE);
+    	r.iAmAlive("Element2");
+    	Thread.sleep(TIMEOUT_GRACE);
+    	Assert.assertEquals(1, r.whoIsAlive().size());
     }
 }
