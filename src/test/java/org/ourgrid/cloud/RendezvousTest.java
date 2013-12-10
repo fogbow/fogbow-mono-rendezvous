@@ -92,8 +92,11 @@ public class RendezvousTest {
     public void testWhoisAliveAfterTimeManyElements() throws InterruptedException {
     	Rendezvous r = new RendezvousImpl(TIMEOUT);
     	r.iAmAlive("id");
+    	Assert.assertEquals(1, r.whoIsAlive().size());
 		Thread.sleep(TIMEOUT/2 + TIMEOUT_GRACE);
+		Assert.assertEquals(1, r.whoIsAlive().size());
     	r.iAmAlive("id2");
+    	Assert.assertEquals(2, r.whoIsAlive().size());
 		Thread.sleep(TIMEOUT/2 + TIMEOUT_GRACE);
 		Assert.assertEquals(1, r.whoIsAlive().size());
 		Thread.sleep(TIMEOUT/2 + TIMEOUT_GRACE);
@@ -112,7 +115,7 @@ public class RendezvousTest {
     		Thread.sleep(100);
     	}
     	Assert.assertEquals(10, r.whoIsAlive().size());
-    	Thread.sleep(TIMEOUT + 500);
+    	Thread.sleep(TIMEOUT + TIMEOUT_GRACE);
     	Assert.assertEquals(0, r.whoIsAlive().size());
     }
     
