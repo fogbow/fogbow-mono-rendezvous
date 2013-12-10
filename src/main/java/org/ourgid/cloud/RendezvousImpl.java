@@ -28,14 +28,14 @@ public class RendezvousImpl implements Rendezvous {
 		this(TIMEOUT_DEFAULT);
 	}
 
-	public synchronized void iAmAlive(String id) {
+	public void iAmAlive(String id) {
 		if (id == null) {
 			throw new IllegalArgumentException();
 		}	
 		aliveIDs.put(id, new RendezvousItem());	
 	}
 
-	public synchronized List<String> whoIsAlive()  {
+	public List<String> whoIsAlive()  {
 		List<String> aliveIds = new ArrayList<String>( aliveIDs.keySet());
 		return aliveIds;
 	}
@@ -44,9 +44,11 @@ public class RendezvousImpl implements Rendezvous {
 		timer.schedule(new TimerTask() {
 			@Override
 			public void run() {
-				for (Entry<String, RendezvousItem> entry : aliveIDs.entrySet()) {
-				    if((entry.getValue()).getLastTime() + timeOut < System.currentTimeMillis()) {
-				    	 aliveIDs.remove(entry.getKey());
+				Iterator<Entry<String, RendezvousItem>> iter = aliveIDs.entrySet().iterator();
+				while (iter.hasNext()) {
+				    Entry<String, RendezvousItem> entry = iter.next();
+				    if((entry.getValue()).getLastTime() + timeOut < System.currentTimeMillis()){
+				        iter.remove();
 				    }
 				}
 			}
