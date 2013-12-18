@@ -1,6 +1,7 @@
 package org.ourgid.cloud;
 
 import java.util.ArrayList;
+import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -10,17 +11,21 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class RendezvousImpl implements Rendezvous {
-	
+
 	private static final long TIMEOUT_DEFAULT = 3 * 60 * 1000;
 	private static final long PERIOD = 50;
+
+	private final long timeOut;
+	private final Timer timer = new Timer();
+	private final Map<String, RendezvousItem> aliveIDs;
+	public boolean iserror = false;
 	
-	private long timeOut;
-	private Timer timer = new Timer();
-	private HashMap <String, RendezvousItem> aliveIDs = new HashMap<String, RendezvousItem>();
-	
-	public RendezvousImpl(long timeOut) {
-		if(timeOut < 0) throw new IllegalArgumentException();
+	public RendezvousImpl(long timeOut, Map<String, RendezvousItem> aliveIDs) {
+		if (timeOut < 0) {
+			throw new IllegalArgumentException();
+		}
 		this.timeOut = timeOut;
+		this.aliveIDs = aliveIDs;
 		collectsNotAlive();
 	}
 
@@ -28,30 +33,44 @@ public class RendezvousImpl implements Rendezvous {
 		this(TIMEOUT_DEFAULT);
 	}
 
+	public RendezvousImpl(long timeout) {
+		this(timeout, new HashMap<String, RendezvousItem>());
+	}
 	public void iAmAlive(String id) {
 		if (id == null) {
 			throw new IllegalArgumentException();
-		}	
-		aliveIDs.put(id, new RendezvousItem());	
+		}
+		aliveIDs.put(id, new RendezvousItem());
 	}
 
-	public List<String> whoIsAlive()  {
-		List<String> aliveIds = new ArrayList<String>( aliveIDs.keySet());
+	public List<String> whoIsAlive() {
+		List<String> aliveIds = new ArrayList<String>(aliveIDs.keySet());
 		return aliveIds;
 	}
 
-	private synchronized void collectsNotAlive () {
+	private void collectsNotAlive() {
 		timer.schedule(new TimerTask() {
 			@Override
 			public void run() {
-				Iterator<Entry<String, RendezvousItem>> iter = aliveIDs.entrySet().iterator();
+				Iterator<Entry<String, RendezvousItem>> iter = aliveIDs
+						.entrySet().iterator();
 				while (iter.hasNext()) {
-				    Entry<String, RendezvousItem> entry = iter.next();
-				    if((entry.getValue()).getLastTime() + timeOut < System.currentTimeMillis()){
-				        iter.remove();
-				    }
+					try {
+						Entry<String, RendezvousItem> entry = iter.next();
+					} catch (ConcurrentModificationException e) {
+						iserror = true;
+					}
+					Entry<String, RendezvousItem> entry = null;
+					if ((entry.getValue()).getLastTime() + timeOut < System
+							.currentTimeMillis()) {
+						iter.remove();
+					}
 				}
 			}
 		}, 0, PERIOD);
+	}
+
+	public boolean getIserror() {
+		return iserror;
 	}
 }
