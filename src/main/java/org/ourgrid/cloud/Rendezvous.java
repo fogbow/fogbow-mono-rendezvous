@@ -1,4 +1,4 @@
-package org.ourgid.cloud;
+package org.ourgrid.cloud;
 
 import java.util.List;
 

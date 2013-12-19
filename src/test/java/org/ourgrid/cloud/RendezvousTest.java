@@ -4,8 +4,8 @@ import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Test;
-import org.ourgid.cloud.Rendezvous;
-import org.ourgid.cloud.RendezvousImpl;
+import org.ourgrid.cloud.Rendezvous;
+import org.ourgrid.cloud.RendezvousImpl;
 
 public class RendezvousTest {
 
