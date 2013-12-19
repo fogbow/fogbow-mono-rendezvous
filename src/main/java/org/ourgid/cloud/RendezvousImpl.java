@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class RendezvousImpl implements Rendezvous {
 
@@ -18,8 +19,9 @@ public class RendezvousImpl implements Rendezvous {
 	private final long timeOut;
 	private final Timer timer = new Timer();
 	private final Map<String, RendezvousItem> aliveIDs;
-	public boolean iserror = false;
-	
+	private boolean iserror = false;
+	private ReentrantLock lock = new ReentrantLock();
+
 	public RendezvousImpl(long timeOut, Map<String, RendezvousItem> aliveIDs) {
 		if (timeOut < 0) {
 			throw new IllegalArgumentException();
@@ -36,11 +38,17 @@ public class RendezvousImpl implements Rendezvous {
 	public RendezvousImpl(long timeout) {
 		this(timeout, new HashMap<String, RendezvousItem>());
 	}
+
 	public void iAmAlive(String id) {
-		if (id == null) {
-			throw new IllegalArgumentException();
+		lock.lock();
+		try {
+			if (id == null) {
+				throw new IllegalArgumentException();
+			}
+			aliveIDs.put(id, new RendezvousItem());
+		} finally {
+			lock.unlock();
 		}
-		aliveIDs.put(id, new RendezvousItem());
 	}
 
 	public List<String> whoIsAlive() {
@@ -50,21 +58,26 @@ public class RendezvousImpl implements Rendezvous {
 
 	private void collectsNotAlive() {
 		timer.schedule(new TimerTask() {
+
 			@Override
 			public void run() {
-				Iterator<Entry<String, RendezvousItem>> iter = aliveIDs
-						.entrySet().iterator();
-				while (iter.hasNext()) {
-					try {
-						Entry<String, RendezvousItem> entry = iter.next();
-					} catch (ConcurrentModificationException e) {
-						iserror = true;
+				lock.lock();
+				try {
+					Iterator<Entry<String, RendezvousItem>> iter = aliveIDs
+							.entrySet().iterator();
+					while (iter.hasNext()) {
+						try {
+							Entry<String, RendezvousItem> entry = iter.next();
+							if ((entry.getValue()).getLastTime() + timeOut < System
+									.currentTimeMillis()) {
+								iter.remove();
+							}
+						} catch (ConcurrentModificationException e) {
+							iserror = true;
+						}
 					}
-					Entry<String, RendezvousItem> entry = null;
-					if ((entry.getValue()).getLastTime() + timeOut < System
-							.currentTimeMillis()) {
-						iter.remove();
-					}
+				} finally {
+					lock.unlock();
 				}
 			}
 		}, 0, PERIOD);

@@ -9,5 +9,6 @@ public interface Rendezvous {
 	List<String> whoIsAlive();
 
 	boolean getIserror();
+
 	
 }

@@ -145,6 +145,8 @@ public class RendezvousTest {
 		semaphoreB.acquire();
 		r.iAmAlive("321");
 		semaphoreA.release();
+		Thread.sleep(TIMEOUT_GRACE);
+		
 		Assert.assertFalse(r.getIserror());
 	}
 }
