@@ -39,8 +39,7 @@ public class RendezvousImpl implements Rendezvous {
 	}
 
 	public List<String> whoIsAlive() {
-		List<String> aliveIds = new ArrayList<String>(aliveIDs.keySet());
-		return aliveIds;
+		return new ArrayList<String>(aliveIDs.keySet());
 	}
 
 	private void collectsNotAlive() {
@@ -48,21 +47,25 @@ public class RendezvousImpl implements Rendezvous {
 
 			@Override
 			public void run() {
-				Iterator<Entry<String, RendezvousItem>> iter = aliveIDs
-						.entrySet().iterator();
-				while (iter.hasNext()) {
-					try {
-						Entry<String, RendezvousItem> entry = iter.next();
-						if ((entry.getValue()).getLastTime() + timeOut < System
-								.currentTimeMillis()) {
-							iter.remove();
-						}
-					} catch (ConcurrentModificationException e) {
-						inError = true;
-					}
-				}
+				checkExpiredAliveIDs();
 			}
 		}, 0, PERIOD);
+	}
+
+	private void checkExpiredAliveIDs() {
+		Iterator<Entry<String, RendezvousItem>> iter = aliveIDs.entrySet()
+				.iterator();
+		while (iter.hasNext()) {
+			try {
+				Entry<String, RendezvousItem> entry = iter.next();
+				if ((entry.getValue()).getLastTime() + timeOut < System
+						.currentTimeMillis()) {
+					iter.remove();
+				}
+			} catch (ConcurrentModificationException e) {
+				inError = true;
+			}
+		}
 	}
 
 	public boolean getIserror() {
