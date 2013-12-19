@@ -16,25 +16,19 @@ public class RendezvousImpl implements Rendezvous {
 
 	private final long timeOut;
 	private final Timer timer = new Timer();
-	private final ConcurrentHashMap<String, RendezvousItem> aliveIDs;
-	private boolean iserror = false;
+	private final ConcurrentHashMap<String, RendezvousItem> aliveIDs = new ConcurrentHashMap<String, RendezvousItem>();
+	private boolean inError = false;
 
-	public RendezvousImpl(long timeOut,
-			ConcurrentHashMap<String, RendezvousItem> aliveIDs) {
+	public RendezvousImpl(long timeOut) {
 		if (timeOut < 0) {
 			throw new IllegalArgumentException();
 		}
 		this.timeOut = timeOut;
-		this.aliveIDs = aliveIDs;
 		collectsNotAlive();
 	}
 
 	public RendezvousImpl() {
 		this(TIMEOUT_DEFAULT);
-	}
-
-	public RendezvousImpl(long timeout) {
-		this(timeout, new ConcurrentHashMap<String, RendezvousItem>());
 	}
 
 	public void iAmAlive(String id) {
@@ -64,7 +58,7 @@ public class RendezvousImpl implements Rendezvous {
 							iter.remove();
 						}
 					} catch (ConcurrentModificationException e) {
-						iserror = true;
+						inError = true;
 					}
 				}
 			}
@@ -72,6 +66,6 @@ public class RendezvousImpl implements Rendezvous {
 	}
 
 	public boolean getIserror() {
-		return iserror;
+		return inError;
 	}
 }
