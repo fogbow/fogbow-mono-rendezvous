@@ -2,14 +2,12 @@ package org.ourgid.cloud;
 
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class RendezvousImpl implements Rendezvous {
 
@@ -18,11 +16,11 @@ public class RendezvousImpl implements Rendezvous {
 
 	private final long timeOut;
 	private final Timer timer = new Timer();
-	private final Map<String, RendezvousItem> aliveIDs;
+	private final ConcurrentHashMap<String, RendezvousItem> aliveIDs;
 	private boolean iserror = false;
-	private ReentrantLock lock = new ReentrantLock();
 
-	public RendezvousImpl(long timeOut, Map<String, RendezvousItem> aliveIDs) {
+	public RendezvousImpl(long timeOut,
+			ConcurrentHashMap<String, RendezvousItem> aliveIDs) {
 		if (timeOut < 0) {
 			throw new IllegalArgumentException();
 		}
@@ -36,19 +34,14 @@ public class RendezvousImpl implements Rendezvous {
 	}
 
 	public RendezvousImpl(long timeout) {
-		this(timeout, new HashMap<String, RendezvousItem>());
+		this(timeout, new ConcurrentHashMap<String, RendezvousItem>());
 	}
 
 	public void iAmAlive(String id) {
-		lock.lock();
-		try {
-			if (id == null) {
-				throw new IllegalArgumentException();
-			}
-			aliveIDs.put(id, new RendezvousItem());
-		} finally {
-			lock.unlock();
+		if (id == null) {
+			throw new IllegalArgumentException();
 		}
+		aliveIDs.put(id, new RendezvousItem());
 	}
 
 	public List<String> whoIsAlive() {
@@ -61,23 +54,18 @@ public class RendezvousImpl implements Rendezvous {
 
 			@Override
 			public void run() {
-				lock.lock();
-				try {
-					Iterator<Entry<String, RendezvousItem>> iter = aliveIDs
-							.entrySet().iterator();
-					while (iter.hasNext()) {
-						try {
-							Entry<String, RendezvousItem> entry = iter.next();
-							if ((entry.getValue()).getLastTime() + timeOut < System
-									.currentTimeMillis()) {
-								iter.remove();
-							}
-						} catch (ConcurrentModificationException e) {
-							iserror = true;
+				Iterator<Entry<String, RendezvousItem>> iter = aliveIDs
+						.entrySet().iterator();
+				while (iter.hasNext()) {
+					try {
+						Entry<String, RendezvousItem> entry = iter.next();
+						if ((entry.getValue()).getLastTime() + timeOut < System
+								.currentTimeMillis()) {
+							iter.remove();
 						}
+					} catch (ConcurrentModificationException e) {
+						iserror = true;
 					}
-				} finally {
-					lock.unlock();
 				}
 			}
 		}, 0, PERIOD);

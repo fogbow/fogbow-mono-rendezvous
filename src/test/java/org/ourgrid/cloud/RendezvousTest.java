@@ -1,13 +1,11 @@
 package org.ourgrid.cloud;
 
 import java.util.List;
-import java.util.concurrent.Semaphore;
 
 import org.junit.Assert;
 import org.junit.Test;
 import org.ourgid.cloud.Rendezvous;
 import org.ourgid.cloud.RendezvousImpl;
-import org.ourgid.cloud.RendezvousItem;
 
 public class RendezvousTest {
 
@@ -135,18 +133,11 @@ public class RendezvousTest {
 	}
 
 	@Test
-	public void testConcourrency2() throws InterruptedException {
-		Semaphore semaphoreA = new Semaphore(0);
-		Semaphore semaphoreB = new Semaphore(0);
-		PausableHashMap<String, RendezvousItem> aliveIDs = new PausableHashMap<String, RendezvousItem>(
-				semaphoreA, semaphoreB);
-		Rendezvous r = new RendezvousImpl(TIMEOUT, aliveIDs);
-		r.iAmAlive("123");
-		semaphoreB.acquire();
-		r.iAmAlive("321");
-		semaphoreA.release();
-		Thread.sleep(TIMEOUT_GRACE);
-		
+	public void testConcourrency3() throws InterruptedException {
+		Rendezvous r = new RendezvousImpl(TIMEOUT);
+		for (int i = 0; i < 1000000; i++) {
+			r.iAmAlive("Element" + i);
+		}
 		Assert.assertFalse(r.getIserror());
 	}
 }
