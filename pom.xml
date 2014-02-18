@@ -3,4 +3,11 @@
   <groupId>cloud-manager</groupId>
   <artifactId>cloud-manager</artifactId>
   <version>0.0.1-SNAPSHOT</version>
+  <dependencies>
+  	<dependency>
+  		<groupId>jamppa</groupId>
+  		<artifactId>jamppa</artifactId>
+  		<version>0.0.1-SNAPSHOT</version>
+  	</dependency>
+  </dependencies>
 </project>
