@@ -10,8 +10,5 @@ public class RendezvousItem {
 	public long getLastTime() {
 		return lastTime;
 	}
-	
-	public void setLastTime(long lastTime) {
-		this.lastTime = lastTime;
-	}
+
 }

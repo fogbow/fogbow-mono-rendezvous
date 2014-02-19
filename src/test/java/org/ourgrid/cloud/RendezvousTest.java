@@ -49,6 +49,12 @@ public class RendezvousTest {
         Rendezvous r = new RendezvousImpl();
         r.iAmAlive(null);
     }
+    
+    @Test(expected = IllegalArgumentException.class)
+    public void testImAliveEmptyParameter() {
+        Rendezvous r = new RendezvousImpl();
+        r.iAmAlive("");
+    }
 
     @Test
     public void testWhoIsAliveEmpty() {
@@ -79,15 +85,16 @@ public class RendezvousTest {
     }
 
     @Test
-    public void testWhoisAliveAfterTime() throws InterruptedException {
+    public void testWhoIsAliveAfterTime() throws InterruptedException {
         Rendezvous r = new RendezvousImpl(TIMEOUT);
         r.iAmAlive("id");
+        Assert.assertEquals(1, r.whoIsAlive().size());
         Thread.sleep(TIMEOUT + TIMEOUT_GRACE);
         Assert.assertEquals(0, r.whoIsAlive().size());
     }
 
     @Test
-    public void testWhoisAliveAfterTimeManyElements()
+    public void testWhoIsAliveAfterTimeManyElements()
             throws InterruptedException {
         Rendezvous r = new RendezvousImpl(TIMEOUT);
         r.iAmAlive("id");
@@ -120,7 +127,8 @@ public class RendezvousTest {
         Assert.assertEquals(0, r.whoIsAlive().size());
     }
 
-    @Test
+    //TODO I don't understand this test! Where is the assert?
+    @Test    
     public void testDuplicateIsItAlive() throws InterruptedException {
         Rendezvous r = new RendezvousImpl(TIMEOUT);
         r.iAmAlive("Element");
@@ -130,12 +138,15 @@ public class RendezvousTest {
         Thread.sleep(TIMEOUT_GRACE);
     }
 
+  //TODO I don't understand this test!
     @Test
     public void testConcourrency3() throws InterruptedException {
-        Rendezvous r = new RendezvousImpl(TIMEOUT);
+        RendezvousImpl r = new RendezvousImpl(TIMEOUT);
+        
         for (int i = 0; i < 1000000; i++) {
             r.iAmAlive("Element" + i);
         }
-        Assert.assertFalse(r.getIserror());
+        
+        Assert.assertFalse(r.getInError());
     }
 }

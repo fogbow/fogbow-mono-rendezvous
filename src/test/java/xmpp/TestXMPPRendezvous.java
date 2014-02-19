@@ -13,77 +13,76 @@ import org.xmpp.packet.IQ;
 import org.xmpp.packet.IQ.Type;
 
 public class TestXMPPRendezvous {
-    private static final String RENDEZVOUS_COMPONENT_URL = null;
+    
+    //server properties
+    private static final int CLIENT_PORT = 5222;
+    private static final String SERVER_HOST = "localhost";
+    
+    //client properties
+    private static final String CLIENT = "user1@test.com";
+    private static final String CLIENT_PASS = "user1";
+   
+    //rendezvous component properties
+    private static final String RENDEZVOUS_COMPONENT_URL = "rendezvous.test.com";
     private static final int TIMEOUT =  10000;
     private static final int TIMEOUT_GRACE = 500;
-    XMPPClient client;
+
+    XMPPClient xmppClient;
     IQ response;
 
     @Before
     public void setUp() {
 
         // initializing client
-        client = new XMPPClient("user1@test.com", "user1", "localhost", 5222);
+        xmppClient = new XMPPClient(CLIENT, CLIENT_PASS, SERVER_HOST, CLIENT_PORT);
 
         try {
-            client.connect();
-            client.login();
-            // /client.process(false);
+            xmppClient.connect();
+            xmppClient.login();
+            xmppClient.process(false);
         } catch (XMPPException e) {
             e.printStackTrace();
             fail("Client set up problem!");
         }
+    }
+
+    @Test(expected = XMPPException.class)
+    // criar Erro
+    public void testInvalidIQ() throws XMPPException {
+      
+        String invalidNamespace = "invalidnamespace";
+        IQ iq = new IQ(Type.get);
+        iq.setTo(RENDEZVOUS_COMPONENT_URL);
+        iq.getElement().addElement("query", invalidNamespace);
+
+        response = (IQ) xmppClient.syncSend(iq);
 
     }
 
-    @Test(expected = IllegalArgumentException.class)
-    // criar Erro
-    public void testInvalidIQ() {
-
-        String content = "invalid content";
-
+    //TODO Is it necessary content? 
+    private IQ createIAmAliveIQ() {
         IQ iq = new IQ(Type.get);
         iq.setTo(RENDEZVOUS_COMPONENT_URL);
-        iq.getElement().addElement("query", "IamAlive").addElement("content")
-                .setText(content);
-
-        try {
-            response = (IQ) client.syncSend(iq);
-
-        } catch (XMPPException e) {
-            e.printStackTrace();
-            fail("Response problem!");
-        }
-
+        iq.getElement().addElement("query", "IamAlive");
+        return iq;
     }
 
     @Test
     public void testImAliveSingleElement() {
-
-        String content = "I am alive!";
-
-        IQ iq = new IQ(Type.get);
-        iq.setTo(RENDEZVOUS_COMPONENT_URL);
-        iq.getElement().addElement("query", "IamAlive").addElement("content")
-                .setText(content);
+        IQ iq = createIAmAliveIQ();
 
         try {
-            response = (IQ) client.syncSend(iq);
-            Assert.assertEquals("result", response.getType());
+            response = (IQ) xmppClient.syncSend(iq);
+            Assert.assertEquals(Type.result, response.getType());
         } catch (XMPPException e) {
             e.printStackTrace();
             fail("Response problem!");
         }
 
-        content = "Who is alive?";
-
-        iq = new IQ(Type.get);
-        iq.setTo(RENDEZVOUS_COMPONENT_URL);
-        iq.getElement().addElement("query", "WhoIsAlive").addElement("content")
-                .setText(content);
+        iq = createWhoIsAliveIQ();
 
         try {
-            response = (IQ) client.syncSend(iq);
+            response = (IQ) xmppClient.syncSend(iq);
             ArrayList<String> aliveIDs = (ArrayList<String>) response
                     .getElement().element("query").element("content").getData();
             Assert.assertTrue(aliveIDs.contains(iq.getFrom()));
@@ -94,46 +93,41 @@ public class TestXMPPRendezvous {
         }
     }
 
+    private IQ createWhoIsAliveIQ() {
+        IQ iq;
+        iq = new IQ(Type.get);
+        iq.setTo(RENDEZVOUS_COMPONENT_URL);
+        iq.getElement().addElement("query", "WhoIsAlive");
+        return iq;
+    }
+
     @Test
     public void testIamAlive2EqualElements() {
 
-        String content = "I am alive!";
-
-        IQ iq = new IQ(Type.get);
-        iq.setTo(RENDEZVOUS_COMPONENT_URL);
-        iq.getElement().addElement("query", "IamAlive").addElement("content")
-                .setText(content);
+        IQ iq = createIAmAliveIQ();
 
         try {
-            response = (IQ) client.syncSend(iq);
-            Assert.assertEquals("result", response.getType());
+            response = (IQ) xmppClient.syncSend(iq);
+            Assert.assertEquals(Type.result, response.getType());
         } catch (XMPPException e) {
             e.printStackTrace();
             fail("Response problem!");
         }
 
-        iq = new IQ(Type.get);
-        iq.setTo(RENDEZVOUS_COMPONENT_URL);
-        iq.getElement().addElement("query", "IamAlive").addElement("content")
-                .setText(content);
+        iq = createIAmAliveIQ();
 
         try {
-            response = (IQ) client.syncSend(iq);
-            Assert.assertEquals("result", response.getType());
+            response = (IQ) xmppClient.syncSend(iq);
+            Assert.assertEquals(Type.result, response.getType());
         } catch (XMPPException e) {
             e.printStackTrace();
             fail("Response problem!");
         }
 
-        content = "Who is alive?";
-
-        iq = new IQ(Type.get);
-        iq.setTo(RENDEZVOUS_COMPONENT_URL);
-        iq.getElement().addElement("query", "WhoIsAlive").addElement("content")
-                .setText(content);
+        iq = createWhoIsAliveIQ();
 
         try {
-            response = (IQ) client.syncSend(iq);
+            response = (IQ) xmppClient.syncSend(iq);
             ArrayList<String> aliveIDs = (ArrayList<String>) response
                     .getElement().element("query").element("content").getData();
             Assert.assertTrue(aliveIDs.contains(iq.getFrom()));
@@ -148,15 +142,12 @@ public class TestXMPPRendezvous {
     // criar Erro
     public void testIAmAliveNullContent() {
 
-        String content = null;
+        //TODO I think this is invalid case
 
-        IQ iq = new IQ(Type.get);
-        iq.setTo(RENDEZVOUS_COMPONENT_URL);
-        iq.getElement().addElement("query", "IamAlive").addElement("content")
-                .setText(content);
+        IQ iq = createIAmAliveIQ();
 
         try {
-            response = (IQ) client.syncSend(iq);
+            response = (IQ) xmppClient.syncSend(iq);
 
         } catch (XMPPException e) {
             e.printStackTrace();
@@ -167,75 +158,60 @@ public class TestXMPPRendezvous {
     @Test
     public void testIamAlive2IQs() {
         // set up client 2
-        XMPPClient client2 = new XMPPClient("user2@test.com", "user2",
-                "localhost", 5222);
+        XMPPClient xmppClient2 = new XMPPClient("user2@test.com", "user2",
+                SERVER_HOST, 5222);
         try {
-            client2.connect();
-            client2.login();
+            xmppClient2.connect();
+            xmppClient2.login();
             // /client.process(false);
         } catch (XMPPException e) {
             e.printStackTrace();
             fail("Client set up problem!");
         }
-
-        String content = "I am alive!";
-
-        IQ iq = new IQ(Type.get);
-        iq.setTo(RENDEZVOUS_COMPONENT_URL);
-        iq.getElement().addElement("query", "IamAlive").addElement("content")
-                .setText(content);
+        
+        IQ iq = createIAmAliveIQ();
 
         // send am alive! from client 1
         try {
-            response = (IQ) client.syncSend(iq);
-            Assert.assertEquals("result", response.getType());
+            response = (IQ) xmppClient.syncSend(iq);
+            Assert.assertEquals(Type.result, response.getType());
         } catch (XMPPException e) {
             e.printStackTrace();
             fail("Response problem!");
         }
         // send am alive! from client 2
         try {
-            response = (IQ) client2.syncSend(iq);
-            Assert.assertEquals("result", response.getType());
+            response = (IQ) xmppClient2.syncSend(iq);
+            Assert.assertEquals(Type.result, response.getType());
         } catch (XMPPException e) {
             e.printStackTrace();
             fail("Response problem!");
         }
 
-        content = "Who is alive?";
-
-        iq = new IQ(Type.get);
-        iq.setTo(RENDEZVOUS_COMPONENT_URL);
-        iq.getElement().addElement("query", "WhoIsAlive").addElement("content")
-                .setText(content);
+        iq = createWhoIsAliveIQ();
         // send Who is Alive?
         try {
-            response = (IQ) client.syncSend(iq);
+            response = (IQ) xmppClient.syncSend(iq);
             ArrayList<String> aliveIDs = (ArrayList<String>) response
                     .getElement().element("query").element("content").getData();
             // asserts
-            Assert.assertTrue(aliveIDs.contains("user1@test.com"));
+            Assert.assertTrue(aliveIDs.contains(CLIENT));
             Assert.assertTrue(aliveIDs.contains("user2@test.com"));
             Assert.assertEquals(2, aliveIDs.size());
         } catch (XMPPException e) {
             e.printStackTrace();
             fail("Response problem!");
         }
-        client2.disconnect();
-    }
+        xmppClient2.disconnect();
+    }content
 
     @Test
     public void testWhoisAliveEmpty() {
 
-        String content = "Who is Alive?";
-
-        IQ iq = new IQ(Type.get);
-        iq.setTo(RENDEZVOUS_COMPONENT_URL);
-        iq.getElement().addElement("query", "IamAlive").addElement("content")
-                .setText(content);
+        IQ iq = createWhoIsAliveIQ();
 
         try {
-            response = (IQ) client.syncSend(iq);
+            response = (IQ) xmppClient.syncSend(iq);
             ArrayList<String> aliveIDs = (ArrayList<String>) response
                     .getElement().element("query").element("content").getData();
             Assert.assertEquals(0, aliveIDs.size());
@@ -248,30 +224,21 @@ public class TestXMPPRendezvous {
     
     @Test
     public void testWhoIsAliveAfterTime() throws InterruptedException {
-        String content = "I am alive!";
 
-        IQ iq = new IQ(Type.get);
-        iq.setTo(RENDEZVOUS_COMPONENT_URL);
-        iq.getElement().addElement("query", "IamAlive").addElement("content")
-                .setText(content);
+        IQ iq = createIAmAliveIQ();
 
         try {
-            response = (IQ) client.syncSend(iq);
-            Assert.assertEquals("result", response.getType());
+            response = (IQ) xmppClient.syncSend(iq);
+            Assert.assertEquals(Type.result, response.getType());
         } catch (XMPPException e) {
             e.printStackTrace();
             fail("Response problem!");
         }
 
-        content = "Who is alive?";
-
-        iq = new IQ(Type.get);
-        iq.setTo(RENDEZVOUS_COMPONENT_URL);
-        iq.getElement().addElement("query", "WhoIsAlive").addElement("content")
-                .setText(content);
+        iq = createWhoIsAliveIQ();
 
         try {
-            response = (IQ) client.syncSend(iq);
+            response = (IQ) xmppClient.syncSend(iq);
             ArrayList<String> aliveIDs = (ArrayList<String>) response
                     .getElement().element("query").element("content").getData();
             Assert.assertTrue(aliveIDs.contains(iq.getFrom()));
@@ -281,16 +248,13 @@ public class TestXMPPRendezvous {
             fail("Response problem!");
         }
         
-        //dorme
+        //sleep
         Thread.sleep(TIMEOUT + TIMEOUT_GRACE);
         
-        iq = new IQ(Type.get);
-        iq.setTo(RENDEZVOUS_COMPONENT_URL);
-        iq.getElement().addElement("query", "WhoIsAlive").addElement("content")
-                .setText(content);
+        iq = createWhoIsAliveIQ();
 
         try {
-            response = (IQ) client.syncSend(iq);
+            response = (IQ) xmppClient.syncSend(iq);
             ArrayList<String> aliveIDs = (ArrayList<String>) response
                     .getElement().element("query").element("content").getData();
             Assert.assertEquals(0, aliveIDs.size());

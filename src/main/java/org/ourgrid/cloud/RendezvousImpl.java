@@ -32,7 +32,7 @@ public class RendezvousImpl implements Rendezvous {
     }
 
     public void iAmAlive(String id) {
-        if (id == null) {
+        if (id == null || "".equals(id)) {
             throw new IllegalArgumentException();
         }
         aliveIDs.put(id, new RendezvousItem());
@@ -68,7 +68,7 @@ public class RendezvousImpl implements Rendezvous {
         }
     }
 
-    public boolean getIserror() {
+    protected boolean getInError() {
         return inError;
     }
 }
