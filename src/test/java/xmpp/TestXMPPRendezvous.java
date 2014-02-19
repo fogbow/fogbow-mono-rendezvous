@@ -203,7 +203,7 @@ public class TestXMPPRendezvous {
             fail("Response problem!");
         }
         xmppClient2.disconnect();
-    }content
+    }
 
     @Test
     public void testWhoisAliveEmpty() {
