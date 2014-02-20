@@ -6,6 +6,7 @@ import java.util.ArrayList;
 
 import org.jamppa.client.XMPPClient;
 import org.jivesoftware.smack.XMPPException;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -15,7 +16,7 @@ import org.xmpp.packet.IQ.Type;
 public class TestXMPPRendezvous {
     
     //server properties
-    private static final int CLIENT_PORT = 5222;
+    private static final int SERVER_CLIENT_PORT = 5222;
     private static final String SERVER_HOST = "localhost";
     
     //client properties
@@ -30,11 +31,11 @@ public class TestXMPPRendezvous {
     XMPPClient xmppClient;
     IQ response;
 
+    
     @Before
     public void setUp() {
-
         // initializing client
-        xmppClient = new XMPPClient(CLIENT, CLIENT_PASS, SERVER_HOST, CLIENT_PORT);
+        xmppClient = new XMPPClient(CLIENT, CLIENT_PASS, SERVER_HOST, SERVER_CLIENT_PORT);
 
         try {
             xmppClient.connect();
@@ -47,7 +48,6 @@ public class TestXMPPRendezvous {
     }
 
     @Test(expected = XMPPException.class)
-    // criar Erro
     public void testInvalidIQ() throws XMPPException {
       
         String invalidNamespace = "invalidnamespace";
@@ -59,14 +59,13 @@ public class TestXMPPRendezvous {
 
     }
 
-    //TODO Is it necessary content? 
     private IQ createIAmAliveIQ() {
         IQ iq = new IQ(Type.get);
         iq.setTo(RENDEZVOUS_COMPONENT_URL);
         iq.getElement().addElement("query", "IamAlive");
         return iq;
     }
-
+    
     @Test
     public void testImAliveSingleElement() {
         IQ iq = createIAmAliveIQ();
@@ -74,23 +73,24 @@ public class TestXMPPRendezvous {
         try {
             response = (IQ) xmppClient.syncSend(iq);
             Assert.assertEquals(Type.result, response.getType());
-        } catch (XMPPException e) {
-            e.printStackTrace();
-            fail("Response problem!");
-        }
 
-        iq = createWhoIsAliveIQ();
-
-        try {
+            iq = createWhoIsAliveIQ();
+        
             response = (IQ) xmppClient.syncSend(iq);
-            ArrayList<String> aliveIDs = (ArrayList<String>) response
-                    .getElement().element("query").element("content").getData();
-            Assert.assertTrue(aliveIDs.contains(iq.getFrom()));
+            ArrayList<String> aliveIDs = getAliveIdsFromIQ(response);
+            
+            Assert.assertTrue(aliveIDs.contains(response.getFrom()));
             Assert.assertEquals(1, aliveIDs.size());
         } catch (XMPPException e) {
             e.printStackTrace();
-            fail("Response problem!");
+            fail(e.getMessage());
         }
+    }
+
+    
+    private ArrayList<String> getAliveIdsFromIQ(IQ responseFromWhoIsAliveIQ) {
+        return (ArrayList<String>) responseFromWhoIsAliveIQ
+                .getElement().element("query").element("content").getData();
     }
 
     private IQ createWhoIsAliveIQ() {
@@ -109,37 +109,27 @@ public class TestXMPPRendezvous {
         try {
             response = (IQ) xmppClient.syncSend(iq);
             Assert.assertEquals(Type.result, response.getType());
-        } catch (XMPPException e) {
-            e.printStackTrace();
-            fail("Response problem!");
-        }
-
-        iq = createIAmAliveIQ();
-
-        try {
+        
+            iq = createIAmAliveIQ();
+        
             response = (IQ) xmppClient.syncSend(iq);
             Assert.assertEquals(Type.result, response.getType());
-        } catch (XMPPException e) {
-            e.printStackTrace();
-            fail("Response problem!");
-        }
-
-        iq = createWhoIsAliveIQ();
-
-        try {
+        
+            iq = createWhoIsAliveIQ();
+        
             response = (IQ) xmppClient.syncSend(iq);
-            ArrayList<String> aliveIDs = (ArrayList<String>) response
-                    .getElement().element("query").element("content").getData();
-            Assert.assertTrue(aliveIDs.contains(iq.getFrom()));
+
+            ArrayList<String> aliveIDs = getAliveIdsFromIQ(response);
+            
+            Assert.assertTrue(aliveIDs.contains(response.getFrom()));
             Assert.assertEquals(1, aliveIDs.size());
         } catch (XMPPException e) {
             e.printStackTrace();
-            fail("Response problem!");
+            fail(e.getMessage());
         }
     }
 
     @Test(expected = IllegalArgumentException.class)
-    // criar Erro
     public void testIAmAliveNullContent() {
 
         //TODO I think this is invalid case
@@ -151,117 +141,96 @@ public class TestXMPPRendezvous {
 
         } catch (XMPPException e) {
             e.printStackTrace();
-            fail("Response problem!");
+            fail(e.getMessage());
         }
     }
 
     @Test
-    public void testIamAlive2IQs() {
+    public void testIamAlive2Clients() {
         // set up client 2
         XMPPClient xmppClient2 = new XMPPClient("user2@test.com", "user2",
-                SERVER_HOST, 5222);
+                SERVER_HOST, SERVER_CLIENT_PORT);
         try {
             xmppClient2.connect();
             xmppClient2.login();
-            // /client.process(false);
-        } catch (XMPPException e) {
-            e.printStackTrace();
-            fail("Client set up problem!");
-        }
-        
-        IQ iq = createIAmAliveIQ();
+            xmppClient2.process(false);
+                
+            IQ iq = createIAmAliveIQ();
 
-        // send am alive! from client 1
-        try {
+            // send am alive! from client 1        
             response = (IQ) xmppClient.syncSend(iq);
             Assert.assertEquals(Type.result, response.getType());
-        } catch (XMPPException e) {
-            e.printStackTrace();
-            fail("Response problem!");
-        }
-        // send am alive! from client 2
-        try {
+                    
+            // send am alive! from client 2
             response = (IQ) xmppClient2.syncSend(iq);
             Assert.assertEquals(Type.result, response.getType());
-        } catch (XMPPException e) {
-            e.printStackTrace();
-            fail("Response problem!");
-        }
 
-        iq = createWhoIsAliveIQ();
-        // send Who is Alive?
-        try {
+            // send Who is Alive?
+            iq = createWhoIsAliveIQ();
             response = (IQ) xmppClient.syncSend(iq);
-            ArrayList<String> aliveIDs = (ArrayList<String>) response
-                    .getElement().element("query").element("content").getData();
+            ArrayList<String> aliveIDs = getAliveIdsFromIQ(response);
+
             // asserts
             Assert.assertTrue(aliveIDs.contains(CLIENT));
             Assert.assertTrue(aliveIDs.contains("user2@test.com"));
             Assert.assertEquals(2, aliveIDs.size());
         } catch (XMPPException e) {
             e.printStackTrace();
-            fail("Response problem!");
+            fail(e.getMessage());
+        } finally {
+            xmppClient2.disconnect();    
         }
-        xmppClient2.disconnect();
     }
 
     @Test
     public void testWhoisAliveEmpty() {
 
         IQ iq = createWhoIsAliveIQ();
-
         try {
             response = (IQ) xmppClient.syncSend(iq);
-            ArrayList<String> aliveIDs = (ArrayList<String>) response
-                    .getElement().element("query").element("content").getData();
+            ArrayList<String> aliveIDs = getAliveIdsFromIQ(response);
             Assert.assertEquals(0, aliveIDs.size());
 
         } catch (XMPPException e) {
             e.printStackTrace();
-            fail("Response problem!");
+            fail(e.getMessage());
         }
     }
     
     @Test
-    public void testWhoIsAliveAfterTime() throws InterruptedException {
+    public void testWhoIsAliveAfterTimeout() throws InterruptedException {
 
         IQ iq = createIAmAliveIQ();
 
         try {
             response = (IQ) xmppClient.syncSend(iq);
             Assert.assertEquals(Type.result, response.getType());
-        } catch (XMPPException e) {
-            e.printStackTrace();
-            fail("Response problem!");
-        }
+        
+            iq = createWhoIsAliveIQ();
 
-        iq = createWhoIsAliveIQ();
-
-        try {
             response = (IQ) xmppClient.syncSend(iq);
-            ArrayList<String> aliveIDs = (ArrayList<String>) response
-                    .getElement().element("query").element("content").getData();
-            Assert.assertTrue(aliveIDs.contains(iq.getFrom()));
+            ArrayList<String> aliveIDs = getAliveIdsFromIQ(response);
+            
+            Assert.assertTrue(aliveIDs.contains(CLIENT));
             Assert.assertEquals(1, aliveIDs.size());
-        } catch (XMPPException e) {
-            e.printStackTrace();
-            fail("Response problem!");
-        }
         
-        //sleep
-        Thread.sleep(TIMEOUT + TIMEOUT_GRACE);
-        
-        iq = createWhoIsAliveIQ();
+            //sleeping
+            Thread.sleep(TIMEOUT + TIMEOUT_GRACE);
+            
+            iq = createWhoIsAliveIQ();
 
-        try {
             response = (IQ) xmppClient.syncSend(iq);
-            ArrayList<String> aliveIDs = (ArrayList<String>) response
-                    .getElement().element("query").element("content").getData();
+            aliveIDs = getAliveIdsFromIQ(response);
+            
             Assert.assertEquals(0, aliveIDs.size());
         } catch (XMPPException e) {
             e.printStackTrace();
-            fail("Response problem!");
-        }
-        
+            fail(e.getMessage());
+        }        
+    }
+    
+    @After
+    public void tearDown(){
+        xmppClient.disconnect();
     }
 }
