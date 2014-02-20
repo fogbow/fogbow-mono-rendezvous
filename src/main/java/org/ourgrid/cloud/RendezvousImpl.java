@@ -11,7 +11,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class RendezvousImpl implements Rendezvous {
 
-    private static final long TIMEOUT_DEFAULT = 3 * 60 * 1000;
+    
+    public static final long TIMEOUT_DEFAULT = 3 * 60 * 1000;
     private static final long PERIOD = 50;
 
     private final long timeOut;
