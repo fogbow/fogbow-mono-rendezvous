@@ -5,9 +5,9 @@
   <version>0.0.1-SNAPSHOT</version>
   <dependencies>
   	<dependency>
-  		<groupId>jamppa</groupId>
+  		<groupId>org.jamppa</groupId>
   		<artifactId>jamppa</artifactId>
-  		<version>0.0.1-SNAPSHOT</version>
+  		<version>0.1.0</version>
   	</dependency>
   </dependencies>
 </project>
