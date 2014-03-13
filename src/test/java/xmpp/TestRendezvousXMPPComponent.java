@@ -19,7 +19,7 @@ import org.xmpp.packet.IQ;
 import org.xmpp.packet.IQ.Type;
 
 public class TestRendezvousXMPPComponent {
-
+       
     // server properties
     private static final int SERVER_CLIENT_PORT = 5222;
     private static final int SERVER_COMPONENT_PORT = 5347;
@@ -32,6 +32,9 @@ public class TestRendezvousXMPPComponent {
     // rendezvous component properties
     private static final String RENDEZVOUS_COMPONENT_URL = "rendezvous.test.com";
     private static final String RENDEZVOUS_COMPONENT_PASS = "password";
+    
+    private static final String WHOISALIVE_NAMESPACE = "http://fogbowcloud.org/rendezvous/whoisalive";
+    private static final String IAMALIVE_NAMESPACE = "http://fogbowcloud.org/rendezvous/iamalive";
 
     private static final int TIMEOUT = 10000;
     private static final int TIMEOUT_GRACE = 500;
@@ -88,7 +91,12 @@ public class TestRendezvousXMPPComponent {
     private IQ createIAmAliveIQ() {
         IQ iq = new IQ(Type.get);
         iq.setTo(RENDEZVOUS_COMPONENT_URL);
-        iq.getElement().addElement("query", "iamalive");
+        Element statusEl = iq.getElement().addElement("query", IAMALIVE_NAMESPACE)
+                                           .addElement("status");
+        statusEl.addElement("cpu-idle").setText("valor1");
+        statusEl.addElement("cpu-inuse").setText("valor2");
+        statusEl.addElement("mem-idle").setText("valor3");
+        statusEl.addElement("mem-inuse").setText("valor4");        
         return iq;
     }
 
@@ -122,9 +130,21 @@ public class TestRendezvousXMPPComponent {
         ArrayList<String> aliveIds = new ArrayList<String>();
 
         while (itemIterator.hasNext()) {
-            Element item = (Element) itemIterator.next();
-            Attribute id = item.attribute("id");
+            Element itemEl = (Element) itemIterator.next();
+            
+            Attribute id = itemEl.attribute("id");
             aliveIds.add(id.getValue());
+            
+            Element statusEl = itemEl.element("status");
+
+            String cpuIdle = statusEl.element("cpu-idle").getText();
+            String cpuInUse = statusEl.element("cpu-inuse").getText();
+            String memIdle = statusEl.element("mem-idle").getText();
+            String memInUse = statusEl.element("mem-inuse").getText();
+            String updated = statusEl.element("updated").getText();
+            
+            //TODO review it
+
         }
 
         return aliveIds;
@@ -134,7 +154,7 @@ public class TestRendezvousXMPPComponent {
         IQ iq;
         iq = new IQ(Type.get);
         iq.setTo(RENDEZVOUS_COMPONENT_URL);
-        iq.getElement().addElement("query", "whoisalive");
+        iq.getElement().addElement("query", WHOISALIVE_NAMESPACE);
         return iq;
     }
 
@@ -310,6 +330,10 @@ public class TestRendezvousXMPPComponent {
     @After
     public void tearDown() {
         xmppClient.disconnect();
-        rendezvousXmppComponent.shutdown();
+        try {
+            rendezvousXmppComponent.disconnect();
+        } catch (ComponentException e) {
+            fail(e.getMessage());
+        }
     }
 }

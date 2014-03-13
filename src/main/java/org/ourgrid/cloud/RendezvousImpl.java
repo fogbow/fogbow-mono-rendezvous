@@ -32,15 +32,16 @@ public class RendezvousImpl implements Rendezvous {
         this(TIMEOUT_DEFAULT);
     }
 
-    public void iAmAlive(String id) {
+    public void iAmAlive(ResourcesInfo resourcesInfo) {
+        String id = resourcesInfo.getId();
         if (id == null || "".equals(id)) {
             throw new IllegalArgumentException();
         }
-        aliveIDs.put(id, new RendezvousItem());
+        aliveIDs.put(id, new RendezvousItem(resourcesInfo));
     }
 
-    public List<String> whoIsAlive() {
-        return new ArrayList<String>(aliveIDs.keySet());
+    public List<RendezvousItem> whoIsAlive() {
+        return new ArrayList<RendezvousItem>(aliveIDs.values());
     }
 
     private void collectsNotAlive() {
