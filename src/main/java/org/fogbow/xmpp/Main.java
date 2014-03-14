@@ -1,4 +1,4 @@
-package xmpp;
+package org.fogbow.xmpp;
 
 import org.xmpp.component.ComponentException;
 

@@ -1,4 +1,4 @@
-package org.ourgrid.cloud;
+package org.fogbow.cloud;
 
 import java.util.List;
 

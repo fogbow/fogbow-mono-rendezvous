@@ -1,14 +1,11 @@
-package xmpp.handler;
+package org.fogbow.xmpp.handler;
 
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 import org.dom4j.Element;
+import org.fogbow.cloud.Rendezvous;
+import org.fogbow.cloud.RendezvousItem;
 import org.jamppa.component.handler.AbstractQueryHandler;
-import org.ourgrid.cloud.Rendezvous;
-import org.ourgrid.cloud.RendezvousItem;
 import org.xmpp.packet.IQ;
 
 public class WhoIsAliveHandler extends AbstractQueryHandler {

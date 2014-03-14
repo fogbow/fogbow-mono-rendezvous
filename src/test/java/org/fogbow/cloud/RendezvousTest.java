@@ -1,7 +1,12 @@
-package org.ourgrid.cloud;
+package org.fogbow.cloud;
 
+import java.util.Date;
 import java.util.List;
 
+import org.fogbow.cloud.Rendezvous;
+import org.fogbow.cloud.RendezvousImpl;
+import org.fogbow.cloud.RendezvousItem;
+import org.fogbow.cloud.ResourcesInfo;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -9,21 +14,19 @@ public class RendezvousTest {
 
     private final static int TIMEOUT = 10000;
     private final static int TIMEOUT_GRACE = 500;
-//    private ResourcesInfo DEFAULT_RESOURCES = new ResourcesInfo("id", "value1", "value2", "value3", "value4");
 
     @Test(expected = IllegalArgumentException.class)
     public void testRendezvousConstructor() {
         new RendezvousImpl(-100);
     }
 
-    
-    
     @Test
     public void testImAliveSingleElement() {
         Rendezvous r = new RendezvousImpl();
-        
-        ResourcesInfo resources = new ResourcesInfo("abc", "value1", "value2", "value3", "value4");
-        
+
+        ResourcesInfo resources = new ResourcesInfo("abc", "value1", "value2",
+                "value3", "value4");
+
         r.iAmAlive(resources);
         List<RendezvousItem> element = r.whoIsAlive();
         Assert.assertEquals(1, element.size());
@@ -35,7 +38,8 @@ public class RendezvousTest {
         Rendezvous r = new RendezvousImpl();
         for (int i = 0; i < 10; i++) {
             String s = "Element " + i;
-            ResourcesInfo resources = new ResourcesInfo(s, "value1", "value2", "value3", "value4");
+            ResourcesInfo resources = new ResourcesInfo(s, "value1", "value2",
+                    "value3", "value4");
 
             r.iAmAlive(resources);
             List<RendezvousItem> elementList = r.whoIsAlive();
@@ -44,21 +48,19 @@ public class RendezvousTest {
     }
 
     private boolean containsId(List<RendezvousItem> elementList, String id) {
-        
-        for (RendezvousItem item : elementList){        
-            if (item.getResourcesInfo().getId().equals(id)){
-              return true;  
+        for (RendezvousItem item : elementList) {
+            if (item.getResourcesInfo().getId().equals(id)) {
+                return true;
             }
         }
         return false;
     }
 
-
-
     @Test
     public void testContainsSameIDs() {
         Rendezvous r = new RendezvousImpl();
-        ResourcesInfo resources = new ResourcesInfo("id", "value1", "value2", "value3", "value4");
+        ResourcesInfo resources = new ResourcesInfo("id", "value1", "value2",
+                "value3", "value4");
         r.iAmAlive(resources);
         r.iAmAlive(resources);
         List<RendezvousItem> elementList = r.whoIsAlive();
@@ -68,15 +70,23 @@ public class RendezvousTest {
     @Test(expected = IllegalArgumentException.class)
     public void testImAliveNullParameter() {
         Rendezvous r = new RendezvousImpl();
-        ResourcesInfo resources = new ResourcesInfo(null, "value1", "value2", "value3", "value4");
+        ResourcesInfo resources = new ResourcesInfo(null, "value1", "value2",
+                "value3", "value4");
         r.iAmAlive(resources);
     }
-    
+
     @Test(expected = IllegalArgumentException.class)
     public void testImAliveEmptyParameter() {
         Rendezvous r = new RendezvousImpl();
-        ResourcesInfo resources = new ResourcesInfo("", "value1", "value2", "value3", "value4");
+        ResourcesInfo resources = new ResourcesInfo("", "value1", "value2",
+                "value3", "value4");
         r.iAmAlive(resources);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testIAmAliveNullResourceInfo() {
+        Rendezvous r = new RendezvousImpl();
+        r.iAmAlive(null);
     }
 
     @Test
@@ -90,17 +100,62 @@ public class RendezvousTest {
     @Test
     public void testWhoIsAliveSingleElement() {
         Rendezvous r = new RendezvousImpl();
-        ResourcesInfo resources = new ResourcesInfo("OnlyElement", "value1", "value2", "value3", "value4");
+        ResourcesInfo resources = new ResourcesInfo("OnlyElement", "value1",
+                "value2", "value3", "value4");
         r.iAmAlive(resources);
         Assert.assertEquals(1, r.whoIsAlive().size());
         Assert.assertTrue(containsId(r.whoIsAlive(), "OnlyElement"));
     }
 
     @Test
+    public void testWhoIsAliveElementValues() throws InterruptedException {
+        Rendezvous r = new RendezvousImpl();
+        ResourcesInfo resources = new ResourcesInfo("id", "value1", "value2",
+                "value3", "value4");
+
+        Date beforeMessage = new Date(System.currentTimeMillis());
+        Thread.sleep(1);
+        r.iAmAlive(resources);
+        Thread.sleep(1);
+        Date afterMessage = new Date(System.currentTimeMillis());
+
+        Assert.assertEquals(1, r.whoIsAlive().size());
+        Assert.assertTrue(containsId(r.whoIsAlive(), "id"));
+        RendezvousItem item = r.whoIsAlive().get(0);
+        ResourcesInfo returnedResource = item.getResourcesInfo();
+        Assert.assertEquals("value1", returnedResource.getCpuIdle());
+        Assert.assertEquals("value2", returnedResource.getCpuInUse());
+        Assert.assertEquals("value3", returnedResource.getMemIdle());
+        Assert.assertEquals("value4", returnedResource.getMemInUse());
+
+        Date updated = new Date(item.getLastTime());
+
+        Assert.assertTrue(updated.after(beforeMessage));
+        Assert.assertTrue(updated.before(afterMessage));
+        Assert.assertNotNull(item.getFormattedTime());
+    }
+
+    @Test
+    public void testWhoIsAliveElementUpdatedValueNotNull() {
+        Rendezvous r = new RendezvousImpl();
+        ResourcesInfo resources = new ResourcesInfo("id", "value1", "value2",
+                "value3", "value4");
+
+        r.iAmAlive(resources);
+
+        Assert.assertEquals(1, r.whoIsAlive().size());
+        Assert.assertTrue(containsId(r.whoIsAlive(), "id"));
+        RendezvousItem item = r.whoIsAlive().get(0);
+
+        Assert.assertNotNull(item.getFormattedTime());
+    }
+
+    @Test
     public void testWhoIsAliveManyElements() {
         Rendezvous r = new RendezvousImpl();
         for (int i = 0; i < 10; i++) {
-            r.iAmAlive(new ResourcesInfo("Element" + (i + 1), "value1", "value2", "value3", "value4"));
+            r.iAmAlive(new ResourcesInfo("Element" + (i + 1), "value1",
+                    "value2", "value3", "value4"));
         }
 
         for (int i = 0; i < 10; i++) {
@@ -111,8 +166,9 @@ public class RendezvousTest {
     @Test
     public void testWhoIsAliveAfterTime() throws InterruptedException {
         Rendezvous r = new RendezvousImpl(TIMEOUT);
-        ResourcesInfo resources = new ResourcesInfo("id", "value1", "value2", "value3", "value4");
-        r.iAmAlive( resources);
+        ResourcesInfo resources = new ResourcesInfo("id", "value1", "value2",
+                "value3", "value4");
+        r.iAmAlive(resources);
         Assert.assertEquals(1, r.whoIsAlive().size());
         Thread.sleep(TIMEOUT + TIMEOUT_GRACE);
         Assert.assertEquals(0, r.whoIsAlive().size());
@@ -122,12 +178,14 @@ public class RendezvousTest {
     public void testWhoIsAliveAfterTimeManyElements()
             throws InterruptedException {
         Rendezvous r = new RendezvousImpl(TIMEOUT);
-        ResourcesInfo resources = new ResourcesInfo("id", "value1", "value2", "value3", "value4");
+        ResourcesInfo resources = new ResourcesInfo("id", "value1", "value2",
+                "value3", "value4");
         r.iAmAlive(resources);
         Assert.assertEquals(1, r.whoIsAlive().size());
         Thread.sleep(TIMEOUT / 2 + TIMEOUT_GRACE);
         Assert.assertEquals(1, r.whoIsAlive().size());
-        ResourcesInfo resources2 = new ResourcesInfo("id2", "value1", "value2", "value3", "value4");
+        ResourcesInfo resources2 = new ResourcesInfo("id2", "value1", "value2",
+                "value3", "value4");
         r.iAmAlive(resources2);
         Assert.assertEquals(2, r.whoIsAlive().size());
         Thread.sleep(TIMEOUT / 2 + TIMEOUT_GRACE);
@@ -140,12 +198,14 @@ public class RendezvousTest {
     public void testConcurrentIAmAlive() throws InterruptedException {
         Rendezvous r = new RendezvousImpl(TIMEOUT);
         for (int i = 0; i < 10; i++) {
-            r.iAmAlive( new ResourcesInfo("Element" + i, "value1", "value2", "value3", "value4"));
+            r.iAmAlive(new ResourcesInfo("Element" + i, "value1", "value2",
+                    "value3", "value4"));
             Thread.sleep(100);
             Assert.assertEquals(i + 1, r.whoIsAlive().size());
         }
         for (int i = 0; i < 10; i++) {
-            r.iAmAlive(new ResourcesInfo("Element" + i, "value1", "value2", "value3", "value4"));
+            r.iAmAlive(new ResourcesInfo("Element" + i, "value1", "value2",
+                    "value3", "value4"));
             Thread.sleep(100);
             Assert.assertEquals(10, r.whoIsAlive().size());
         }
@@ -154,28 +214,15 @@ public class RendezvousTest {
         Assert.assertEquals(0, r.whoIsAlive().size());
     }
 
-    //TODO I don't understand this test! Where is the assert?
-    @Test    
-    public void testDuplicateIsItAlive() throws InterruptedException {
-        Rendezvous r = new RendezvousImpl(TIMEOUT);
-        ResourcesInfo resources = new ResourcesInfo("Element", "value1", "value2", "value3", "value4");
-        r.iAmAlive(resources);
-        r.iAmAlive(resources);
-        Thread.sleep(TIMEOUT + TIMEOUT_GRACE);
-        ResourcesInfo resources2 = new ResourcesInfo("Element1", "value1", "value2", "value3", "value4");
-        r.iAmAlive(resources2);
-        Thread.sleep(TIMEOUT_GRACE);
-    }
-
-    //TODO I don't understand this test!
     @Test
-    public void testConcourrency3() throws InterruptedException {
+    public void testConcourrency() throws InterruptedException {
         RendezvousImpl r = new RendezvousImpl(TIMEOUT);
-        
+
         for (int i = 0; i < 1000000; i++) {
-            r.iAmAlive(new ResourcesInfo("Element" + i, "value1", "value2", "value3", "value4"));
+            r.iAmAlive(new ResourcesInfo("Element" + i, "value1", "value2",
+                    "value3", "value4"));
         }
-        
+
         Assert.assertFalse(r.getInError());
     }
 }

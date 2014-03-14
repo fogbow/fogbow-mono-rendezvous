@@ -1,4 +1,4 @@
-package org.ourgrid.cloud;
+package org.fogbow.cloud;
 
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
@@ -32,18 +32,19 @@ public class RendezvousImpl implements Rendezvous {
         this(TIMEOUT_DEFAULT);
     }
 
-    public void iAmAlive(ResourcesInfo resourcesInfo) {
-        String id = resourcesInfo.getId();
-        if (id == null || "".equals(id)) {
+    public void iAmAlive(ResourcesInfo resourcesInfo) {        
+        if (resourcesInfo == null ) {
             throw new IllegalArgumentException();
         }
-        aliveIDs.put(id, new RendezvousItem(resourcesInfo));
+
+        aliveIDs.put(resourcesInfo.getId(), new RendezvousItem(resourcesInfo));
     }
 
     public List<RendezvousItem> whoIsAlive() {
         return new ArrayList<RendezvousItem>(aliveIDs.values());
     }
 
+    
     private void collectsNotAlive() {
         timer.schedule(new TimerTask() {
 

@@ -1,9 +1,9 @@
-package xmpp.handler;
+package org.fogbow.xmpp.handler;
 
 import org.dom4j.Element;
+import org.fogbow.cloud.Rendezvous;
+import org.fogbow.cloud.ResourcesInfo;
 import org.jamppa.component.handler.AbstractQueryHandler;
-import org.ourgrid.cloud.Rendezvous;
-import org.ourgrid.cloud.ResourcesInfo;
 import org.xmpp.packet.IQ;
 
 public class IAmAliveHandler extends AbstractQueryHandler {
