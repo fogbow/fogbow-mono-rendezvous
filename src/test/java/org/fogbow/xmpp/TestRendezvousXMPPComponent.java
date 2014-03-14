@@ -136,31 +136,20 @@ public class TestRendezvousXMPPComponent {
     public void testImAsyncAliveSingleElement() {
         IQ iq = createIAmAliveIQ();
 
-        try {
-            PacketFilter filter = new AndFilter(new PacketTypeFilter(IQ.class), 
-                    new ToContainsFilter(CLIENT));
-            
-            PacketListener callback = new PacketListener() {
-                public void processPacket(Packet packet) {
-                    IQ response = (IQ) packet;
-                    Assert.assertEquals(Type.result, response.getType());
-                }
-            };
-                       
-            xmppClient.on(filter, callback);
-            xmppClient.send(iq);
-            
-            iq = createWhoIsAliveIQ();
-
-            response = (IQ) xmppClient.syncSend(iq);
-            ArrayList<String> aliveIDs = getAliveIdsFromIQ(response);
-
-            Assert.assertTrue(aliveIDs.contains(CLIENT));
-            Assert.assertEquals(1, aliveIDs.size());
-        } catch (XMPPException e) {
-            e.printStackTrace();
-            fail(e.getMessage());
-        }
+        PacketFilter filter = new AndFilter(new PacketTypeFilter(IQ.class), 
+                new ToContainsFilter(CLIENT));
+        
+        PacketListener callback = new PacketListener() {
+            public void processPacket(Packet packet) {
+                IQ response = (IQ) packet;
+                Assert.assertEquals(Type.result, response.getType());
+            }
+        };
+                   
+        xmppClient.on(filter, callback);
+        xmppClient.send(iq);           
+       
+       
     }
     
     @Test
@@ -339,8 +328,32 @@ public class TestRendezvousXMPPComponent {
 
     @Test
     public void testIamAliveManyClients() {
-        // set up client 2
 
+        //stopping components and client
+        xmppClient.disconnect();
+        try {
+            rendezvousXmppComponent.disconnect();
+        } catch (ComponentException e2) {
+            fail(e2.getMessage());
+        }
+        
+        //Initializing xmpp component with big Timeout     
+        rendezvousXmppComponent = new RendezvousXMPPComponent(
+                RENDEZVOUS_COMPONENT_URL, RENDEZVOUS_COMPONENT_PASS,
+                SERVER_HOST, SERVER_COMPONENT_PORT, 100 * TIMEOUT);
+
+        rendezvousXmppComponent.setDescription("Rendezvous Component");
+        rendezvousXmppComponent.setName("rendezvous");
+        try {
+            rendezvousXmppComponent.connect();
+        } catch (ComponentException e1) {
+            e1.printStackTrace();
+            fail(e1.getMessage());
+        }
+
+        rendezvousXmppComponent.process();
+
+        //creating clients
         int begin = 100;
         int numberOfXmppClients = 1000;
 
@@ -375,12 +388,26 @@ public class TestRendezvousXMPPComponent {
                 otherXmppClient.on(filter, callback);
                 otherXmppClient.send(iq);
 
+                register.deleteAccount();
             } catch (XMPPException e) {
                 e.printStackTrace();
                 fail(e.getMessage());
             } finally {
                 otherXmppClient.disconnect();
             }
+        }
+
+        // initializing client
+        xmppClient = new XMPPClient(CLIENT, CLIENT_PASS, SERVER_HOST,
+                SERVER_CLIENT_PORT);
+
+        try {
+            xmppClient.connect();
+            xmppClient.login();
+            xmppClient.process(false);
+        } catch (XMPPException e) {
+            e.printStackTrace();
+            fail("Client set up problem!");
         }
 
         try {
