@@ -43,8 +43,7 @@ public class WhoIsAliveHandler extends AbstractQueryHandler {
             statusEl.addElement("mem-idle").setText(
                     rendezvouItem.getResourcesInfo().getMemIdle());
             statusEl.addElement("mem-inuse").setText(
-                    rendezvouItem.getResourcesInfo().getMemInUse());
-           
+                    rendezvouItem.getResourcesInfo().getMemInUse());           
             statusEl.addElement("updated").setText(
                     String.valueOf(rendezvouItem.getFormattedTime())); 
         }
