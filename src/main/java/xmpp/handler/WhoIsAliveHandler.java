@@ -44,13 +44,9 @@ public class WhoIsAliveHandler extends AbstractQueryHandler {
                     rendezvouItem.getResourcesInfo().getMemIdle());
             statusEl.addElement("mem-inuse").setText(
                     rendezvouItem.getResourcesInfo().getMemInUse());
-            
-            //FIXME I think it isn't better place to put this. Maybe RendezvousItem 
-            SimpleDateFormat dateFormatISO8601 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ", Locale.ROOT);
-            Date date = new Date(rendezvouItem.getLastTime());
-            
+           
             statusEl.addElement("updated").setText(
-                    String.valueOf(dateFormatISO8601.format(date))); 
+                    String.valueOf(rendezvouItem.getFormattedTime())); 
         }
         return resultIQ;
     }
