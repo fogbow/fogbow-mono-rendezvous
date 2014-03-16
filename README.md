@@ -1,4 +1,4 @@
-cloud-manager
+fogbow-rendezvous
 =============
 
-Federation layer of an IaaS provider
+Where all fogbow managers meet and greet. 
