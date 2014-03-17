@@ -1,4 +1,4 @@
-package org.fogbowcloud.rendezvous.cloud;
+package org.fogbowcloud.rendezvous.core;
 
 import java.util.List;
 

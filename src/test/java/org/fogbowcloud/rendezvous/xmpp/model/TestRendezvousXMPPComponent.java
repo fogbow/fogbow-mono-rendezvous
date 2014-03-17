@@ -12,8 +12,8 @@ import java.util.TimeZone;
 
 import org.dom4j.Attribute;
 import org.dom4j.Element;
-import org.fogbowcloud.rendezvous.cloud.RendezvousItem;
-import org.fogbowcloud.rendezvous.cloud.ResourcesInfo;
+import org.fogbowcloud.rendezvous.core.RendezvousItem;
+import org.fogbowcloud.rendezvous.core.ResourcesInfo;
 import org.fogbowcloud.rendezvous.xmpp.RendezvousXMPPComponent;
 import org.jamppa.client.XMPPClient;
 import org.jamppa.client.plugin.xep0077.XEP0077;

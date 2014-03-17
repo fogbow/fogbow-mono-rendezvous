@@ -12,8 +12,8 @@ import java.util.TimeZone;
 
 import org.dom4j.Attribute;
 import org.dom4j.Element;
-import org.fogbowcloud.rendezvous.cloud.RendezvousItem;
-import org.fogbowcloud.rendezvous.cloud.ResourcesInfo;
+import org.fogbowcloud.rendezvous.core.RendezvousItem;
+import org.fogbowcloud.rendezvous.core.ResourcesInfo;
 import org.fogbowcloud.rendezvous.xmpp.model.TestRendezvousXMPPComponent;
 import org.fogbowcloud.rendezvous.xmpp.model.WhoIsAliveResponseItem;
 import org.jamppa.client.XMPPClient;
@@ -27,7 +27,7 @@ import org.xmpp.component.ComponentException;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.IQ.Type;
 
-public class TestRendezvousXMPPComponentWhoIsAlive extends TestRendezvousXMPPComponent{
+public class TestWhoIsAlive extends TestRendezvousXMPPComponent{
 	
     @Before
     public void setUp() {

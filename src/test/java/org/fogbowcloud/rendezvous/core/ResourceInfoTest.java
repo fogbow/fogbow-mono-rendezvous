@@ -1,6 +1,6 @@
-package org.fogbowcloud.rendezvous.cloud;
+package org.fogbowcloud.rendezvous.core;
 
-import org.fogbowcloud.rendezvous.cloud.ResourcesInfo;
+import org.fogbowcloud.rendezvous.core.ResourcesInfo;
 import org.junit.Assert;
 import org.junit.Test;
 

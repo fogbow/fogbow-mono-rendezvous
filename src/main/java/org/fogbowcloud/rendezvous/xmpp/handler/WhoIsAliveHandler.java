@@ -3,8 +3,8 @@ package org.fogbowcloud.rendezvous.xmpp.handler;
 import java.util.List;
 
 import org.dom4j.Element;
-import org.fogbowcloud.rendezvous.cloud.Rendezvous;
-import org.fogbowcloud.rendezvous.cloud.RendezvousItem;
+import org.fogbowcloud.rendezvous.core.Rendezvous;
+import org.fogbowcloud.rendezvous.core.RendezvousItem;
 import org.jamppa.component.handler.AbstractQueryHandler;
 import org.xmpp.packet.IQ;
 

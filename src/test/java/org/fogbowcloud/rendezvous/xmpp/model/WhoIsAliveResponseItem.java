@@ -1,6 +1,6 @@
 package org.fogbowcloud.rendezvous.xmpp.model;
 
-import org.fogbowcloud.rendezvous.cloud.ResourcesInfo;
+import org.fogbowcloud.rendezvous.core.ResourcesInfo;
 
 public class WhoIsAliveResponseItem {
     private ResourcesInfo resources;

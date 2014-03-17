@@ -7,7 +7,7 @@ import java.util.Iterator;
 
 import org.dom4j.Attribute;
 import org.dom4j.Element;
-import org.fogbowcloud.rendezvous.cloud.ResourcesInfo;
+import org.fogbowcloud.rendezvous.core.ResourcesInfo;
 import org.fogbowcloud.rendezvous.xmpp.model.TestRendezvousXMPPComponent;
 import org.jamppa.client.XMPPClient;
 import org.jamppa.client.plugin.xep0077.XEP0077;
@@ -26,7 +26,7 @@ import org.xmpp.packet.IQ;
 import org.xmpp.packet.Packet;
 import org.xmpp.packet.IQ.Type;
 
-public class TestRendezvousXMPPComponentIAmAlive extends TestRendezvousXMPPComponent{
+public class TestIAmAlive extends TestRendezvousXMPPComponent{
 		
     @Before
     public void setUp() {

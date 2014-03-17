@@ -1,12 +1,12 @@
-package org.fogbowcloud.rendezvous.cloud;
+package org.fogbowcloud.rendezvous.core;
 
 import java.util.Date;
 import java.util.List;
 
-import org.fogbowcloud.rendezvous.cloud.Rendezvous;
-import org.fogbowcloud.rendezvous.cloud.RendezvousImpl;
-import org.fogbowcloud.rendezvous.cloud.RendezvousItem;
-import org.fogbowcloud.rendezvous.cloud.ResourcesInfo;
+import org.fogbowcloud.rendezvous.core.Rendezvous;
+import org.fogbowcloud.rendezvous.core.RendezvousImpl;
+import org.fogbowcloud.rendezvous.core.RendezvousItem;
+import org.fogbowcloud.rendezvous.core.ResourcesInfo;
 import org.junit.Assert;
 import org.junit.Test;
 

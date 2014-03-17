@@ -1,4 +1,4 @@
-package org.fogbowcloud.rendezvous.cloud;
+package org.fogbowcloud.rendezvous.core;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
