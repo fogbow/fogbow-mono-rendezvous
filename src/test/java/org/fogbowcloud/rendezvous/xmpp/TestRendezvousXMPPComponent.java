@@ -1,4 +1,4 @@
-package org.fogbow.xmpp;
+package org.fogbowcloud.rendezvous.xmpp;
 
 import static org.junit.Assert.fail;
 
@@ -8,10 +8,13 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Locale;
+import java.util.TimeZone;
 
 import org.dom4j.Attribute;
 import org.dom4j.Element;
-import org.fogbow.cloud.ResourcesInfo;
+import org.fogbowcloud.rendezvous.cloud.RendezvousItem;
+import org.fogbowcloud.rendezvous.cloud.ResourcesInfo;
+import org.fogbowcloud.rendezvous.xmpp.RendezvousXMPPComponent;
 import org.jamppa.client.XMPPClient;
 import org.jamppa.client.plugin.xep0077.XEP0077;
 import org.jivesoftware.smack.PacketListener;
@@ -208,7 +211,8 @@ public class TestRendezvousXMPPComponent {
             ArrayList<String> aliveIDs = getAliveIdsFromIQ(response);
 
             SimpleDateFormat format = new SimpleDateFormat(
-                    "yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.ROOT);
+                   RendezvousItem.ISO_8601_DATE_FORMAT, Locale.ROOT);
+            format.setTimeZone(TimeZone.getTimeZone("GMT"));
 
             Date updated = new Date(format.parse(item.getUpdated()).getTime());
 

@@ -1,4 +1,4 @@
-package org.fogbow.cloud;
+package org.fogbowcloud.rendezvous.cloud;
 
 public class ResourcesInfo {
 

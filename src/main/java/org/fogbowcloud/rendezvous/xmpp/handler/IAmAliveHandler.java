@@ -1,15 +1,15 @@
-package org.fogbow.xmpp.handler;
+package org.fogbowcloud.rendezvous.xmpp.handler;
 
 import org.dom4j.Element;
-import org.fogbow.cloud.Rendezvous;
-import org.fogbow.cloud.ResourcesInfo;
+import org.fogbowcloud.rendezvous.cloud.Rendezvous;
+import org.fogbowcloud.rendezvous.cloud.ResourcesInfo;
 import org.jamppa.component.handler.AbstractQueryHandler;
 import org.xmpp.packet.IQ;
 
 public class IAmAliveHandler extends AbstractQueryHandler {
 
-    final static String NAMESPACE = "http://fogbowcloud.org/rendezvous/iamalive";
-    Rendezvous rendezvous;
+    private final static String NAMESPACE = "http://fogbowcloud.org/rendezvous/iamalive";
+    private Rendezvous rendezvous;
 
     public IAmAliveHandler(Rendezvous rendezvous) {
         super(NAMESPACE);

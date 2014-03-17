@@ -1,6 +1,6 @@
-package org.fogbow.cloud;
+package org.fogbowcloud.rendezvous.cloud;
 
-import org.fogbow.cloud.ResourcesInfo;
+import org.fogbowcloud.rendezvous.cloud.ResourcesInfo;
 import org.junit.Assert;
 import org.junit.Test;
 

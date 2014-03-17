@@ -1,16 +1,16 @@
-package org.fogbow.xmpp.handler;
+package org.fogbowcloud.rendezvous.xmpp.handler;
 
 import java.util.List;
 
 import org.dom4j.Element;
-import org.fogbow.cloud.Rendezvous;
-import org.fogbow.cloud.RendezvousItem;
+import org.fogbowcloud.rendezvous.cloud.Rendezvous;
+import org.fogbowcloud.rendezvous.cloud.RendezvousItem;
 import org.jamppa.component.handler.AbstractQueryHandler;
 import org.xmpp.packet.IQ;
 
 public class WhoIsAliveHandler extends AbstractQueryHandler {
 
-    final static String NAMESPACE = "http://fogbowcloud.org/rendezvous/whoisalive";
+    private final static String NAMESPACE = "http://fogbowcloud.org/rendezvous/whoisalive";
     private Rendezvous rendezvous;
 
     public WhoIsAliveHandler(Rendezvous rendezvous) {

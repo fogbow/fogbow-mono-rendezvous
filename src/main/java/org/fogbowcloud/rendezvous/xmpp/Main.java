@@ -1,4 +1,4 @@
-package org.fogbow.xmpp;
+package org.fogbowcloud.rendezvous.xmpp;
 
 import org.xmpp.component.ComponentException;
 

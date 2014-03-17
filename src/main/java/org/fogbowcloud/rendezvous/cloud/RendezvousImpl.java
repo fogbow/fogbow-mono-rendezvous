@@ -1,4 +1,4 @@
-package org.fogbow.cloud;
+package org.fogbowcloud.rendezvous.cloud;
 
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
@@ -11,7 +11,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class RendezvousImpl implements Rendezvous {
 
-    
     public static final long TIMEOUT_DEFAULT = 3 * 60 * 1000;
     private static final long PERIOD = 50;
 
@@ -32,8 +31,8 @@ public class RendezvousImpl implements Rendezvous {
         this(TIMEOUT_DEFAULT);
     }
 
-    public void iAmAlive(ResourcesInfo resourcesInfo) {        
-        if (resourcesInfo == null ) {
+    public void iAmAlive(ResourcesInfo resourcesInfo) {
+        if (resourcesInfo == null) {
             throw new IllegalArgumentException();
         }
 
@@ -44,7 +43,6 @@ public class RendezvousImpl implements Rendezvous {
         return new ArrayList<RendezvousItem>(aliveIDs.values());
     }
 
-    
     private void collectsNotAlive() {
         timer.schedule(new TimerTask() {
 
