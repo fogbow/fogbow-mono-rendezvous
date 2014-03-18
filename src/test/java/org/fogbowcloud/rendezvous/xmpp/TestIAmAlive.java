@@ -2,7 +2,7 @@ package org.fogbowcloud.rendezvous.xmpp;
 
 import java.util.ArrayList;
 
-import org.fogbowcloud.rendezvous.xmpp.model.TestRendezvousXMPPComponent;
+import org.fogbowcloud.rendezvous.xmpp.model.RendezvousUseful;
 import org.jamppa.client.XMPPClient;
 import org.jamppa.client.plugin.xep0077.XEP0077;
 import org.jivesoftware.smack.PacketListener;
@@ -20,14 +20,18 @@ import org.xmpp.packet.IQ;
 import org.xmpp.packet.IQ.Type;
 import org.xmpp.packet.Packet;
 
-public class TestIAmAlive extends TestRendezvousXMPPComponent{
+public class TestIAmAlive {
 		
+	private RendezvousUseful rendezvousUseful;
+	
     @Before
     public void setUp() {
+    	
+    	rendezvousUseful = new RendezvousUseful();
 
-        initializeXMPPRendezvousComponent(TEST_DEFAULT_TIMEOUT);
+        rendezvousUseful.initializeXMPPRendezvousComponent(RendezvousUseful.TEST_DEFAULT_TIMEOUT);
 
-        initializeXMPPClient();
+        rendezvousUseful.initializeXMPPClient();
     }
     
     @Test(expected = XMPPException.class)
@@ -36,27 +40,27 @@ public class TestIAmAlive extends TestRendezvousXMPPComponent{
     	
         String invalidNamespace = "invalidnamespace";
         IQ iq = new IQ(Type.get);
-        iq.setTo(RENDEZVOUS_COMPONENT_URL);
+        iq.setTo(RendezvousUseful.RENDEZVOUS_COMPONENT_URL);
         iq.getElement().addElement("query", invalidNamespace);
 
-        response = (IQ) xmppClient.syncSend(iq);
+        response = (IQ) rendezvousUseful.getXmppClient().syncSend(iq);
     }  
     
     @Test
     public void testSyncImAliveSingleElement() {
     	IQ response;
-        IQ iq = createIAmAliveIQ();
+        IQ iq = rendezvousUseful.createIAmAliveIQ();
 
         try {
-            response = (IQ) xmppClient.syncSend(iq);
+            response = (IQ) rendezvousUseful.getXmppClient().syncSend(iq);
             Assert.assertEquals(Type.result, response.getType());
 
-            iq = createWhoIsAliveIQ();
+            iq = rendezvousUseful.createWhoIsAliveIQ();
 
-            response = (IQ) xmppClient.syncSend(iq);
-            ArrayList<String> aliveIDs = getAliveIdsFromIQ(response);
+            response = (IQ) rendezvousUseful.getXmppClient().syncSend(iq);
+            ArrayList<String> aliveIDs = rendezvousUseful.getAliveIdsFromIQ(response);
 
-            Assert.assertTrue(aliveIDs.contains(CLIENT));
+            Assert.assertTrue(aliveIDs.contains(RendezvousUseful.CLIENT));
             Assert.assertEquals(1, aliveIDs.size());
         } catch (XMPPException e) {
             e.printStackTrace();
@@ -65,10 +69,10 @@ public class TestIAmAlive extends TestRendezvousXMPPComponent{
     
     @Test
     public void testImAsyncAliveSingleElement() {
-        IQ iq = createIAmAliveIQ();
+        IQ iq = rendezvousUseful.createIAmAliveIQ();
 
         PacketFilter filter = new AndFilter(new PacketTypeFilter(IQ.class), 
-                new ToContainsFilter(CLIENT));
+                new ToContainsFilter(RendezvousUseful.CLIENT));
         
         PacketListener callback = new PacketListener() {
             public void processPacket(Packet packet) {
@@ -77,32 +81,32 @@ public class TestIAmAlive extends TestRendezvousXMPPComponent{
             }
         };
                    
-        xmppClient.on(filter, callback);
-        xmppClient.send(iq);           
+        rendezvousUseful.getXmppClient().on(filter, callback);
+        rendezvousUseful.getXmppClient().send(iq);           
     }  
     
     @Test
     public void testIamAlive2EqualElements() {
     	IQ response;
-        IQ iq = createIAmAliveIQ();
+        IQ iq = rendezvousUseful.createIAmAliveIQ();
 
         try {
-            response = (IQ) xmppClient.syncSend(iq);
+            response = (IQ) rendezvousUseful.getXmppClient().syncSend(iq);
             Assert.assertEquals(Type.result, response.getType());
 
-            iq = createIAmAliveIQ();
+            iq = rendezvousUseful.createIAmAliveIQ();
 
-            response = (IQ) xmppClient.syncSend(iq);
+            response = (IQ) rendezvousUseful.getXmppClient().syncSend(iq);
             Assert.assertEquals(Type.result, response.getType());
 
-            iq = createWhoIsAliveIQ();
+            iq = rendezvousUseful.createWhoIsAliveIQ();
 
-            response = (IQ) xmppClient.syncSend(iq);
+            response = (IQ) rendezvousUseful.getXmppClient().syncSend(iq);
 
-            ArrayList<String> aliveIDs = getAliveIdsFromIQ(response);
+            ArrayList<String> aliveIDs = rendezvousUseful.getAliveIdsFromIQ(response);
 
             Assert.assertEquals(1, aliveIDs.size());
-            Assert.assertTrue(aliveIDs.contains(CLIENT));
+            Assert.assertTrue(aliveIDs.contains(RendezvousUseful.CLIENT));
         } catch (XMPPException e) {
             e.printStackTrace();
         }
@@ -115,7 +119,7 @@ public class TestIAmAlive extends TestRendezvousXMPPComponent{
         XEP0077 reg = new XEP0077();
         
         XMPPClient xmppClient2 = new XMPPClient("testuser2@test.com", "testuser2",
-                SERVER_HOST, SERVER_CLIENT_PORT);
+                RendezvousUseful.SERVER_HOST, RendezvousUseful.SERVER_CLIENT_PORT);
         try {
             xmppClient2.registerPlugin(reg);
             xmppClient2.connect();
@@ -125,10 +129,10 @@ public class TestIAmAlive extends TestRendezvousXMPPComponent{
             xmppClient2.login();
             xmppClient2.process(false);
         
-            IQ iq = createIAmAliveIQ();
+            IQ iq = rendezvousUseful.createIAmAliveIQ();
 
             // send am alive! from client 1
-            response = (IQ) xmppClient.syncSend(iq);
+            response = (IQ) rendezvousUseful.getXmppClient().syncSend(iq);
             Assert.assertEquals(Type.result, response.getType());
 
             // send am alive! from client 2
@@ -136,13 +140,13 @@ public class TestIAmAlive extends TestRendezvousXMPPComponent{
             Assert.assertEquals(Type.result, response.getType());
 
             // send Who is Alive?
-            iq = createWhoIsAliveIQ();
-            response = (IQ) xmppClient.syncSend(iq);
-            ArrayList<String> aliveIDs = getAliveIdsFromIQ(response);
+            iq = rendezvousUseful.createWhoIsAliveIQ();
+            response = (IQ) rendezvousUseful.getXmppClient().syncSend(iq);
+            ArrayList<String> aliveIDs = rendezvousUseful.getAliveIdsFromIQ(response);
 
             // asserts
             Assert.assertEquals(2, aliveIDs.size());
-            Assert.assertTrue(aliveIDs.contains(CLIENT));
+            Assert.assertTrue(aliveIDs.contains(RendezvousUseful.CLIENT));
             Assert.assertTrue(aliveIDs.contains("testuser2@test.com"));
             
         } catch (XMPPException e) {
@@ -165,7 +169,7 @@ public class TestIAmAlive extends TestRendezvousXMPPComponent{
         tearDown();
         
         //Initializing XMPP component with big Timeout     
-        initializeXMPPRendezvousComponent(100 * TEST_DEFAULT_TIMEOUT);
+        rendezvousUseful.initializeXMPPRendezvousComponent(100 * RendezvousUseful.TEST_DEFAULT_TIMEOUT);
         
         //creating clients
         int begin = 100;
@@ -175,7 +179,7 @@ public class TestIAmAlive extends TestRendezvousXMPPComponent{
         for (int i = begin; i < begin + numberOfXmppClients; i++) {
             String user = "user" + i;
             otherXmppClient = new XMPPClient(user + "@test.com", user,
-                    SERVER_HOST, SERVER_CLIENT_PORT);
+                    RendezvousUseful.SERVER_HOST, RendezvousUseful.SERVER_CLIENT_PORT);
 
             XEP0077 reg = new XEP0077();
             try {
@@ -187,7 +191,7 @@ public class TestIAmAlive extends TestRendezvousXMPPComponent{
                 otherXmppClient.login();
                 otherXmppClient.process(false);
                 
-                IQ iq = createIAmAliveIQ();
+                IQ iq = rendezvousUseful.createIAmAliveIQ();
                 
                 PacketFilter filter = new AndFilter(new PacketTypeFilter(IQ.class), 
                         new ToContainsFilter(user + "@test.com"));
@@ -211,12 +215,12 @@ public class TestIAmAlive extends TestRendezvousXMPPComponent{
         }
 
         // initializing client
-        initializeXMPPClient();
+        rendezvousUseful.initializeXMPPClient();
 
         try {
-            IQ iq = createWhoIsAliveIQ();
-            response = (IQ) xmppClient.syncSend(iq);
-            ArrayList<String> aliveIDs = getAliveIdsFromIQ(response);
+            IQ iq = rendezvousUseful.createWhoIsAliveIQ();
+            response = (IQ) rendezvousUseful.getXmppClient().syncSend(iq);
+            ArrayList<String> aliveIDs = rendezvousUseful.getAliveIdsFromIQ(response);
 
             for (int i = begin; i < begin + numberOfXmppClients; i++) {
                 String user = "user" + i;
@@ -232,10 +236,10 @@ public class TestIAmAlive extends TestRendezvousXMPPComponent{
     @Test
     public void testIAmLiveXmppResponse() {
     	IQ response;
-        IQ iq = createIAmAliveIQ();
+        IQ iq = rendezvousUseful.createIAmAliveIQ();
 
         try {
-            response = (IQ) xmppClient.syncSend(iq);
+            response = (IQ) rendezvousUseful.getXmppClient().syncSend(iq);
             Assert.assertEquals(Type.result, response.getType());
         } catch (XMPPException e) {
             e.printStackTrace();
@@ -245,13 +249,13 @@ public class TestIAmAlive extends TestRendezvousXMPPComponent{
     @After
     public void tearDown() {
         try {           
-            register.deleteAccount();            
+            rendezvousUseful.deleteAccount();         
         } catch (XMPPException e1) {
             e1.printStackTrace();
         }
-        xmppClient.disconnect();
+        rendezvousUseful.disconnectXMPPClient();
         try{
-            rendezvousXmppComponent.disconnect();
+            rendezvousUseful.disconnectRendezvousXMPPComponent();
         } catch (ComponentException e) {
         	e.printStackTrace();
         }

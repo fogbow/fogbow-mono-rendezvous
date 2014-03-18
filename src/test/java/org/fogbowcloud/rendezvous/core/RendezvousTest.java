@@ -12,7 +12,7 @@ import org.junit.Test;
 
 public class RendezvousTest {
 
-    private final static int TIMEOUT = 10000;
+    private final static int TIMEOUT = 1000;
     private final static int TIMEOUT_GRACE = 500;
 
     @Test(expected = IllegalArgumentException.class)
