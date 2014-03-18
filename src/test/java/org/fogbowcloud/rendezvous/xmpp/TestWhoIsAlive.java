@@ -1,7 +1,5 @@
 package org.fogbowcloud.rendezvous.xmpp;
 
-import static org.junit.Assert.fail;
-
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -43,7 +41,6 @@ public class TestWhoIsAlive extends TestRendezvousXMPPComponent{
 
         } catch (XMPPException e) {
             e.printStackTrace();
-            fail(e.getMessage());
         }
     }
 
@@ -75,7 +72,6 @@ public class TestWhoIsAlive extends TestRendezvousXMPPComponent{
             Assert.assertEquals(0, aliveIDs.size());
         } catch (XMPPException e) {
             e.printStackTrace();
-            fail(e.getMessage());
         }
     }    
     
@@ -134,7 +130,6 @@ public class TestWhoIsAlive extends TestRendezvousXMPPComponent{
             Assert.assertEquals(1, aliveIDs.size());
         } catch (XMPPException e) {
             e.printStackTrace();
-            fail(e.getMessage());
         }
     }    
     
@@ -143,13 +138,13 @@ public class TestWhoIsAlive extends TestRendezvousXMPPComponent{
         try {           
             register.deleteAccount();            
         } catch (XMPPException e1) {
-            fail(e1.getMessage());
+            e1.printStackTrace();
         }
         xmppClient.disconnect();
         try{
             rendezvousXmppComponent.disconnect();
         } catch (ComponentException e) {
-            fail(e.getMessage());
+            e.printStackTrace();
         }
     }        
 }

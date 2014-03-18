@@ -1,7 +1,5 @@
 package org.fogbowcloud.rendezvous.xmpp;
 
-import static org.junit.Assert.fail;
-
 import java.util.ArrayList;
 
 import org.fogbowcloud.rendezvous.xmpp.model.TestRendezvousXMPPComponent;
@@ -60,7 +58,6 @@ public class TestIAmAlive extends TestRendezvousXMPPComponent{
             Assert.assertEquals(1, aliveIDs.size());
         } catch (XMPPException e) {
             e.printStackTrace();
-            fail(e.getMessage());
         }
     }    
     
@@ -108,7 +105,6 @@ public class TestIAmAlive extends TestRendezvousXMPPComponent{
             Assert.assertTrue(aliveIDs.contains(CLIENT));
         } catch (XMPPException e) {
             e.printStackTrace();
-            fail(e.getMessage());
         }
     }
 
@@ -151,12 +147,11 @@ public class TestIAmAlive extends TestRendezvousXMPPComponent{
             
         } catch (XMPPException e) {
             e.printStackTrace();
-            fail(e.getMessage());
         } finally {            
             try {
                 reg.deleteAccount();
             } catch (XMPPException e) {
-                fail(e.getMessage());
+            	e.printStackTrace();
             }
             xmppClient2.disconnect();
         }
@@ -209,7 +204,6 @@ public class TestIAmAlive extends TestRendezvousXMPPComponent{
                 reg.deleteAccount();
             } catch (XMPPException e) {
                 e.printStackTrace();
-                fail(e.getMessage());
             } finally {
                 otherXmppClient.disconnect();
             }
@@ -231,7 +225,6 @@ public class TestIAmAlive extends TestRendezvousXMPPComponent{
             Assert.assertEquals(numberOfXmppClients, aliveIDs.size());
         } catch (XMPPException e) {
             e.printStackTrace();
-            fail(e.getMessage());
         }
     }
     
@@ -244,7 +237,6 @@ public class TestIAmAlive extends TestRendezvousXMPPComponent{
             Assert.assertEquals(Type.result, response.getType());
         } catch (XMPPException e) {
             e.printStackTrace();
-            fail(e.getMessage());
         }
     }
 
@@ -253,13 +245,13 @@ public class TestIAmAlive extends TestRendezvousXMPPComponent{
         try {           
             register.deleteAccount();            
         } catch (XMPPException e1) {
-            fail(e1.getMessage());
+            e1.printStackTrace();
         }
         xmppClient.disconnect();
         try{
             rendezvousXmppComponent.disconnect();
         } catch (ComponentException e) {
-            fail(e.getMessage());
+        	e.printStackTrace();
         }
     }    
 }
