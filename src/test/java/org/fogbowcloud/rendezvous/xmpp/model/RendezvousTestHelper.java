@@ -14,7 +14,7 @@ import org.xmpp.component.ComponentException;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.IQ.Type;
 
-public class RendezvousUseful {
+public class RendezvousTestHelper {
 
     // server properties
 	public static final int SERVER_CLIENT_PORT = 5222;
@@ -39,7 +39,7 @@ public class RendezvousUseful {
     private RendezvousXMPPComponent rendezvousXmppComponent;
     private XEP0077 register; 
 
-    public RendezvousUseful() {
+    public RendezvousTestHelper() {
 	}
     
     public void initializeXMPPClient() {
@@ -51,14 +51,18 @@ public class RendezvousUseful {
             xmppClient.registerPlugin(register);
             xmppClient.connect();
             
-            register.createAccount(CLIENT, CLIENT_PASS);
+            try {
+				register.createAccount(CLIENT, CLIENT_PASS);
+			} catch (XMPPException e) {
+				e.printStackTrace();
+			}
             
             xmppClient.login();
             xmppClient.process(false);
-            
-        } catch (XMPPException e) {
+        }catch(XMPPException e){
         	e.printStackTrace();
         }
+        
     }
 
     public void initializeXMPPRendezvousComponent(int timeout) {
@@ -77,10 +81,6 @@ public class RendezvousUseful {
 
         rendezvousXmppComponent.process();
         
-    }
-    
-    public void deleteAccount() throws XMPPException{
-    	register.deleteAccount();
     }
     
     public void disconnectXMPPClient(){
@@ -106,6 +106,8 @@ public class RendezvousUseful {
     public ArrayList<String> getAliveIdsFromIQ(IQ responseFromWhoIsAliveIQ) {
         ArrayList<String> aliveIds = new ArrayList<String>();
 
+        System.out.println("Quantidade de Users : " + getItemsFromIQ(responseFromWhoIsAliveIQ).size());
+        
         for (WhoIsAliveResponseItem item : getItemsFromIQ(responseFromWhoIsAliveIQ)) {
             aliveIds.add(item.getResources().getId());
         }
