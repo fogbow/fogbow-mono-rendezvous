@@ -200,13 +200,13 @@ public class RendezvousTest {
         for (int i = 0; i < 10; i++) {
             r.iAmAlive(new ResourcesInfo("Element" + i, "value1", "value2",
                     "value3", "value4"));
-            Thread.sleep(100);
+            Thread.sleep(TIMEOUT / 20);
             Assert.assertEquals(i + 1, r.whoIsAlive().size());
         }
         for (int i = 0; i < 10; i++) {
             r.iAmAlive(new ResourcesInfo("Element" + i, "value1", "value2",
                     "value3", "value4"));
-            Thread.sleep(100);
+            Thread.sleep(TIMEOUT / 20);
             Assert.assertEquals(10, r.whoIsAlive().size());
         }
         Assert.assertEquals(10, r.whoIsAlive().size());

@@ -42,9 +42,7 @@ public class TestWhoIsAlive{
             response = (IQ) rendezvousTestHelper.getXmppClient().syncSend(iq);
             ArrayList<String> aliveIDs = rendezvousTestHelper.getAliveIdsFromIQ(response);
             Assert.assertEquals(0, aliveIDs.size());
-
         } catch (XMPPException e) {
-            e.printStackTrace();
         }
     }
 
@@ -75,7 +73,6 @@ public class TestWhoIsAlive{
 
             Assert.assertEquals(0, aliveIDs.size());
         } catch (XMPPException e) {
-            e.printStackTrace();
         }
     }    
     
@@ -133,7 +130,6 @@ public class TestWhoIsAlive{
             Assert.assertTrue(aliveIDs.contains(RendezvousTestHelper.CLIENT));
             Assert.assertEquals(1, aliveIDs.size());
         } catch (XMPPException e) {
-            e.printStackTrace();
         }
     }    
     
@@ -143,7 +139,6 @@ public class TestWhoIsAlive{
         try{
             rendezvousTestHelper.disconnectRendezvousXMPPComponent();
         } catch (ComponentException e) {
-        	e.printStackTrace();
         }
     }        
 }

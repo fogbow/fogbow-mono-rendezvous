@@ -63,7 +63,6 @@ public class TestIAmAlive {
             Assert.assertTrue(aliveIDs.contains(RendezvousTestHelper.CLIENT));
             Assert.assertEquals(1, aliveIDs.size());
         } catch (XMPPException e) {
-            e.printStackTrace();
         }
     }    
     
@@ -108,7 +107,6 @@ public class TestIAmAlive {
             Assert.assertEquals(1, aliveIDs.size());
             Assert.assertTrue(aliveIDs.contains(RendezvousTestHelper.CLIENT));
         } catch (XMPPException e) {
-            e.printStackTrace();
         }
     }
 
@@ -127,7 +125,6 @@ public class TestIAmAlive {
             try {
             	reg.createAccount("testuser2@test.com", "testuser2");	
 			} catch (XMPPException e) {
-				e.printStackTrace();
 			}
             
 
@@ -155,7 +152,6 @@ public class TestIAmAlive {
             Assert.assertTrue(aliveIDs.contains("testuser2@test.com"));
             
         } catch (XMPPException e) {
-            e.printStackTrace();
         } finally {            
             xmppClient2.disconnect();
         }
@@ -189,7 +185,6 @@ public class TestIAmAlive {
                 try {
                 	reg.createAccount(user + "@test.com", user);
 				} catch (XMPPException e) {
-					e.printStackTrace();
 				}
 			
                 otherXmppClient.login();
@@ -213,10 +208,8 @@ public class TestIAmAlive {
                 try {
         			Thread.sleep(2);
         		} catch (InterruptedException e1) {
-        			e1.printStackTrace();
         		}                
             } catch (XMPPException e) {
-                e.printStackTrace();
             } finally {
                 otherXmppClient.disconnect();
             }
@@ -237,7 +230,6 @@ public class TestIAmAlive {
             
             Assert.assertEquals(numberOfXmppClients, aliveIDs.size());
         } catch (XMPPException e) {
-            e.printStackTrace();
         }
     }
     
@@ -250,7 +242,6 @@ public class TestIAmAlive {
             response = (IQ) rendezvousTestHelper.getXmppClient().syncSend(iq);
             Assert.assertEquals(Type.result, response.getType());
         } catch (XMPPException e) {
-            e.printStackTrace();
         }
     }
 
@@ -260,7 +251,6 @@ public class TestIAmAlive {
         try{
             rendezvousTestHelper.disconnectRendezvousXMPPComponent();
         } catch (ComponentException e) {
-        	e.printStackTrace();
         }
     }    
 }

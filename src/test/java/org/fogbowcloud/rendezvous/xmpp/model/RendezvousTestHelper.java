@@ -54,13 +54,11 @@ public class RendezvousTestHelper {
             try {
 				register.createAccount(CLIENT, CLIENT_PASS);
 			} catch (XMPPException e) {
-				e.printStackTrace();
 			}
             
             xmppClient.login();
             xmppClient.process(false);
         }catch(XMPPException e){
-        	e.printStackTrace();
         }
         
     }
@@ -76,7 +74,6 @@ public class RendezvousTestHelper {
         try {
             rendezvousXmppComponent.connect();
         } catch (ComponentException e1) {
-            e1.printStackTrace();
         }
 
         rendezvousXmppComponent.process();
@@ -105,8 +102,6 @@ public class RendezvousTestHelper {
 
     public ArrayList<String> getAliveIdsFromIQ(IQ responseFromWhoIsAliveIQ) {
         ArrayList<String> aliveIds = new ArrayList<String>();
-
-        System.out.println("Quantidade de Users : " + getItemsFromIQ(responseFromWhoIsAliveIQ).size());
         
         for (WhoIsAliveResponseItem item : getItemsFromIQ(responseFromWhoIsAliveIQ)) {
             aliveIds.add(item.getResources().getId());
