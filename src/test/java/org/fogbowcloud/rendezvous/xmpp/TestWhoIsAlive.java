@@ -32,7 +32,7 @@ public class TestWhoIsAlive extends TestRendezvousXMPPComponent{
     
     @Test
     public void testWhoisAliveEmpty() {
-
+    	IQ response;
         IQ iq = createWhoIsAliveIQ();
         try {
             response = (IQ) xmppClient.syncSend(iq);
@@ -46,7 +46,7 @@ public class TestWhoIsAlive extends TestRendezvousXMPPComponent{
 
     @Test
     public void testWhoIsAliveAfterTimeout() throws InterruptedException {
-
+    	IQ response;
         IQ iq = createIAmAliveIQ();
 
         try {
@@ -78,7 +78,7 @@ public class TestWhoIsAlive extends TestRendezvousXMPPComponent{
     @Test
     public void testWhoIsAliveReturnedItemValue() throws InterruptedException,
             ParseException {
-        
+    	IQ response;
         //creating IAmAlive IQ
         IQ iq = new IQ(Type.get);
         iq.setTo(RENDEZVOUS_COMPONENT_URL);

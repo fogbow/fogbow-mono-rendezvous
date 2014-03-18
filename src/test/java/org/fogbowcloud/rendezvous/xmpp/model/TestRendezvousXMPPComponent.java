@@ -40,8 +40,6 @@ public class TestRendezvousXMPPComponent {
     protected XMPPClient xmppClient;
     protected RendezvousXMPPComponent rendezvousXmppComponent;
     protected XEP0077 register; 
-    
-    protected IQ response;
 
     protected void initializeXMPPClient() {
         register = new XEP0077();

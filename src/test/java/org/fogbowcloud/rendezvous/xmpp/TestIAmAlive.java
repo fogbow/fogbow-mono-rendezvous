@@ -32,7 +32,8 @@ public class TestIAmAlive extends TestRendezvousXMPPComponent{
     
     @Test(expected = XMPPException.class)
     public void testInvalidIQ() throws XMPPException {
-
+    	IQ response;
+    	
         String invalidNamespace = "invalidnamespace";
         IQ iq = new IQ(Type.get);
         iq.setTo(RENDEZVOUS_COMPONENT_URL);
@@ -43,6 +44,7 @@ public class TestIAmAlive extends TestRendezvousXMPPComponent{
     
     @Test
     public void testSyncImAliveSingleElement() {
+    	IQ response;
         IQ iq = createIAmAliveIQ();
 
         try {
@@ -77,13 +79,11 @@ public class TestIAmAlive extends TestRendezvousXMPPComponent{
                    
         xmppClient.on(filter, callback);
         xmppClient.send(iq);           
-       
-       
     }  
     
     @Test
     public void testIamAlive2EqualElements() {
-
+    	IQ response;
         IQ iq = createIAmAliveIQ();
 
         try {
@@ -111,7 +111,7 @@ public class TestIAmAlive extends TestRendezvousXMPPComponent{
     @Test
     public void testIamAlive2Clients() {
         // set up client 2
-        
+    	IQ response;
         XEP0077 reg = new XEP0077();
         
         XMPPClient xmppClient2 = new XMPPClient("testuser2@test.com", "testuser2",
@@ -159,7 +159,8 @@ public class TestIAmAlive extends TestRendezvousXMPPComponent{
     
     @Test
     public void testIamAliveManyClients() {
-
+    	IQ response;
+    	
         //stopping components and client
         tearDown();
         
@@ -230,6 +231,7 @@ public class TestIAmAlive extends TestRendezvousXMPPComponent{
     
     @Test
     public void testIAmLiveXmppResponse() {
+    	IQ response;
         IQ iq = createIAmAliveIQ();
 
         try {
