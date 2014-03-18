@@ -1,13 +1,9 @@
 package org.fogbowcloud.rendezvous.xmpp;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.fail;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 
-import org.dom4j.Attribute;
-import org.dom4j.Element;
-import org.fogbowcloud.rendezvous.core.ResourcesInfo;
 import org.fogbowcloud.rendezvous.xmpp.model.TestRendezvousXMPPComponent;
 import org.jamppa.client.XMPPClient;
 import org.jamppa.client.plugin.xep0077.XEP0077;
@@ -23,8 +19,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.xmpp.component.ComponentException;
 import org.xmpp.packet.IQ;
-import org.xmpp.packet.Packet;
 import org.xmpp.packet.IQ.Type;
+import org.xmpp.packet.Packet;
 
 public class TestIAmAlive extends TestRendezvousXMPPComponent{
 		

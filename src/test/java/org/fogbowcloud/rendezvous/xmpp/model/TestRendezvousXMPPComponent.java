@@ -2,35 +2,19 @@ package org.fogbowcloud.rendezvous.xmpp.model;
 
 import static org.junit.Assert.fail;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Iterator;
-import java.util.Locale;
-import java.util.TimeZone;
 
 import org.dom4j.Attribute;
 import org.dom4j.Element;
-import org.fogbowcloud.rendezvous.core.RendezvousItem;
 import org.fogbowcloud.rendezvous.core.ResourcesInfo;
 import org.fogbowcloud.rendezvous.xmpp.RendezvousXMPPComponent;
 import org.jamppa.client.XMPPClient;
 import org.jamppa.client.plugin.xep0077.XEP0077;
-import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.XMPPException;
-import org.jivesoftware.smack.filter.AndFilter;
-import org.jivesoftware.smack.filter.PacketFilter;
-import org.jivesoftware.smack.filter.PacketTypeFilter;
-import org.jivesoftware.smack.filter.ToContainsFilter;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
 import org.xmpp.component.ComponentException;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.IQ.Type;
-import org.xmpp.packet.Packet;
 
 public class TestRendezvousXMPPComponent {
 
@@ -117,7 +101,8 @@ public class TestRendezvousXMPPComponent {
         return aliveIds;
     }
 
-    protected ArrayList<WhoIsAliveResponseItem> getItemsFromIQ(
+    @SuppressWarnings("unchecked")
+	protected ArrayList<WhoIsAliveResponseItem> getItemsFromIQ(
             IQ responseFromWhoIsAliveIQ) {
         Element queryElement = responseFromWhoIsAliveIQ.getElement().element(
                 "query");

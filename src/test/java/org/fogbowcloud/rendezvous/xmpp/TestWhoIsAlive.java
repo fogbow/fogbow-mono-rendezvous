@@ -1,23 +1,18 @@
 package org.fogbowcloud.rendezvous.xmpp;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.fail;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.Locale;
 import java.util.TimeZone;
 
-import org.dom4j.Attribute;
 import org.dom4j.Element;
 import org.fogbowcloud.rendezvous.core.RendezvousItem;
-import org.fogbowcloud.rendezvous.core.ResourcesInfo;
 import org.fogbowcloud.rendezvous.xmpp.model.TestRendezvousXMPPComponent;
 import org.fogbowcloud.rendezvous.xmpp.model.WhoIsAliveResponseItem;
-import org.jamppa.client.XMPPClient;
-import org.jamppa.client.plugin.xep0077.XEP0077;
 import org.jivesoftware.smack.XMPPException;
 import org.junit.After;
 import org.junit.Assert;
