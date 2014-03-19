@@ -16,16 +16,16 @@ import org.xmpp.packet.IQ.Type;
 
 public class RendezvousTestHelper {
 
-    // server properties
+	// server properties
 	public static final int SERVER_CLIENT_PORT = 5222;
 	public static final int SERVER_COMPONENT_PORT = 5347;
 	public static final String SERVER_HOST = "localhost";
 
-    // client properties
+	// client properties
 	public static final String CLIENT = "testuser@test.com";
 	public static final String CLIENT_PASS = "testuser";
 
-    // rendezvous component properties
+	// rendezvous component properties
 	public static final String RENDEZVOUS_COMPONENT_URL = "rendezvous.test.com";
 	public static final String RENDEZVOUS_COMPONENT_PASS = "password";
 
@@ -35,122 +35,134 @@ public class RendezvousTestHelper {
 	public static final int TEST_DEFAULT_TIMEOUT = 10000;
 	public static final int TIMEOUT_GRACE = 500;
 
-    private XMPPClient xmppClient;
-    private RendezvousXMPPComponent rendezvousXmppComponent;
-    private XEP0077 register; 
+	public static final int SEARCH_FIRST_XMPPCLIENT_CREATED = 0;
+	public static final int SEARCH_SECOND_XMPPCLIENT_CREATED = 1;
 
-    public RendezvousTestHelper() {
+	private RendezvousXMPPComponent rendezvousXmppComponent;
+	private XEP0077 register;
+
+	private ArrayList<XMPPClient> xmppClients = new ArrayList();
+
+	public RendezvousTestHelper() {
 	}
-    
-    public void initializeXMPPClient() {
-        register = new XEP0077();
-        xmppClient = new XMPPClient(CLIENT, CLIENT_PASS, SERVER_HOST,
-                SERVER_CLIENT_PORT);
-      
-        try{
-            xmppClient.registerPlugin(register);
-            xmppClient.connect();
-            
-            try {
+
+	public XMPPClient createXMPPClient() {
+		register = new XEP0077();
+		int numeroUsuario = this.xmppClients.size();
+		final String CLIENT = "user" + numeroUsuario + "@test.com";
+		final String CLIENT_PASS = "user" + numeroUsuario;
+		XMPPClient xmppClient = new XMPPClient(CLIENT, CLIENT_PASS,
+				SERVER_HOST, SERVER_CLIENT_PORT);
+
+		try {
+			xmppClient.registerPlugin(register);
+			xmppClient.connect();
+
+			try {
 				register.createAccount(CLIENT, CLIENT_PASS);
 			} catch (XMPPException e) {
 			}
-            
-            xmppClient.login();
-            xmppClient.process(false);
-        }catch(XMPPException e){
-        }
-        
-    }
 
-    public void initializeXMPPRendezvousComponent(int timeout) {
-        rendezvousXmppComponent = new RendezvousXMPPComponent(
-                RENDEZVOUS_COMPONENT_URL, RENDEZVOUS_COMPONENT_PASS,
-                SERVER_HOST, SERVER_COMPONENT_PORT, timeout);
+			xmppClient.login();
+			xmppClient.process(false);
 
-        rendezvousXmppComponent.setDescription("Rendezvous Component");
-        rendezvousXmppComponent.setName("rendezvous");
-        
-        try {
-            rendezvousXmppComponent.connect();
-        } catch (ComponentException e1) {
-        }
+			xmppClients.add(xmppClient);
+			return xmppClient;
+		} catch (XMPPException e) {
+			return null;
+		}
+	}
 
-        rendezvousXmppComponent.process();
-        
-    }
-    
-    public void disconnectXMPPClient(){
-    	xmppClient.disconnect();
-    }
-    
-    public void disconnectRendezvousXMPPComponent() throws ComponentException{
-    	rendezvousXmppComponent.disconnect();
-    }
+	public String returnNameXMPPClientOnList(int valuePositionCLient) {
+		return this.xmppClients.get(valuePositionCLient).getJid().toString();
+	}
 
-    public IQ createIAmAliveIQ() {
-        IQ iq = new IQ(Type.get);
-        iq.setTo(RENDEZVOUS_COMPONENT_URL);
-        Element statusEl = iq.getElement()
-                .addElement("query", IAMALIVE_NAMESPACE).addElement("status");
-        statusEl.addElement("cpu-idle").setText("valor1");
-        statusEl.addElement("cpu-inuse").setText("valor2");
-        statusEl.addElement("mem-idle").setText("valor3");
-        statusEl.addElement("mem-inuse").setText("valor4");
-        return iq;
-    }
+	public void disconnectXMPPClients() {
+		for (XMPPClient xmppClient : this.xmppClients) {
+			xmppClient.disconnect();
+		}
+	}
 
-    public ArrayList<String> getAliveIdsFromIQ(IQ responseFromWhoIsAliveIQ) {
-        ArrayList<String> aliveIds = new ArrayList<String>();
-        
-        for (WhoIsAliveResponseItem item : getItemsFromIQ(responseFromWhoIsAliveIQ)) {
-            aliveIds.add(item.getResources().getId());
-        }
+	public void initializeXMPPRendezvousComponent(int timeout) {
+		rendezvousXmppComponent = new RendezvousXMPPComponent(
+				RENDEZVOUS_COMPONENT_URL, RENDEZVOUS_COMPONENT_PASS,
+				SERVER_HOST, SERVER_COMPONENT_PORT, timeout);
 
-        return aliveIds;
-    }
+		rendezvousXmppComponent.setDescription("Rendezvous Component");
+		rendezvousXmppComponent.setName("rendezvous");
 
-    @SuppressWarnings("unchecked")
-    public ArrayList<WhoIsAliveResponseItem> getItemsFromIQ(
-            IQ responseFromWhoIsAliveIQ) {
-        Element queryElement = responseFromWhoIsAliveIQ.getElement().element(
-                "query");
-        Iterator<Element> itemIterator = queryElement.elementIterator("item");
+		try {
+			rendezvousXmppComponent.connect();
+		} catch (ComponentException e1) {
+		}
 
-        ArrayList<WhoIsAliveResponseItem> aliveItems = new ArrayList<WhoIsAliveResponseItem>();
+		rendezvousXmppComponent.process();
 
-        while (itemIterator.hasNext()) {
-            Element itemEl = (Element) itemIterator.next();
+	}
 
-            Attribute id = itemEl.attribute("id");
-            Element statusEl = itemEl.element("status");
+	public void disconnectRendezvousXMPPComponent() throws ComponentException {
+		rendezvousXmppComponent.disconnect();
+	}
 
-            String cpuIdle = statusEl.element("cpu-idle").getText();
-            String cpuInUse = statusEl.element("cpu-inuse").getText();
-            String memIdle = statusEl.element("mem-idle").getText();
-            String memInUse = statusEl.element("mem-inuse").getText();
-            String updated = statusEl.element("updated").getText();
+	public IQ createIAmAliveIQ() {
+		IQ iq = new IQ(Type.get);
+		iq.setTo(RENDEZVOUS_COMPONENT_URL);
+		Element statusEl = iq.getElement()
+				.addElement("query", IAMALIVE_NAMESPACE).addElement("status");
+		statusEl.addElement("cpu-idle").setText("valor1");
+		statusEl.addElement("cpu-inuse").setText("valor2");
+		statusEl.addElement("mem-idle").setText("valor3");
+		statusEl.addElement("mem-inuse").setText("valor4");
+		return iq;
+	}
 
-            ResourcesInfo resources = new ResourcesInfo(id.getValue(), cpuIdle,
-                    cpuInUse, memIdle, memInUse);
-            WhoIsAliveResponseItem item = new WhoIsAliveResponseItem(resources,
-                    updated);
-            aliveItems.add(item);
-        }
+	public ArrayList<String> getAliveIdsFromIQ(IQ responseFromWhoIsAliveIQ) {
+		ArrayList<String> aliveIds = new ArrayList<String>();
 
-        return aliveItems;
-    }
+		for (WhoIsAliveResponseItem item : getItemsFromIQ(responseFromWhoIsAliveIQ)) {
+			aliveIds.add(item.getResources().getId());
+		}
 
-    public IQ createWhoIsAliveIQ() {
-        IQ iq;
-        iq = new IQ(Type.get);
-        iq.setTo(RENDEZVOUS_COMPONENT_URL);
-        iq.getElement().addElement("query", WHOISALIVE_NAMESPACE);
-        return iq;
-    }
+		return aliveIds;
+	}
 
-	public XMPPClient getXmppClient() {
-		return xmppClient;
+	@SuppressWarnings("unchecked")
+	public ArrayList<WhoIsAliveResponseItem> getItemsFromIQ(
+			IQ responseFromWhoIsAliveIQ) {
+		Element queryElement = responseFromWhoIsAliveIQ.getElement().element(
+				"query");
+		Iterator<Element> itemIterator = queryElement.elementIterator("item");
+
+		ArrayList<WhoIsAliveResponseItem> aliveItems = new ArrayList<WhoIsAliveResponseItem>();
+
+		while (itemIterator.hasNext()) {
+			Element itemEl = (Element) itemIterator.next();
+
+			Attribute id = itemEl.attribute("id");
+			Element statusEl = itemEl.element("status");
+
+			String cpuIdle = statusEl.element("cpu-idle").getText();
+			String cpuInUse = statusEl.element("cpu-inuse").getText();
+			String memIdle = statusEl.element("mem-idle").getText();
+			String memInUse = statusEl.element("mem-inuse").getText();
+			String updated = statusEl.element("updated").getText();
+
+			ResourcesInfo resources = new ResourcesInfo(id.getValue(), cpuIdle,
+					cpuInUse, memIdle, memInUse);
+			WhoIsAliveResponseItem item = new WhoIsAliveResponseItem(resources,
+					updated);
+			aliveItems.add(item);
+		}
+
+		return aliveItems;
+	}
+
+	public IQ createWhoIsAliveIQ() {
+		IQ iq;
+		iq = new IQ(Type.get);
+		iq.setTo(RENDEZVOUS_COMPONENT_URL);
+		iq.getElement().addElement("query", WHOISALIVE_NAMESPACE);
+		return iq;
 	}
 
 	public RendezvousXMPPComponent getRendezvousXmppComponent() {
