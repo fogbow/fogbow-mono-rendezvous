@@ -9,12 +9,12 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.apache.log4j.Logger;
 import org.fogbowcloud.rendezvous.core.model.DateUtils;
 
 public class RendezvousImpl implements Rendezvous {
 
-    public static final long TIMEOUT_DEFAULT = 3 * 60 * 1000;
-    private static final long PERIOD = 50;
+	private static final Logger LOGGER = Logger.getLogger(RendezvousImpl.class);
 
     private final long timeOut;
     private final Timer timer = new Timer();
@@ -22,7 +22,10 @@ public class RendezvousImpl implements Rendezvous {
     private boolean inError = false;
 	private DateUtils dateUnit;
 
-    public RendezvousImpl(long timeOut) {
+	public static final long TIMEOUT_DEFAULT = 3 * 60 * 1000;
+	private static final long PERIOD = 50;
+
+	public RendezvousImpl(long timeOut) {
         if (timeOut < 0) {
             throw new IllegalArgumentException();
         }
@@ -31,31 +34,37 @@ public class RendezvousImpl implements Rendezvous {
         collectsNotAlive();
     }
 
-    public RendezvousImpl() {
-        this(TIMEOUT_DEFAULT);
-    }
+	public RendezvousImpl() {
+		this(TIMEOUT_DEFAULT);
+	}
 
-    public void iAmAlive(ResourcesInfo resourcesInfo) {
-        if (resourcesInfo == null) {
-            throw new IllegalArgumentException();
-        }
+	public void iAmAlive(ResourcesInfo resourcesInfo) {
+		if (resourcesInfo == null) {
+			throw new IllegalArgumentException();
+		}
+//		LOGGER.info("Receiving iAmAlive from '" + resourcesInfo.getId()
+//				+ "': MemIdle : '" + resourcesInfo.getMemIdle()
+//				+ "'; MemInUse : '" + resourcesInfo.getMemInUse()
+//				+ "'; CpuIdle : '" + resourcesInfo.getCpuIdle()
+//				+ "'; CPuInUse : '" + resourcesInfo.getCpuInUse() + "'");
+		aliveIDs.put(resourcesInfo.getId(), new RendezvousItem(resourcesInfo));
+	}
 
-        aliveIDs.put(resourcesInfo.getId(), new RendezvousItem(resourcesInfo));
-    }
+	public List<RendezvousItem> whoIsAlive() {
+//		LOGGER.debug("WhoISAlive done.");
+		return new ArrayList<RendezvousItem>(aliveIDs.values());
+	}
 
-    public List<RendezvousItem> whoIsAlive() {
-        return new ArrayList<RendezvousItem>(aliveIDs.values());
-    }
+	private void collectsNotAlive() {
+		timer.schedule(new TimerTask() {
 
-    private void collectsNotAlive() {
-        timer.schedule(new TimerTask() {
+			@Override
+			public void run() {
+				checkExpiredAliveIDs();
+			}
+		}, 0, PERIOD);
+	}
 
-            @Override
-            public void run() {
-                checkExpiredAliveIDs();
-            }
-        }, 0, PERIOD);
-    }
 
     protected void checkExpiredAliveIDs() {
         Iterator<Entry<String, RendezvousItem>> iter = aliveIDs.entrySet()
@@ -66,6 +75,8 @@ public class RendezvousImpl implements Rendezvous {
                 if (((entry.getValue()).getLastTime() + timeOut)< dateUnit
 						.currentTimeMillis()) {
                     iter.remove();
+//                    LOGGER.info(entry.getValue().getResourcesInfo().getId()
+//							+ " expired.");
                 }
             } catch (ConcurrentModificationException e) {
                 inError = true;
