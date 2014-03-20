@@ -9,6 +9,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.fogbowcloud.rendezvous.core.model.DateUtils;
+
 public class RendezvousImpl implements Rendezvous {
 
     public static final long TIMEOUT_DEFAULT = 3 * 60 * 1000;
@@ -18,12 +20,14 @@ public class RendezvousImpl implements Rendezvous {
     private final Timer timer = new Timer();
     private final ConcurrentHashMap<String, RendezvousItem> aliveIDs = new ConcurrentHashMap<String, RendezvousItem>();
     private boolean inError = false;
+	private DateUtils dateUnit;
 
     public RendezvousImpl(long timeOut) {
         if (timeOut < 0) {
             throw new IllegalArgumentException();
         }
         this.timeOut = timeOut;
+		dateUnit = new DateUtils();
         collectsNotAlive();
     }
 
@@ -53,14 +57,14 @@ public class RendezvousImpl implements Rendezvous {
         }, 0, PERIOD);
     }
 
-    private void checkExpiredAliveIDs() {
+    protected void checkExpiredAliveIDs() {
         Iterator<Entry<String, RendezvousItem>> iter = aliveIDs.entrySet()
                 .iterator();
         while (iter.hasNext()) {
             try {
                 Entry<String, RendezvousItem> entry = iter.next();
-                if ((entry.getValue()).getLastTime() + timeOut < System
-                        .currentTimeMillis()) {
+                if (((entry.getValue()).getLastTime() + timeOut)< dateUnit
+						.currentTimeMillis()) {
                     iter.remove();
                 }
             } catch (ConcurrentModificationException e) {
@@ -72,4 +76,15 @@ public class RendezvousImpl implements Rendezvous {
     protected boolean getInError() {
         return inError;
     }
+    
+    protected void setDateUnit(DateUtils dataUnit){
+		this.dateUnit = dataUnit;
+	}
+	
+	
+	protected void setLastTime(String id, long lastTime){
+		if (aliveIDs.get(id) != null ){
+			aliveIDs.get(id).setLastTime(lastTime);
+		}
+	}
 }

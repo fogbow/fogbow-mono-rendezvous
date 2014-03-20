@@ -3,12 +3,10 @@ package org.fogbowcloud.rendezvous.core;
 import java.util.Date;
 import java.util.List;
 
-import org.fogbowcloud.rendezvous.core.Rendezvous;
-import org.fogbowcloud.rendezvous.core.RendezvousImpl;
-import org.fogbowcloud.rendezvous.core.RendezvousItem;
-import org.fogbowcloud.rendezvous.core.ResourcesInfo;
+import org.fogbowcloud.rendezvous.core.model.DateUtils;
 import org.junit.Assert;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 public class RendezvousTest {
 
@@ -165,53 +163,150 @@ public class RendezvousTest {
 
     @Test
     public void testWhoIsAliveAfterTime() throws InterruptedException {
-        Rendezvous r = new RendezvousImpl(TIMEOUT);
-        ResourcesInfo resources = new ResourcesInfo("id", "value1", "value2",
-                "value3", "value4");
-        r.iAmAlive(resources);
-        Assert.assertEquals(1, r.whoIsAlive().size());
-        Thread.sleep(TIMEOUT + TIMEOUT_GRACE);
-        Assert.assertEquals(0, r.whoIsAlive().size());
+    	RendezvousImpl r = new RendezvousImpl(TIMEOUT);
+
+		ResourcesInfo resources = new ResourcesInfo("id", "value1", "value2",
+				"value3", "value4");
+
+		r.iAmAlive(resources);
+
+		Assert.assertEquals(1, r.whoIsAlive().size());
+
+		// mocking data
+		DateUtils dateMock = Mockito.mock(DateUtils.class);
+		long timeAfterTimeout = new DateUtils().currentTimeMillis() + TIMEOUT
+				+ TIMEOUT_GRACE;
+		Mockito.when(dateMock.currentTimeMillis()).thenReturn(timeAfterTimeout);
+		r.setDateUnit(dateMock);
+
+		// checking expired alive ids
+		r.checkExpiredAliveIDs();
+
+		Assert.assertEquals(0, r.whoIsAlive().size());
     }
 
     @Test
     public void testWhoIsAliveAfterTimeManyElements()
             throws InterruptedException {
-        Rendezvous r = new RendezvousImpl(TIMEOUT);
-        ResourcesInfo resources = new ResourcesInfo("id", "value1", "value2",
-                "value3", "value4");
-        r.iAmAlive(resources);
-        Assert.assertEquals(1, r.whoIsAlive().size());
-        Thread.sleep(TIMEOUT / 2 + TIMEOUT_GRACE);
-        Assert.assertEquals(1, r.whoIsAlive().size());
-        ResourcesInfo resources2 = new ResourcesInfo("id2", "value1", "value2",
-                "value3", "value4");
-        r.iAmAlive(resources2);
-        Assert.assertEquals(2, r.whoIsAlive().size());
-        Thread.sleep(TIMEOUT / 2 + TIMEOUT_GRACE);
-        Assert.assertEquals(1, r.whoIsAlive().size());
-        Thread.sleep(TIMEOUT / 2 + TIMEOUT_GRACE);
-        Assert.assertEquals(0, r.whoIsAlive().size());
+    	RendezvousImpl r = new RendezvousImpl(TIMEOUT);
+
+		ResourcesInfo resources = new ResourcesInfo("id", "value1", "value2",
+				"value3", "value4");
+		r.iAmAlive(resources);
+		Assert.assertEquals(1, r.whoIsAlive().size());
+
+		// mocking data
+		long currentTime = new DateUtils().currentTimeMillis();
+		long halfTimeoutInterval = TIMEOUT / 2 + TIMEOUT_GRACE;
+		long firstPassageOfTime = currentTime + halfTimeoutInterval;
+		long secondPassageOfTime = firstPassageOfTime + halfTimeoutInterval;
+		long thirdPassageOfTime = secondPassageOfTime + halfTimeoutInterval;
+
+		DateUtils dateMock = Mockito.mock(DateUtils.class);
+		Mockito.when(dateMock.currentTimeMillis()).thenReturn(
+				firstPassageOfTime, secondPassageOfTime, secondPassageOfTime,
+				thirdPassageOfTime);
+		r.setDateUnit(dateMock);
+
+		// first passage of time
+
+		r.checkExpiredAliveIDs();
+		Assert.assertEquals(1, r.whoIsAlive().size());
+
+		// IAmAlive of new id
+		ResourcesInfo resources2 = new ResourcesInfo("id2", "value1", "value2",
+				"value3", "value4");
+		r.iAmAlive(resources2);
+		r.setLastTime("id2", firstPassageOfTime + 3);
+
+		Assert.assertEquals(2, r.whoIsAlive().size());
+
+		// second passage of time
+
+		r.checkExpiredAliveIDs();
+		Assert.assertEquals(1, r.whoIsAlive().size());
+
+		// third passage of time
+
+		r.checkExpiredAliveIDs();
+		Assert.assertEquals(0, r.whoIsAlive().size());
     }
 
     @Test
     public void testConcurrentIAmAlive() throws InterruptedException {
-        Rendezvous r = new RendezvousImpl(TIMEOUT);
-        for (int i = 0; i < 10; i++) {
-            r.iAmAlive(new ResourcesInfo("Element" + i, "value1", "value2",
-                    "value3", "value4"));
-            Thread.sleep(TIMEOUT / 20);
-            Assert.assertEquals(i + 1, r.whoIsAlive().size());
-        }
-        for (int i = 0; i < 10; i++) {
-            r.iAmAlive(new ResourcesInfo("Element" + i, "value1", "value2",
-                    "value3", "value4"));
-            Thread.sleep(TIMEOUT / 20);
-            Assert.assertEquals(10, r.whoIsAlive().size());
-        }
-        Assert.assertEquals(10, r.whoIsAlive().size());
-        Thread.sleep(TIMEOUT + TIMEOUT_GRACE);
-        Assert.assertEquals(0, r.whoIsAlive().size());
+    	RendezvousImpl r = new RendezvousImpl(TIMEOUT);
+
+		long shortInterval = TIMEOUT / 20;
+
+		long currentTime = new DateUtils().currentTimeMillis();
+
+		DateUtils dateMock;
+
+		int numberOfClients = 10;
+		for (int i = 0; i < numberOfClients; i++) {
+			// simulating short passage of time
+			currentTime += shortInterval + 3;
+
+			// IAmAlive of new id
+			String id = "Element" + i;
+			r.iAmAlive(new ResourcesInfo(id, "value1", "value2", "value3",
+					"value4"));
+			r.setLastTime(id, currentTime);
+
+			// mocking date to check expired
+			dateMock = Mockito.mock(DateUtils.class);
+			Mockito.when(dateMock.currentTimeMillis())
+					.thenReturn(++currentTime);
+			r.setDateUnit(dateMock);
+
+			// checking expired alive ids
+			r.checkExpiredAliveIDs();
+
+			// assert new id was added
+			Assert.assertEquals(i + 1, r.whoIsAlive().size());
+		}
+
+		for (int i = 0; i < numberOfClients; i++) {
+			// simulating short passage of time
+			currentTime += shortInterval + 3;
+
+			// IAmAlive client from already existing client
+			String id = "Element" + i;
+			r.iAmAlive(new ResourcesInfo(id, "value1", "value2", "value3",
+					"value4"));
+			r.setLastTime(id, currentTime);
+
+			// mocking date to check expired
+			dateMock = Mockito.mock(DateUtils.class);
+			Mockito.when(dateMock.currentTimeMillis())
+					.thenReturn(++currentTime);
+			r.setDateUnit(dateMock);
+
+			// checking expired alive ids
+			r.checkExpiredAliveIDs();
+
+			// assert all ids were alive
+			Assert.assertEquals(numberOfClients, r.whoIsAlive().size());
+		}
+
+		Assert.assertEquals(numberOfClients, r.whoIsAlive().size());
+
+		// simulating passage of time bigger than timeout
+		long bigInterval = TIMEOUT + TIMEOUT_GRACE;
+		currentTime += bigInterval;
+
+		Long firstReturn = ++currentTime;
+
+		// mocking date to check expired
+		dateMock = Mockito.mock(DateUtils.class);
+		Mockito.when(dateMock.currentTimeMillis()).thenReturn(firstReturn);
+		r.setDateUnit(dateMock);
+
+		// checking expired alive ids
+		r.checkExpiredAliveIDs();
+
+		// assert there was not ids alive
+		Assert.assertEquals(0, r.whoIsAlive().size());
     }
 
     @Test
