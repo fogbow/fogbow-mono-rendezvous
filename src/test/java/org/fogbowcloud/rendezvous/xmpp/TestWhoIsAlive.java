@@ -26,72 +26,49 @@ public class TestWhoIsAlive {
 	private RendezvousTestHelper rendezvousTestHelper;
 
 	@Before
-	public void setUp() {
-
+	public void setUp() throws ComponentException {
 		rendezvousTestHelper = new RendezvousTestHelper();
-
 		rendezvousTestHelper
 				.initializeXMPPRendezvousComponent(RendezvousTestHelper.TEST_DEFAULT_TIMEOUT);
 	}
 
 	@Test
-	public void testWhoisAliveEmpty() {
-		IQ response;
+	public void testWhoisAliveEmpty() throws XMPPException {
 		IQ iq = rendezvousTestHelper.createWhoIsAliveIQ();
-
 		XMPPClient xmppClient = rendezvousTestHelper.createXMPPClient();
-
-		try {
-			response = (IQ) xmppClient.syncSend(iq);
-			ArrayList<String> aliveIDs = rendezvousTestHelper
-					.getAliveIdsFromIQ(response);
-			Assert.assertEquals(0, aliveIDs.size());
-		} catch (XMPPException e) {
-		}
+		IQ response = (IQ) xmppClient.syncSend(iq);
+		ArrayList<String> aliveIDs = rendezvousTestHelper.getAliveIds(response);
+		Assert.assertEquals(0, aliveIDs.size());
 	}
 
 	@Test
-	public void testWhoIsAliveAfterTimeout() throws InterruptedException {
-		IQ response;
+	public void testWhoIsAliveAfterTimeout() throws InterruptedException,
+			XMPPException {
 		IQ iq = rendezvousTestHelper.createIAmAliveIQ();
-
 		XMPPClient xmppClient = rendezvousTestHelper.createXMPPClient();
+		IQ response = (IQ) xmppClient.syncSend(iq);
+		Assert.assertEquals(Type.result, response.getType());
 
-		try {
-			response = (IQ) xmppClient.syncSend(iq);
-			Assert.assertEquals(Type.result, response.getType());
+		iq = rendezvousTestHelper.createWhoIsAliveIQ();
+		response = (IQ) xmppClient.syncSend(iq);
+		ArrayList<String> aliveIDs = rendezvousTestHelper.getAliveIds(response);
+		Assert.assertEquals(1, aliveIDs.size());
+		Assert.assertTrue(aliveIDs.contains(rendezvousTestHelper
+				.getClientName(0)));
 
-			iq = rendezvousTestHelper.createWhoIsAliveIQ();
-
-			response = (IQ) xmppClient.syncSend(iq);
-			ArrayList<String> aliveIDs = rendezvousTestHelper
-					.getAliveIdsFromIQ(response);
-
-			Assert.assertEquals(1, aliveIDs.size());
-			Assert.assertTrue(aliveIDs.contains(rendezvousTestHelper
-					.returnNameXMPPClientOnList(RendezvousTestHelper.SEARCH_FIRST_XMPPCLIENT_CREATED)));
-
-			// sleeping
-			Thread.sleep(RendezvousTestHelper.TEST_DEFAULT_TIMEOUT
-					+ RendezvousTestHelper.TIMEOUT_GRACE);
-
-			iq = rendezvousTestHelper.createWhoIsAliveIQ();
-
-			response = (IQ) xmppClient.syncSend(iq);
-			aliveIDs = rendezvousTestHelper.getAliveIdsFromIQ(response);
-
-			Assert.assertEquals(0, aliveIDs.size());
-		} catch (XMPPException e) {
-		}
+		Thread.sleep(RendezvousTestHelper.TEST_DEFAULT_TIMEOUT
+				+ RendezvousTestHelper.TIMEOUT_GRACE);
+		iq = rendezvousTestHelper.createWhoIsAliveIQ();
+		response = (IQ) xmppClient.syncSend(iq);
+		aliveIDs = rendezvousTestHelper.getAliveIds(response);
+		Assert.assertEquals(0, aliveIDs.size());
 	}
 
 	@Test
 	public void testWhoIsAliveReturnedItemValue() throws InterruptedException,
-			ParseException {
+			ParseException, XMPPException {
 		XMPPClient xmppClient = rendezvousTestHelper.createXMPPClient();
-
 		IQ response;
-		// creating IAmAlive IQ
 		IQ iq = new IQ(Type.get);
 		iq.setTo(RendezvousTestHelper.RENDEZVOUS_COMPONENT_URL);
 		Element statusEl = iq.getElement()
@@ -107,53 +84,36 @@ public class TestWhoIsAlive {
 		statusEl.addElement("mem-idle").setText(memIdleValue);
 		statusEl.addElement("mem-inuse").setText(memInUseValue);
 
-		try {
+		Date beforeMessage = new Date(System.currentTimeMillis());
+		response = (IQ) xmppClient.syncSend(iq);
+		Date afterMessage = new Date(System.currentTimeMillis());
+		Assert.assertEquals(Type.result, response.getType());
 
-			Date beforeMessage = new Date(System.currentTimeMillis());
-			response = (IQ) xmppClient.syncSend(iq);
-			Date afterMessage = new Date(System.currentTimeMillis());
+		iq = rendezvousTestHelper.createWhoIsAliveIQ();
+		response = (IQ) xmppClient.syncSend(iq);
+		ArrayList<WhoIsAliveResponseItem> responseItems = rendezvousTestHelper
+				.getItemsFromIQ(response);
+		WhoIsAliveResponseItem item = responseItems.get(0);
+		Assert.assertEquals(cpuIdleValue, item.getResources().getCpuIdle());
+		Assert.assertEquals(cpuInUseValue, item.getResources().getCpuInUse());
+		Assert.assertEquals(memIdleValue, item.getResources().getMemIdle());
+		Assert.assertEquals(memInUseValue, item.getResources().getMemInUse());
 
-			Assert.assertEquals(Type.result, response.getType());
-
-			iq = rendezvousTestHelper.createWhoIsAliveIQ();
-
-			response = (IQ) xmppClient.syncSend(iq);
-			ArrayList<WhoIsAliveResponseItem> responseItems = rendezvousTestHelper
-					.getItemsFromIQ(response);
-
-			// checking values from whoIsAlive
-			WhoIsAliveResponseItem item = responseItems.get(0);
-			Assert.assertEquals(cpuIdleValue, item.getResources().getCpuIdle());
-			Assert.assertEquals(cpuInUseValue, item.getResources()
-					.getCpuInUse());
-			Assert.assertEquals(memIdleValue, item.getResources().getMemIdle());
-			Assert.assertEquals(memInUseValue, item.getResources()
-					.getMemInUse());
-
-			ArrayList<String> aliveIDs = rendezvousTestHelper
-					.getAliveIdsFromIQ(response);
-
-			SimpleDateFormat format = new SimpleDateFormat(
-					RendezvousItem.ISO_8601_DATE_FORMAT, Locale.ROOT);
-			format.setTimeZone(TimeZone.getTimeZone("GMT"));
-
-			Date updated = new Date(format.parse(item.getUpdated()).getTime());
-
-			Assert.assertTrue(updated.after(beforeMessage));
-			Assert.assertTrue(updated.before(afterMessage));
-			Assert.assertTrue(aliveIDs.contains(rendezvousTestHelper
-					.returnNameXMPPClientOnList(RendezvousTestHelper.SEARCH_FIRST_XMPPCLIENT_CREATED)));
-			Assert.assertEquals(1, aliveIDs.size());
-		} catch (XMPPException e) {
-		}
+		ArrayList<String> aliveIDs = rendezvousTestHelper.getAliveIds(response);
+		SimpleDateFormat format = new SimpleDateFormat(
+				RendezvousItem.ISO_8601_DATE_FORMAT, Locale.ROOT);
+		format.setTimeZone(TimeZone.getTimeZone("GMT"));
+		Date updated = new Date(format.parse(item.getUpdated()).getTime());
+		Assert.assertTrue(updated.after(beforeMessage));
+		Assert.assertTrue(updated.before(afterMessage));
+		Assert.assertTrue(aliveIDs.contains(rendezvousTestHelper
+				.getClientName(0)));
+		Assert.assertEquals(1, aliveIDs.size());
 	}
 
 	@After
-	public void tearDown() {
+	public void tearDown() throws ComponentException {
 		rendezvousTestHelper.disconnectXMPPClients();
-		try {
-			rendezvousTestHelper.disconnectRendezvousXMPPComponent();
-		} catch (ComponentException e) {
-		}
+		rendezvousTestHelper.disconnectRendezvousXMPPComponent();
 	}
 }

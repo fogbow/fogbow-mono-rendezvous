@@ -16,16 +16,13 @@ import org.xmpp.packet.IQ.Type;
 
 public class RendezvousTestHelper {
 
-	// server properties
 	public static final int SERVER_CLIENT_PORT = 5222;
 	public static final int SERVER_COMPONENT_PORT = 5347;
 	public static final String SERVER_HOST = "localhost";
 
-	// client properties
 	public static final String CLIENT = "testuser@test.com";
 	public static final String CLIENT_PASS = "testuser";
 
-	// rendezvous component properties
 	public static final String RENDEZVOUS_COMPONENT_URL = "rendezvous.test.com";
 	public static final String RENDEZVOUS_COMPONENT_PASS = "password";
 
@@ -35,46 +32,33 @@ public class RendezvousTestHelper {
 	public static final int TEST_DEFAULT_TIMEOUT = 10000;
 	public static final int TIMEOUT_GRACE = 500;
 
-	public static final int SEARCH_FIRST_XMPPCLIENT_CREATED = 0;
-	public static final int SEARCH_SECOND_XMPPCLIENT_CREATED = 1;
-
 	private RendezvousXMPPComponent rendezvousXmppComponent;
 	private XEP0077 register;
 
-	private ArrayList<XMPPClient> xmppClients = new ArrayList();
+	private ArrayList<XMPPClient> xmppClients = new ArrayList<XMPPClient>();
 
-	public RendezvousTestHelper() {
-	}
-
-	public XMPPClient createXMPPClient(){
+	public XMPPClient createXMPPClient() throws XMPPException {
 		register = new XEP0077();
-		int numeroUsuario = this.xmppClients.size();
-		final String CLIENT = "user" + numeroUsuario + "@test.com";
-		final String CLIENT_PASS = "user" + numeroUsuario;
+		final String CLIENT = "user" + this.xmppClients.size() + "@test.com";
+		final String CLIENT_PASS = "user" + this.xmppClients.size();
+
 		XMPPClient xmppClient = new XMPPClient(CLIENT, CLIENT_PASS,
 				SERVER_HOST, SERVER_CLIENT_PORT);
-
+		xmppClient.registerPlugin(register);
+		xmppClient.connect();
 		try {
-			xmppClient.registerPlugin(register);
-			xmppClient.connect();
-
-			try {
-				register.createAccount(CLIENT, CLIENT_PASS);
-			} catch (XMPPException e) {
-			}
-
-			xmppClient.login();
-			xmppClient.process(false);
-
+			register.createAccount(CLIENT, CLIENT_PASS);
 		} catch (XMPPException e) {
 			return null;
-		}finally{
+		} finally {
+			xmppClient.login();
+			xmppClient.process(false);
 			xmppClients.add(xmppClient);
 			return xmppClient;
 		}
 	}
 
-	public String returnNameXMPPClientOnList(int valuePositionCLient) {		
+	public String getClientName(int valuePositionCLient) {
 		return this.xmppClients.get(valuePositionCLient).getJid().toString();
 	}
 
@@ -84,21 +68,15 @@ public class RendezvousTestHelper {
 		}
 	}
 
-	public void initializeXMPPRendezvousComponent(int timeout) {
+	public void initializeXMPPRendezvousComponent(int timeout)
+			throws ComponentException {
 		rendezvousXmppComponent = new RendezvousXMPPComponent(
 				RENDEZVOUS_COMPONENT_URL, RENDEZVOUS_COMPONENT_PASS,
 				SERVER_HOST, SERVER_COMPONENT_PORT, timeout);
-
 		rendezvousXmppComponent.setDescription("Rendezvous Component");
 		rendezvousXmppComponent.setName("rendezvous");
-
-		try {
-			rendezvousXmppComponent.connect();
-		} catch (ComponentException e1) {
-		}
-
+		rendezvousXmppComponent.connect();
 		rendezvousXmppComponent.process();
-
 	}
 
 	public void disconnectRendezvousXMPPComponent() throws ComponentException {
@@ -117,13 +95,11 @@ public class RendezvousTestHelper {
 		return iq;
 	}
 
-	public ArrayList<String> getAliveIdsFromIQ(IQ responseFromWhoIsAliveIQ) {
+	public ArrayList<String> getAliveIds(IQ responseFromWhoIsAliveIQ) {
 		ArrayList<String> aliveIds = new ArrayList<String>();
-
 		for (WhoIsAliveResponseItem item : getItemsFromIQ(responseFromWhoIsAliveIQ)) {
 			aliveIds.add(item.getResources().getId());
 		}
-
 		return aliveIds;
 	}
 
@@ -133,15 +109,12 @@ public class RendezvousTestHelper {
 		Element queryElement = responseFromWhoIsAliveIQ.getElement().element(
 				"query");
 		Iterator<Element> itemIterator = queryElement.elementIterator("item");
-
 		ArrayList<WhoIsAliveResponseItem> aliveItems = new ArrayList<WhoIsAliveResponseItem>();
 
 		while (itemIterator.hasNext()) {
 			Element itemEl = (Element) itemIterator.next();
-
 			Attribute id = itemEl.attribute("id");
 			Element statusEl = itemEl.element("status");
-
 			String cpuIdle = statusEl.element("cpu-idle").getText();
 			String cpuInUse = statusEl.element("cpu-inuse").getText();
 			String memIdle = statusEl.element("mem-idle").getText();
@@ -154,7 +127,6 @@ public class RendezvousTestHelper {
 					updated);
 			aliveItems.add(item);
 		}
-
 		return aliveItems;
 	}
 

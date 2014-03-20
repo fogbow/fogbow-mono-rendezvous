@@ -6,7 +6,6 @@ import java.util.concurrent.TimeUnit;
 
 import org.fogbowcloud.rendezvous.xmpp.model.RendezvousTestHelper;
 import org.jamppa.client.XMPPClient;
-import org.jamppa.client.plugin.xep0077.XEP0077;
 import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.filter.AndFilter;
@@ -27,168 +26,111 @@ public class TestIAmAlive {
 	private RendezvousTestHelper rendezvousTestHelper;
 
 	@Before
-	public void setUp() {
+	public void setUp() throws ComponentException {
 		rendezvousTestHelper = new RendezvousTestHelper();
-
 		rendezvousTestHelper
 				.initializeXMPPRendezvousComponent(RendezvousTestHelper.TEST_DEFAULT_TIMEOUT);
 	}
 
 	@Test(expected = XMPPException.class)
 	public void testInvalidIQ() throws XMPPException {
-		IQ response;
-
 		String invalidNamespace = "invalidnamespace";
 		IQ iq = new IQ(Type.get);
 		iq.setTo(RendezvousTestHelper.RENDEZVOUS_COMPONENT_URL);
 		iq.getElement().addElement("query", invalidNamespace);
-
 		XMPPClient xmppClient = rendezvousTestHelper.createXMPPClient();
-
-		response = (IQ) xmppClient.syncSend(iq);
-	}
-
-	@Test 
-	public void testSyncImAliveSingleElement() {
-		IQ response;
-		IQ iq = rendezvousTestHelper.createIAmAliveIQ();
-
-		XMPPClient xmppClient = rendezvousTestHelper.createXMPPClient();
-
-		try {
-			response = (IQ) xmppClient.syncSend(iq);
-			Assert.assertEquals(Type.result, response.getType());
-
-			iq = rendezvousTestHelper.createWhoIsAliveIQ();
-
-			response = (IQ) xmppClient.syncSend(iq);
-			ArrayList<String> aliveIDs = rendezvousTestHelper
-					.getAliveIdsFromIQ(response);
-
-			Assert.assertTrue(aliveIDs.contains(rendezvousTestHelper
-					.returnNameXMPPClientOnList(RendezvousTestHelper.SEARCH_FIRST_XMPPCLIENT_CREATED)));
-			Assert.assertEquals(1, aliveIDs.size());
-		} catch (XMPPException e) {
-		}
+		IQ response = (IQ) xmppClient.syncSend(iq);
 	}
 
 	@Test
-	public void testImAsyncAliveSingleElement() {
+	public void testSyncImAliveSingleElement() throws XMPPException {
+		IQ response;
 		IQ iq = rendezvousTestHelper.createIAmAliveIQ();
+		XMPPClient xmppClient = rendezvousTestHelper.createXMPPClient();
 
+		response = (IQ) xmppClient.syncSend(iq);
+		Assert.assertEquals(Type.result, response.getType());
+
+		iq = rendezvousTestHelper.createWhoIsAliveIQ();
+		response = (IQ) xmppClient.syncSend(iq);
+		ArrayList<String> aliveIDs = rendezvousTestHelper.getAliveIds(response);
+
+		Assert.assertTrue(aliveIDs.contains(rendezvousTestHelper
+				.getClientName(0)));
+		Assert.assertEquals(1, aliveIDs.size());
+	}
+
+	@Test
+	public void testImAsyncAliveSingleElement() throws XMPPException {
+		IQ iq = rendezvousTestHelper.createIAmAliveIQ();
 		XMPPClient xmppClient = rendezvousTestHelper.createXMPPClient();
 
 		PacketFilter filter = new AndFilter(
 				new PacketTypeFilter(IQ.class),
 				new ToContainsFilter(
 						rendezvousTestHelper
-								.returnNameXMPPClientOnList(RendezvousTestHelper.SEARCH_FIRST_XMPPCLIENT_CREATED)));
-
+								.getClientName(0)));
 		PacketListener callback = new PacketListener() {
 			public void processPacket(Packet packet) {
 				IQ response = (IQ) packet;
 				Assert.assertEquals(Type.result, response.getType());
 			}
 		};
-
 		xmppClient.on(filter, callback);
 		xmppClient.send(iq);
 	}
 
 	@Test
-	public void testIamAlive2EqualElements() {
+	public void testIamAlive2EqualElements() throws XMPPException {
 		IQ response;
 		IQ iq = rendezvousTestHelper.createIAmAliveIQ();
-
 		XMPPClient xmppClient = rendezvousTestHelper.createXMPPClient();
 
-		try {
-			response = (IQ) xmppClient.syncSend(iq);
-			Assert.assertEquals(Type.result, response.getType());
+		response = (IQ) xmppClient.syncSend(iq);
+		Assert.assertEquals(Type.result, response.getType());
+		iq = rendezvousTestHelper.createIAmAliveIQ();
+		response = (IQ) xmppClient.syncSend(iq);
+		Assert.assertEquals(Type.result, response.getType());
 
-			iq = rendezvousTestHelper.createIAmAliveIQ();
-
-			response = (IQ) xmppClient.syncSend(iq);
-			Assert.assertEquals(Type.result, response.getType());
-
-			iq = rendezvousTestHelper.createWhoIsAliveIQ();
-
-			response = (IQ) xmppClient.syncSend(iq);
-
-			ArrayList<String> aliveIDs = rendezvousTestHelper
-					.getAliveIdsFromIQ(response);
-
-			Assert.assertEquals(1, aliveIDs.size());
-			Assert.assertTrue(aliveIDs.contains(rendezvousTestHelper
-					.returnNameXMPPClientOnList(RendezvousTestHelper.SEARCH_FIRST_XMPPCLIENT_CREATED)));
-		} catch (XMPPException e) {
-		}
+		iq = rendezvousTestHelper.createWhoIsAliveIQ();
+		response = (IQ) xmppClient.syncSend(iq);
+		ArrayList<String> aliveIDs = rendezvousTestHelper.getAliveIds(response);
+		Assert.assertEquals(1, aliveIDs.size());
+		Assert.assertTrue(aliveIDs.contains(rendezvousTestHelper
+				.getClientName(0)));
 	}
 
 	@Test
-	public void testIamAlive2Clients() {
-		// set up client 2
-		IQ response;
-
+	public void testIamAlive2Clients() throws XMPPException {
 		XMPPClient xmppClient1 = rendezvousTestHelper.createXMPPClient();
 		XMPPClient xmppClient2 = rendezvousTestHelper.createXMPPClient();
+		IQ iq = rendezvousTestHelper.createIAmAliveIQ();
 
-		try {
+		IQ response = (IQ) xmppClient1.syncSend(iq);
+		Assert.assertEquals(Type.result, response.getType());
+		response = (IQ) xmppClient2.syncSend(iq);
+		Assert.assertEquals(Type.result, response.getType());
 
-			IQ iq = rendezvousTestHelper.createIAmAliveIQ();
-
-			// send am alive! from client 1
-			response = (IQ) xmppClient1.syncSend(iq);
-			Assert.assertEquals(Type.result, response.getType());
-
-			// send am alive! from client 2
-			response = (IQ) xmppClient2.syncSend(iq);
-			Assert.assertEquals(Type.result, response.getType());
-
-			// send Who is Alive?
-			iq = rendezvousTestHelper.createWhoIsAliveIQ();
-			response = (IQ) xmppClient1.syncSend(iq);
-			ArrayList<String> aliveIDs = rendezvousTestHelper
-					.getAliveIdsFromIQ(response);
-
-			// asserts
-			Assert.assertEquals(2, aliveIDs.size());
-			Assert.assertTrue(aliveIDs.contains(rendezvousTestHelper
-					.returnNameXMPPClientOnList(RendezvousTestHelper.SEARCH_FIRST_XMPPCLIENT_CREATED)));
-			Assert.assertTrue(aliveIDs.contains(rendezvousTestHelper
-					.returnNameXMPPClientOnList(RendezvousTestHelper.SEARCH_SECOND_XMPPCLIENT_CREATED)));
-
-		} catch (XMPPException e) {
-		} finally {
-			xmppClient2.disconnect();
-		}
+		iq = rendezvousTestHelper.createWhoIsAliveIQ();
+		response = (IQ) xmppClient1.syncSend(iq);
+		ArrayList<String> aliveIDs = rendezvousTestHelper.getAliveIds(response);
+		Assert.assertEquals(2, aliveIDs.size());
+		Assert.assertTrue(aliveIDs.contains(rendezvousTestHelper
+				.getClientName(0)));
+		Assert.assertTrue(aliveIDs.contains(rendezvousTestHelper
+				.getClientName(1)));
 	}
 
 	@Test
-	public void testIamAliveManyClients() {
-		IQ response;
-
-		// stopping components and client
-		tearDown();
-
-		// Initializing XMPP component with big Timeout
+	public void testIamAliveManyClients() throws XMPPException, ComponentException {
 		rendezvousTestHelper
 				.initializeXMPPRendezvousComponent(10000 * RendezvousTestHelper.TEST_DEFAULT_TIMEOUT);
-
-		// creating clients
-		int begin = 0;
 		int numberOfXmppClients = 800;
 
-		XMPPClient xmppClient;
-		for (int i = begin; i < begin + numberOfXmppClients; i++) {
-
-			xmppClient = rendezvousTestHelper.createXMPPClient();
-
+		for (int i = 0; i < numberOfXmppClients; i++) {
+			XMPPClient xmppClient = rendezvousTestHelper.createXMPPClient();
 			IQ iq = rendezvousTestHelper.createIAmAliveIQ();
-
-			String nameClient = rendezvousTestHelper
-					.returnNameXMPPClientOnList(i);
-
+			String nameClient = rendezvousTestHelper.getClientName(i);
 			PacketFilter filter = new AndFilter(new PacketTypeFilter(IQ.class),
 					new ToContainsFilter(nameClient));
 
@@ -198,125 +140,75 @@ public class TestIAmAlive {
 					Assert.assertEquals(Type.result, response.getType());
 				}
 			};
-
 			xmppClient.on(filter, callback);
 			xmppClient.send(iq);
 		}
 
 		XMPPClient xmppClient2 = rendezvousTestHelper.createXMPPClient();
-
-		try {
-			IQ iq = rendezvousTestHelper.createWhoIsAliveIQ();
-			response = (IQ) xmppClient2.syncSend(iq);
-			ArrayList<String> aliveIDs = rendezvousTestHelper
-					.getAliveIdsFromIQ(response);
-
-			for (int i = begin; i < begin + numberOfXmppClients; i++) {
-				String user = rendezvousTestHelper
-						.returnNameXMPPClientOnList(i);
-				Assert.assertTrue(aliveIDs.contains(user));
-			}
-
-			Assert.assertEquals(numberOfXmppClients, aliveIDs.size());
-		} catch (XMPPException e) {
+		IQ iq = rendezvousTestHelper.createWhoIsAliveIQ();
+		IQ response = (IQ) xmppClient2.syncSend(iq);
+		ArrayList<String> aliveIDs = rendezvousTestHelper.getAliveIds(response);
+		for (int i = 0; i < numberOfXmppClients; i++) {
+			String user = rendezvousTestHelper.getClientName(i);
+			Assert.assertTrue(aliveIDs.contains(user));
 		}
+		Assert.assertEquals(numberOfXmppClients, aliveIDs.size());
 	}
 
 	@Test
-	public void testIamAliveManyClientsWithSemaphore() {
-		IQ response;
-
-		// stopping components and client
-		tearDown();
-
-		// Initializing XMPP component with big Timeout
+	public void testIamAliveManyClientsWithSemaphore()
+			throws InterruptedException, XMPPException, ComponentException {
 		rendezvousTestHelper
 				.initializeXMPPRendezvousComponent(10000 * RendezvousTestHelper.TEST_DEFAULT_TIMEOUT);
-
-		// creating clients
 		int numberOfXmppClients = 1000;
-
 		final Semaphore semaphore = new Semaphore(0);
 		final long TIMEOUT_ALL_RESPONSE = 60000;
 
-		XMPPClient xmppClient;
-		for (int i = 0; i < numberOfXmppClients; i++) {			
-
-			xmppClient = rendezvousTestHelper.createXMPPClient();			
-			
+		for (int i = 0; i < numberOfXmppClients; i++) {
+			XMPPClient xmppClient = rendezvousTestHelper.createXMPPClient();
 			IQ iq = rendezvousTestHelper.createIAmAliveIQ();
-			
-			String nameClient = rendezvousTestHelper
-					.returnNameXMPPClientOnList(i);
-
+			String nameClient = rendezvousTestHelper.getClientName(i);
 			PacketFilter filter = new AndFilter(new PacketTypeFilter(IQ.class),
 					new ToContainsFilter(nameClient));
 
 			PacketListener callback = new PacketListener() {
 				public void processPacket(Packet packet) {
 					IQ response = (IQ) packet;
-					
 					semaphore.release();
-
 					Assert.assertEquals(Type.result, response.getType());
 				}
 			};
-
 			xmppClient.on(filter, callback);
 			xmppClient.send(iq);
-
 		}
+		
+		boolean receivedAllResults = false;
+		receivedAllResults = semaphore.tryAcquire(numberOfXmppClients,
+				TIMEOUT_ALL_RESPONSE, TimeUnit.MILLISECONDS);
 
-		boolean receivedAllResults = false;		
-
-		try {
-			receivedAllResults = semaphore.tryAcquire(numberOfXmppClients,
-					TIMEOUT_ALL_RESPONSE, TimeUnit.MILLISECONDS);
-			Assert.assertTrue(receivedAllResults);
-		} catch (InterruptedException e1) {
-			e1.printStackTrace();
-		}
-
+		Assert.assertTrue(receivedAllResults);
 		XMPPClient xmppClient2 = rendezvousTestHelper.createXMPPClient();
-
-		try {
-			IQ iq = rendezvousTestHelper.createWhoIsAliveIQ();
-			response = (IQ) xmppClient2.syncSend(iq);
-			ArrayList<String> aliveIDs = rendezvousTestHelper
-					.getAliveIdsFromIQ(response);
-
-			for (int i = 0; i < numberOfXmppClients; i++) {
-				String user = rendezvousTestHelper
-						.returnNameXMPPClientOnList(i);
-				Assert.assertTrue(aliveIDs.contains(user));
-			}
-
-			Assert.assertEquals(numberOfXmppClients, aliveIDs.size());
-		} catch (XMPPException e) {
+		IQ iq = rendezvousTestHelper.createWhoIsAliveIQ();
+		IQ response = (IQ) xmppClient2.syncSend(iq);
+		ArrayList<String> aliveIDs = rendezvousTestHelper.getAliveIds(response);
+		for (int i = 0; i < numberOfXmppClients; i++) {
+			String user = rendezvousTestHelper.getClientName(i);
+			Assert.assertTrue(aliveIDs.contains(user));
 		}
-
+		Assert.assertEquals(numberOfXmppClients, aliveIDs.size());
 	}
 
 	@Test
-	public void testIAmLiveXmppResponse() {
-		IQ response;
+	public void testIAmLiveXmppResponse() throws XMPPException {
 		IQ iq = rendezvousTestHelper.createIAmAliveIQ();
-
 		XMPPClient xmppClient = rendezvousTestHelper.createXMPPClient();
-
-		try {
-			response = (IQ) xmppClient.syncSend(iq);
-			Assert.assertEquals(Type.result, response.getType());
-		} catch (XMPPException e) {
-		}
+		IQ response = (IQ) xmppClient.syncSend(iq);
+		Assert.assertEquals(Type.result, response.getType());
 	}
 
 	@After
-	public void tearDown() {
+	public void tearDown() throws ComponentException {
 		rendezvousTestHelper.disconnectXMPPClients();
-		try {
-			rendezvousTestHelper.disconnectRendezvousXMPPComponent();
-		} catch (ComponentException e) {
-		}
+		rendezvousTestHelper.disconnectRendezvousXMPPComponent();
 	}
 }
