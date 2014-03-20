@@ -48,7 +48,7 @@ public class TestIAmAlive {
 		response = (IQ) xmppClient.syncSend(iq);
 	}
 
-	@Test
+	@Test 
 	public void testSyncImAliveSingleElement() {
 		IQ response;
 		IQ iq = rendezvousTestHelper.createIAmAliveIQ();
@@ -177,7 +177,7 @@ public class TestIAmAlive {
 
 		// creating clients
 		int begin = 0;
-		int numberOfXmppClients = 1000;
+		int numberOfXmppClients = 800;
 
 		XMPPClient xmppClient;
 		for (int i = begin; i < begin + numberOfXmppClients; i++) {
@@ -223,7 +223,7 @@ public class TestIAmAlive {
 	}
 
 	@Test
-	public void testIamAliveManyClientsWithSemaphore() throws Exception {
+	public void testIamAliveManyClientsWithSemaphore() {
 		IQ response;
 
 		// stopping components and client
@@ -237,15 +237,15 @@ public class TestIAmAlive {
 		int numberOfXmppClients = 1000;
 
 		final Semaphore semaphore = new Semaphore(0);
-		final long TIMEOUT_ALL_RESPONSE = 6000;
+		final long TIMEOUT_ALL_RESPONSE = 60000;
 
 		XMPPClient xmppClient;
 		for (int i = 0; i < numberOfXmppClients; i++) {			
 
-			xmppClient = rendezvousTestHelper.createXMPPClient();
-
+			xmppClient = rendezvousTestHelper.createXMPPClient();			
+			
 			IQ iq = rendezvousTestHelper.createIAmAliveIQ();
-
+			
 			String nameClient = rendezvousTestHelper
 					.returnNameXMPPClientOnList(i);
 
@@ -255,12 +255,9 @@ public class TestIAmAlive {
 			PacketListener callback = new PacketListener() {
 				public void processPacket(Packet packet) {
 					IQ response = (IQ) packet;
-					if (response
-							.getFrom()
-							.toString()
-							.equals(rendezvousTestHelper.RENDEZVOUS_COMPONENT_URL)) {
-						semaphore.release();
-					}
+					
+					semaphore.release();
+
 					Assert.assertEquals(Type.result, response.getType());
 				}
 			};
@@ -270,7 +267,7 @@ public class TestIAmAlive {
 
 		}
 
-		boolean receivedAllResults = false;
+		boolean receivedAllResults = false;		
 
 		try {
 			receivedAllResults = semaphore.tryAcquire(numberOfXmppClients,

@@ -46,7 +46,7 @@ public class RendezvousTestHelper {
 	public RendezvousTestHelper() {
 	}
 
-	public XMPPClient createXMPPClient() {
+	public XMPPClient createXMPPClient(){
 		register = new XEP0077();
 		int numeroUsuario = this.xmppClients.size();
 		final String CLIENT = "user" + numeroUsuario + "@test.com";
@@ -66,14 +66,15 @@ public class RendezvousTestHelper {
 			xmppClient.login();
 			xmppClient.process(false);
 
-			xmppClients.add(xmppClient);
-			return xmppClient;
 		} catch (XMPPException e) {
 			return null;
+		}finally{
+			xmppClients.add(xmppClient);
+			return xmppClient;
 		}
 	}
 
-	public String returnNameXMPPClientOnList(int valuePositionCLient) {
+	public String returnNameXMPPClientOnList(int valuePositionCLient) {		
 		return this.xmppClients.get(valuePositionCLient).getJid().toString();
 	}
 
