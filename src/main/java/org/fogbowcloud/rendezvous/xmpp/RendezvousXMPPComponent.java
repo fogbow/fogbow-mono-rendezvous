@@ -1,11 +1,10 @@
-package xmpp;
+package org.fogbowcloud.rendezvous.xmpp;
 
+import org.fogbowcloud.rendezvous.core.Rendezvous;
+import org.fogbowcloud.rendezvous.core.RendezvousImpl;
+import org.fogbowcloud.rendezvous.xmpp.handler.IAmAliveHandler;
+import org.fogbowcloud.rendezvous.xmpp.handler.WhoIsAliveHandler;
 import org.jamppa.component.XMPPComponent;
-import org.ourgrid.cloud.Rendezvous;
-import org.ourgrid.cloud.RendezvousImpl;
-
-import xmpp.handler.IAmAliveHandler;
-import xmpp.handler.WhoIsAliveHandler;
 
 public class RendezvousXMPPComponent extends XMPPComponent{
     
