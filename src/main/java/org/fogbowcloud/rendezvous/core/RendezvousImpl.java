@@ -30,7 +30,7 @@ public class RendezvousImpl implements Rendezvous {
 			throw new IllegalArgumentException();
 		}
 		this.timeOut = timeOut;
-		dateUnit = new DateUtils();
+		this.dateUnit = new DateUtils();
 		collectsNotAlive();
 	}
 
@@ -57,7 +57,6 @@ public class RendezvousImpl implements Rendezvous {
 
 	private void collectsNotAlive() {
 		timer.schedule(new TimerTask() {
-
 			@Override
 			public void run() {
 				checkExpiredAliveIDs();
@@ -66,16 +65,14 @@ public class RendezvousImpl implements Rendezvous {
 	}
 
 	protected void checkExpiredAliveIDs() {
-		Iterator<Entry<String, RendezvousItem>> iter = aliveIDs.entrySet()
-				.iterator();
+		Iterator<Entry<String, RendezvousItem>> iter = aliveIDs.entrySet().iterator();
 		while (iter.hasNext()) {
 			try {
 				Entry<String, RendezvousItem> entry = iter.next();
-				if (((entry.getValue()).getLastTime() + timeOut) < dateUnit
-						.currentTimeMillis()) {
+				RendezvousItem rendezvousItem = entry.getValue();
+				if ((rendezvousItem.getLastTime() + timeOut) < dateUnit.currentTimeMillis()) {
 					iter.remove();
-					LOGGER.info(entry.getValue().getResourcesInfo().getId()
-							+ " expired.");
+					LOGGER.info(rendezvousItem.getResourcesInfo().getId() + " expired.");
 				}
 			} catch (ConcurrentModificationException e) {
 				inError = true;

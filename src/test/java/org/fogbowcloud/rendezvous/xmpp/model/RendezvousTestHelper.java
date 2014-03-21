@@ -16,12 +16,9 @@ import org.xmpp.packet.IQ.Type;
 
 public class RendezvousTestHelper {
 
-	public static final int SERVER_CLIENT_PORT = 5222;
-	public static final int SERVER_COMPONENT_PORT = 5347;
-	public static final String SERVER_HOST = "localhost";
-
-	public static final String CLIENT = "testuser@test.com";
-	public static final String CLIENT_PASS = "testuser";
+	private static final int SERVER_CLIENT_PORT = 5222;
+	private static final int SERVER_COMPONENT_PORT = 5347;
+	private static final String SERVER_HOST = "localhost";
 
 	public static final String RENDEZVOUS_COMPONENT_URL = "rendezvous.test.com";
 	public static final String RENDEZVOUS_COMPONENT_PASS = "password";
@@ -33,35 +30,40 @@ public class RendezvousTestHelper {
 	public static final int TIMEOUT_GRACE = 500;
 
 	private RendezvousXMPPComponent rendezvousXmppComponent;
-	private XEP0077 register;
 
 	private ArrayList<XMPPClient> xmppClients = new ArrayList<XMPPClient>();
 
 	public XMPPClient createXMPPClient() throws XMPPException {
-		register = new XEP0077();
-		final String CLIENT = "user" + this.xmppClients.size() + "@test.com";
-		final String CLIENT_PASS = "user" + this.xmppClients.size();
-
+		int clientIndex = this.xmppClients.size();
+		
+		final String CLIENT = getClientJid(clientIndex);
+		final String CLIENT_PASS = getClientPassword(clientIndex);
+		
 		XMPPClient xmppClient = new XMPPClient(CLIENT, CLIENT_PASS,
 				SERVER_HOST, SERVER_CLIENT_PORT);
+		XEP0077 register = new XEP0077();
 		xmppClient.registerPlugin(register);
 		xmppClient.connect();
 		try {
 			register.createAccount(CLIENT, CLIENT_PASS);
 		} catch (XMPPException e) {
-			return null;
-		} finally {
-			xmppClient.login();
-			xmppClient.process(false);
-			xmppClients.add(xmppClient);
-			return xmppClient;
 		}
+		
+		xmppClient.login();
+		xmppClient.process(false);
+		xmppClients.add(xmppClient);
+		
+		return xmppClient;
 	}
 
-	public String getClientName(int valuePositionCLient) {
-		return this.xmppClients.get(valuePositionCLient).getJid().toString();
+	public static String getClientJid(int clientIndex) {
+		return "user" + clientIndex + "@test.com";
 	}
 
+	private static String getClientPassword(int clientIndex) {
+		return "user" + clientIndex;
+	}
+	
 	public void disconnectXMPPClients() {
 		for (XMPPClient xmppClient : this.xmppClients) {
 			xmppClient.disconnect();
@@ -83,7 +85,7 @@ public class RendezvousTestHelper {
 		rendezvousXmppComponent.disconnect();
 	}
 
-	public IQ createIAmAliveIQ() {
+	public static IQ createIAmAliveIQ() {
 		IQ iq = new IQ(Type.get);
 		iq.setTo(RENDEZVOUS_COMPONENT_URL);
 		Element statusEl = iq.getElement()
@@ -95,16 +97,16 @@ public class RendezvousTestHelper {
 		return iq;
 	}
 
-	public ArrayList<String> getAliveIds(IQ responseFromWhoIsAliveIQ) {
+	public static ArrayList<String> getAliveIds(IQ whoIsAliveResponse) {
 		ArrayList<String> aliveIds = new ArrayList<String>();
-		for (WhoIsAliveResponseItem item : getItemsFromIQ(responseFromWhoIsAliveIQ)) {
+		for (WhoIsAliveResponseItem item : getItemsFromIQ(whoIsAliveResponse)) {
 			aliveIds.add(item.getResources().getId());
 		}
 		return aliveIds;
 	}
 
 	@SuppressWarnings("unchecked")
-	public ArrayList<WhoIsAliveResponseItem> getItemsFromIQ(
+	public static ArrayList<WhoIsAliveResponseItem> getItemsFromIQ(
 			IQ responseFromWhoIsAliveIQ) {
 		Element queryElement = responseFromWhoIsAliveIQ.getElement().element(
 				"query");
@@ -130,19 +132,10 @@ public class RendezvousTestHelper {
 		return aliveItems;
 	}
 
-	public IQ createWhoIsAliveIQ() {
-		IQ iq;
-		iq = new IQ(Type.get);
+	public static IQ createWhoIsAliveIQ() {
+		IQ iq = new IQ(Type.get);
 		iq.setTo(RENDEZVOUS_COMPONENT_URL);
 		iq.getElement().addElement("query", WHOISALIVE_NAMESPACE);
 		return iq;
-	}
-
-	public RendezvousXMPPComponent getRendezvousXmppComponent() {
-		return rendezvousXmppComponent;
-	}
-
-	public XEP0077 getRegister() {
-		return register;
 	}
 }
