@@ -1,0 +1,5 @@
+xmpp_jid=rendezvous.test.com
+xmpp_password=password
+xmpp_host=127.0.0.1
+xmpp_port=5347
+sidy_expiration=10000

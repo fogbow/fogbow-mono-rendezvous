@@ -5,11 +5,11 @@ import java.util.Properties;
 
 public class Main {
 
-	private static final String PROP_JID = "prop_jid";
-	private static final String PROP_PASSWORD = "prop_password";
-	private static final String PROP_HOST = "prop_host";
-	private static final String PROP_PORT = "prop_port";
-	private static final String PROP_EXPIRATION = "prop_expiration";
+	private static final String PROP_JID = "xmpp_jid";
+	private static final String PROP_PASSWORD = "xmpp_password";
+	private static final String PROP_HOST = "xmpp_host";
+	private static final String PROP_PORT = "xmpp_port";
+	private static final String PROP_EXPIRATION = "sidy_expiration";
 	private static final String DESCRIPTION = "Rendezvous Component";
 	private static final String NAME = "rendezvous";
 
