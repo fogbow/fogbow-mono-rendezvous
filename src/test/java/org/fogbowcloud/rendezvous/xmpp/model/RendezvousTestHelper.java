@@ -36,16 +36,16 @@ public class RendezvousTestHelper {
 	public XMPPClient createXMPPClient() throws XMPPException {
 		int clientIndex = this.xmppClients.size();
 		
-		final String CLIENT = getClientJid(clientIndex);
-		final String CLIENT_PASS = getClientPassword(clientIndex);
+		final String client = getClientJid(clientIndex);
+		final String client_pass = getClientPassword(clientIndex);
 		
-		XMPPClient xmppClient = new XMPPClient(CLIENT, CLIENT_PASS,
+		XMPPClient xmppClient = new XMPPClient(client, client_pass,
 				SERVER_HOST, SERVER_CLIENT_PORT);
 		XEP0077 register = new XEP0077();
 		xmppClient.registerPlugin(register);
 		xmppClient.connect();
 		try {
-			register.createAccount(CLIENT, CLIENT_PASS);
+			register.createAccount(client, client_pass);
 		} catch (XMPPException e) {
 		}
 		
