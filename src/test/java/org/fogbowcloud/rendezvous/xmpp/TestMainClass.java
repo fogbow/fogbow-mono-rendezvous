@@ -8,10 +8,10 @@ import java.util.Properties;
 import org.junit.Before;
 import org.junit.Test;
 
-public class MainTest {
+public class TestMainClass {
 
-	private final String DEFAULT_PATH_TEST_VALUE_EMPTY = "rendezvous.conf.testEmptyValue";
-	private final String PATH_TEST_VALUE_WRONG = "rendezvous.conf.testWrongValue";
+	private final String DEFAULT_PATH_TEST_VALUE_EMPTY = "src/test/java/rendezvous.conf.testEmptyValue";
+	private final String PATH_TEST_VALUE_WRONG = "src/test/java/rendezvous.conf.testWrongValue";
 
 	private Properties properties = new Properties();
 	private FileInputStream fileInputStream;
@@ -29,7 +29,7 @@ public class MainTest {
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testMainFileConfigValuePortEmpty() {
-		Main.getPort(this.properties);		
+		Main.getPort(this.properties);
 	}
 
 	@Test(expected = IllegalArgumentException.class)
