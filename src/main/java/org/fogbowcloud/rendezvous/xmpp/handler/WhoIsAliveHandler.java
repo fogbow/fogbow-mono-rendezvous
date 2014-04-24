@@ -32,6 +32,7 @@ public class WhoIsAliveHandler extends AbstractQueryHandler {
         for (RendezvousItem rendezvousItem : aliveIds) {
             Element itemEl = queryElement.addElement("item");
             itemEl.addAttribute("id", rendezvousItem.getResourcesInfo().getId());
+            itemEl.addElement("cert");
             
             Element statusEl = itemEl.addElement("status");
             statusEl.addElement("cpu-idle").setText(
@@ -53,7 +54,6 @@ public class WhoIsAliveHandler extends AbstractQueryHandler {
 				flavorElement.addElement("capacity").setText(
 						f.getCapacity().toString());
 			}
-			statusEl.addElement("cert");
 			statusEl.addElement("updated").setText(
 					String.valueOf(rendezvousItem.getFormattedTime()));
         }
