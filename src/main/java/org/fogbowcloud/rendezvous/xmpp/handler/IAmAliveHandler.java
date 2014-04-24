@@ -1,10 +1,13 @@
 package org.fogbowcloud.rendezvous.xmpp.handler;
 
-import org.apache.log4j.Logger;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+
 import org.dom4j.Element;
 import org.fogbowcloud.rendezvous.core.Rendezvous;
-import org.fogbowcloud.rendezvous.core.RendezvousImpl;
 import org.fogbowcloud.rendezvous.core.ResourcesInfo;
+import org.fogbowcloud.rendezvous.core.model.Flavor;
 import org.jamppa.component.handler.AbstractQueryHandler;
 import org.xmpp.packet.IQ;
 
@@ -18,7 +21,8 @@ public class IAmAliveHandler extends AbstractQueryHandler {
         this.rendezvous = rendezvous;
     }
 
-    public IQ handle(IQ iq) {
+    @SuppressWarnings("unchecked")
+	public IQ handle(IQ iq) {
         String id = iq.getFrom().toBareJID();
 
         Element statusElement = iq.getElement().element("query")
@@ -28,10 +32,23 @@ public class IAmAliveHandler extends AbstractQueryHandler {
         String cpuInUse = statusElement.element("cpu-inuse").getText();
         String memIdle = statusElement.element("mem-idle").getText();
         String memInUse = statusElement.element("mem-inuse").getText();
-
+        
+        List<Flavor> flavoursList = new LinkedList<Flavor>();
+		Iterator<Element> flavourIterator = statusElement
+				.elementIterator("flavor");
+		while(flavourIterator.hasNext()) {
+			Element flavour = (Element) flavourIterator.next();
+			String name = flavour.element("name").getText();
+			String cpu = flavour.element("cpu").getText();
+			String mem = flavour.element("mem").getText();
+			int capacity = Integer.parseInt(flavour.element("capacity")
+					.getText());
+			Flavor flavor = new Flavor(name, cpu, mem, capacity);
+			flavoursList.add(flavor);
+		}
         ResourcesInfo resources = new ResourcesInfo(id ,cpuIdle, cpuInUse, memIdle,
-                memInUse);
-
+                memInUse, flavoursList);
+        //TODO handle certificate?
         rendezvous.iAmAlive(resources);
 
         IQ response = IQ.createResultIQ(iq);
