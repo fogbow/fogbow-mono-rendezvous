@@ -9,6 +9,7 @@ import java.util.TimeZone;
 
 import org.dom4j.Element;
 import org.fogbowcloud.rendezvous.core.RendezvousItem;
+import org.fogbowcloud.rendezvous.core.model.Flavor;
 import org.fogbowcloud.rendezvous.xmpp.model.RendezvousTestHelper;
 import org.fogbowcloud.rendezvous.xmpp.model.WhoIsAliveResponseItem;
 import org.jamppa.client.XMPPClient;
@@ -74,15 +75,23 @@ public class TestWhoIsAlive {
 		Element statusEl = iq.getElement()
 				.addElement("query", RendezvousTestHelper.IAMALIVE_NAMESPACE)
 				.addElement("status");
-		String cpuIdleValue = "valor1";
-		String cpuInUseValue = "valor2";
-		String memIdleValue = "valor3";
-		String memInUseValue = "valor4";
-
+		String cpuIdleValue = "value1";
+		String cpuInUseValue = "value2";
+		String memIdleValue = "value3";
+		String memInUseValue = "value4";
+		Flavor flavor = new Flavor("small", "cpu", "mem", 2);
+		
 		statusEl.addElement("cpu-idle").setText(cpuIdleValue);
 		statusEl.addElement("cpu-inuse").setText(cpuInUseValue);
 		statusEl.addElement("mem-idle").setText(memIdleValue);
 		statusEl.addElement("mem-inuse").setText(memInUseValue);
+
+		Element flavorElement = statusEl.addElement("flavor");
+		flavorElement.addElement("name").setText(flavor.getName());
+		flavorElement.addElement("cpu").setText(flavor.getCpu());
+		flavorElement.addElement("mem").setText(flavor.getMem());
+		flavorElement.addElement("capacity").setText(
+				flavor.getCapacity().toString());
 
 		Date beforeMessage = new Date(System.currentTimeMillis());
 		response = (IQ) xmppClient.syncSend(iq);
@@ -98,7 +107,15 @@ public class TestWhoIsAlive {
 		Assert.assertEquals(cpuInUseValue, item.getResources().getCpuInUse());
 		Assert.assertEquals(memIdleValue, item.getResources().getMemIdle());
 		Assert.assertEquals(memInUseValue, item.getResources().getMemInUse());
-
+		Assert.assertEquals(flavor.getName(), item.getResources().getFlavours()
+				.get(0).getName());
+		Assert.assertEquals(flavor.getCpu(), item.getResources().getFlavours()
+				.get(0).getCpu());
+		Assert.assertEquals(flavor.getMem(), item.getResources().getFlavours()
+				.get(0).getMem());
+		Assert.assertEquals(flavor.getCapacity(), item.getResources().getFlavours()
+				.get(0).getCapacity());
+		
 		ArrayList<String> aliveIDs = RendezvousTestHelper.getAliveIds(response);
 		SimpleDateFormat format = new SimpleDateFormat(
 				RendezvousItem.ISO_8601_DATE_FORMAT, Locale.ROOT);

@@ -1,10 +1,13 @@
 package org.fogbowcloud.rendezvous.core;
 
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.fogbowcloud.rendezvous.core.model.DateUtils;
+import org.fogbowcloud.rendezvous.core.model.Flavor;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -12,7 +15,17 @@ public class RendezvousTest {
 
     private final static int TIMEOUT = 1000;
     private final static int TIMEOUT_GRACE = 500;
-
+    private ResourcesInfo resources;
+    private List<Flavor> flavors;
+    
+    @Before 
+    public void set() {
+    	flavors = new LinkedList<Flavor>();
+		flavors.add(new Flavor("small", "cpu", "mem", 2));
+    	resources = new ResourcesInfo("abc", "value1", "value2",
+                "value3", "value4", flavors);
+    }
+    
     @Test(expected = IllegalArgumentException.class)
     public void testRendezvousConstructor() {
         new RendezvousImpl(-100);
@@ -21,10 +34,8 @@ public class RendezvousTest {
     @Test
     public void testImAliveSingleElement() {
         Rendezvous r = new RendezvousImpl();
-
-        ResourcesInfo resources = new ResourcesInfo("abc", "value1", "value2",
-                "value3", "value4");
-
+        List<Flavor> flavors = new LinkedList<Flavor>();
+		flavors.add(new Flavor("small", "cpu", "mem", 2));
         r.iAmAlive(resources);
         List<RendezvousItem> element = r.whoIsAlive();
         Assert.assertEquals(1, element.size());
@@ -36,12 +47,12 @@ public class RendezvousTest {
         Rendezvous r = new RendezvousImpl();
         for (int i = 0; i < 10; i++) {
             String s = "Element " + i;
-            ResourcesInfo resources = new ResourcesInfo(s, "value1", "value2",
-                    "value3", "value4");
-
+            resources = new ResourcesInfo(s, "value1", "value2",
+                    "value3", "value4", flavors);
             r.iAmAlive(resources);
             List<RendezvousItem> elementList = r.whoIsAlive();
             Assert.assertTrue(containsId(elementList, s));
+         
         }
     }
 
@@ -57,8 +68,6 @@ public class RendezvousTest {
     @Test
     public void testContainsSameIDs() {
         Rendezvous r = new RendezvousImpl();
-        ResourcesInfo resources = new ResourcesInfo("id", "value1", "value2",
-                "value3", "value4");
         r.iAmAlive(resources);
         r.iAmAlive(resources);
         List<RendezvousItem> elementList = r.whoIsAlive();
@@ -69,7 +78,7 @@ public class RendezvousTest {
     public void testImAliveNullParameter() {
         Rendezvous r = new RendezvousImpl();
         ResourcesInfo resources = new ResourcesInfo(null, "value1", "value2",
-                "value3", "value4");
+                "value3", "value4", flavors);
         r.iAmAlive(resources);
     }
 
@@ -77,7 +86,7 @@ public class RendezvousTest {
     public void testImAliveEmptyParameter() {
         Rendezvous r = new RendezvousImpl();
         ResourcesInfo resources = new ResourcesInfo("", "value1", "value2",
-                "value3", "value4");
+                "value3", "value4", flavors);
         r.iAmAlive(resources);
     }
 
@@ -99,7 +108,7 @@ public class RendezvousTest {
     public void testWhoIsAliveSingleElement() {
         Rendezvous r = new RendezvousImpl();
         ResourcesInfo resources = new ResourcesInfo("OnlyElement", "value1",
-                "value2", "value3", "value4");
+                "value2", "value3", "value4", flavors);
         r.iAmAlive(resources);
         Assert.assertEquals(1, r.whoIsAlive().size());
         Assert.assertTrue(containsId(r.whoIsAlive(), "OnlyElement"));
@@ -109,7 +118,7 @@ public class RendezvousTest {
     public void testWhoIsAliveElementValues() throws InterruptedException {
         Rendezvous r = new RendezvousImpl();
         ResourcesInfo resources = new ResourcesInfo("id", "value1", "value2",
-                "value3", "value4");
+                "value3", "value4", flavors);
 
         Date beforeMessage = new Date(System.currentTimeMillis());
         Thread.sleep(1);
@@ -136,13 +145,10 @@ public class RendezvousTest {
     @Test
     public void testWhoIsAliveElementUpdatedValueNotNull() {
         Rendezvous r = new RendezvousImpl();
-        ResourcesInfo resources = new ResourcesInfo("id", "value1", "value2",
-                "value3", "value4");
-
         r.iAmAlive(resources);
 
         Assert.assertEquals(1, r.whoIsAlive().size());
-        Assert.assertTrue(containsId(r.whoIsAlive(), "id"));
+        Assert.assertTrue(containsId(r.whoIsAlive(), "abc"));
         RendezvousItem item = r.whoIsAlive().get(0);
 
         Assert.assertNotNull(item.getFormattedTime());
@@ -153,7 +159,7 @@ public class RendezvousTest {
         Rendezvous r = new RendezvousImpl();
         for (int i = 0; i < 10; i++) {
             r.iAmAlive(new ResourcesInfo("Element" + (i + 1), "value1",
-                    "value2", "value3", "value4"));
+                    "value2", "value3", "value4", flavors));
         }
 
         for (int i = 0; i < 10; i++) {
@@ -164,10 +170,6 @@ public class RendezvousTest {
     @Test
     public void testWhoIsAliveAfterTime() throws InterruptedException {
     	RendezvousImpl r = new RendezvousImpl(TIMEOUT);
-
-		ResourcesInfo resources = new ResourcesInfo("id", "value1", "value2",
-				"value3", "value4");
-
 		r.iAmAlive(resources);
 
 		Assert.assertEquals(1, r.whoIsAlive().size());
@@ -190,8 +192,6 @@ public class RendezvousTest {
             throws InterruptedException {
     	RendezvousImpl r = new RendezvousImpl(TIMEOUT);
 
-		ResourcesInfo resources = new ResourcesInfo("id", "value1", "value2",
-				"value3", "value4");
 		r.iAmAlive(resources);
 		Assert.assertEquals(1, r.whoIsAlive().size());
 
@@ -215,7 +215,7 @@ public class RendezvousTest {
 
 		// IAmAlive of new id
 		ResourcesInfo resources2 = new ResourcesInfo("id2", "value1", "value2",
-				"value3", "value4");
+				"value3", "value4", flavors);
 		r.iAmAlive(resources2);
 		r.setLastTime("id2", firstPassageOfTime + 3);
 
@@ -250,7 +250,7 @@ public class RendezvousTest {
 			// IAmAlive of new id
 			String id = "Element" + i;
 			r.iAmAlive(new ResourcesInfo(id, "value1", "value2", "value3",
-					"value4"));
+					"value4", flavors));
 			r.setLastTime(id, currentTime);
 
 			// mocking date to check expired
@@ -273,7 +273,7 @@ public class RendezvousTest {
 			// IAmAlive client from already existing client
 			String id = "Element" + i;
 			r.iAmAlive(new ResourcesInfo(id, "value1", "value2", "value3",
-					"value4"));
+					"value4", flavors));
 			r.setLastTime(id, currentTime);
 
 			// mocking date to check expired
@@ -315,7 +315,7 @@ public class RendezvousTest {
 
         for (int i = 0; i < 1000000; i++) {
             r.iAmAlive(new ResourcesInfo("Element" + i, "value1", "value2",
-                    "value3", "value4"));
+                    "value3", "value4", flavors));
         }
 
         Assert.assertFalse(r.getInError());

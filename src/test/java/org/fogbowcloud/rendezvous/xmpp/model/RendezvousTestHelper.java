@@ -2,10 +2,13 @@ package org.fogbowcloud.rendezvous.xmpp.model;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 
 import org.dom4j.Attribute;
 import org.dom4j.Element;
 import org.fogbowcloud.rendezvous.core.ResourcesInfo;
+import org.fogbowcloud.rendezvous.core.model.Flavor;
 import org.fogbowcloud.rendezvous.xmpp.RendezvousXMPPComponent;
 import org.jamppa.client.XMPPClient;
 import org.jamppa.client.plugin.xep0077.XEP0077;
@@ -122,9 +125,23 @@ public class RendezvousTestHelper {
 			String memIdle = statusEl.element("mem-idle").getText();
 			String memInUse = statusEl.element("mem-inuse").getText();
 			String updated = statusEl.element("updated").getText();
+			//TODO add new things and test new things
+			List<Flavor> flavoursList = new LinkedList<Flavor>();
+			Iterator<Element> flavourIterator = statusEl
+					.elementIterator("flavor");
+			while (flavourIterator.hasNext()) {
+				Element flavour = (Element) flavourIterator.next();
+				String name = flavour.element("name").getText();
+				String cpu = flavour.element("cpu").getText();
+				String mem = flavour.element("mem").getText();
+				int capacity = Integer.parseInt(flavour.element("capacity")
+						.getText());
+				Flavor flavor = new Flavor(name, cpu, mem, capacity);
+				flavoursList.add(flavor);
+			}
 
 			ResourcesInfo resources = new ResourcesInfo(id.getValue(), cpuIdle,
-					cpuInUse, memIdle, memInUse);
+					cpuInUse, memIdle, memInUse, flavoursList);	
 			WhoIsAliveResponseItem item = new WhoIsAliveResponseItem(resources,
 					updated);
 			aliveItems.add(item);
