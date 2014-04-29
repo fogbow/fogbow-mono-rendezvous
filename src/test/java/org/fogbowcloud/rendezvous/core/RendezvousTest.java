@@ -23,7 +23,7 @@ public class RendezvousTest {
     	flavors = new LinkedList<Flavor>();
 		flavors.add(new Flavor("small", "cpu", "mem", 2));
     	resources = new ResourcesInfo("abc", "value1", "value2",
-                "value3", "value4", flavors);
+                "value3", "value4", flavors, "cert");
     }
     
     @Test(expected = IllegalArgumentException.class)
@@ -48,7 +48,7 @@ public class RendezvousTest {
         for (int i = 0; i < 10; i++) {
             String s = "Element " + i;
             resources = new ResourcesInfo(s, "value1", "value2",
-                    "value3", "value4", flavors);
+                    "value3", "value4", flavors, "cert");
             r.iAmAlive(resources);
             List<RendezvousItem> elementList = r.whoIsAlive();
             Assert.assertTrue(containsId(elementList, s));
@@ -78,7 +78,7 @@ public class RendezvousTest {
     public void testImAliveNullParameter() {
         Rendezvous r = new RendezvousImpl();
         ResourcesInfo resources = new ResourcesInfo(null, "value1", "value2",
-                "value3", "value4", flavors);
+                "value3", "value4", flavors, "cert");
         r.iAmAlive(resources);
     }
 
@@ -86,7 +86,7 @@ public class RendezvousTest {
     public void testImAliveEmptyParameter() {
         Rendezvous r = new RendezvousImpl();
         ResourcesInfo resources = new ResourcesInfo("", "value1", "value2",
-                "value3", "value4", flavors);
+                "value3", "value4", flavors, "cert");
         r.iAmAlive(resources);
     }
 
@@ -108,7 +108,7 @@ public class RendezvousTest {
     public void testWhoIsAliveSingleElement() {
         Rendezvous r = new RendezvousImpl();
         ResourcesInfo resources = new ResourcesInfo("OnlyElement", "value1",
-                "value2", "value3", "value4", flavors);
+                "value2", "value3", "value4", flavors, "cert");
         r.iAmAlive(resources);
         Assert.assertEquals(1, r.whoIsAlive().size());
         Assert.assertTrue(containsId(r.whoIsAlive(), "OnlyElement"));
@@ -118,7 +118,7 @@ public class RendezvousTest {
     public void testWhoIsAliveElementValues() throws InterruptedException {
         Rendezvous r = new RendezvousImpl();
         ResourcesInfo resources = new ResourcesInfo("id", "value1", "value2",
-                "value3", "value4", flavors);
+                "value3", "value4", flavors, "cert");
 
         Date beforeMessage = new Date(System.currentTimeMillis());
         Thread.sleep(1);
@@ -159,7 +159,7 @@ public class RendezvousTest {
         Rendezvous r = new RendezvousImpl();
         for (int i = 0; i < 10; i++) {
             r.iAmAlive(new ResourcesInfo("Element" + (i + 1), "value1",
-                    "value2", "value3", "value4", flavors));
+                    "value2", "value3", "value4", flavors, "cert"));
         }
 
         for (int i = 0; i < 10; i++) {
@@ -215,7 +215,7 @@ public class RendezvousTest {
 
 		// IAmAlive of new id
 		ResourcesInfo resources2 = new ResourcesInfo("id2", "value1", "value2",
-				"value3", "value4", flavors);
+				"value3", "value4", flavors, "cert");
 		r.iAmAlive(resources2);
 		r.setLastTime("id2", firstPassageOfTime + 3);
 
@@ -250,7 +250,7 @@ public class RendezvousTest {
 			// IAmAlive of new id
 			String id = "Element" + i;
 			r.iAmAlive(new ResourcesInfo(id, "value1", "value2", "value3",
-					"value4", flavors));
+					"value4", flavors, "cert"));
 			r.setLastTime(id, currentTime);
 
 			// mocking date to check expired
@@ -273,7 +273,7 @@ public class RendezvousTest {
 			// IAmAlive client from already existing client
 			String id = "Element" + i;
 			r.iAmAlive(new ResourcesInfo(id, "value1", "value2", "value3",
-					"value4", flavors));
+					"value4", flavors, "cert"));
 			r.setLastTime(id, currentTime);
 
 			// mocking date to check expired
@@ -315,7 +315,7 @@ public class RendezvousTest {
 
         for (int i = 0; i < 1000000; i++) {
             r.iAmAlive(new ResourcesInfo("Element" + i, "value1", "value2",
-                    "value3", "value4", flavors));
+                    "value3", "value4", flavors, "cert"));
         }
 
         Assert.assertFalse(r.getInError());

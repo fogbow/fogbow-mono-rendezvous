@@ -27,7 +27,8 @@ public class IAmAliveHandler extends AbstractQueryHandler {
 
         Element statusElement = iq.getElement().element("query")
                 .element("status");
-
+        
+        String cert = iq.getElement().element("query").element("cert").getText();
         String cpuIdle = statusElement.element("cpu-idle").getText();
         String cpuInUse = statusElement.element("cpu-inuse").getText();
         String memIdle = statusElement.element("mem-idle").getText();
@@ -47,7 +48,7 @@ public class IAmAliveHandler extends AbstractQueryHandler {
 			flavoursList.add(flavor);
 		}
         ResourcesInfo resources = new ResourcesInfo(id ,cpuIdle, cpuInUse, memIdle,
-                memInUse, flavoursList);
+                memInUse, flavoursList, cert);
         //TODO handle certificate?
         rendezvous.iAmAlive(resources);
 
