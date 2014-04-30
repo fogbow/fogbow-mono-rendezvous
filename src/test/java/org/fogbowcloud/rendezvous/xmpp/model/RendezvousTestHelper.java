@@ -93,6 +93,7 @@ public class RendezvousTestHelper {
 		iq.setTo(RENDEZVOUS_COMPONENT_URL);
 		Element statusEl = iq.getElement()
 				.addElement("query", IAMALIVE_NAMESPACE).addElement("status");
+		iq.getElement().element("query").addElement("cert").setText("cert");
 		statusEl.addElement("cpu-idle").setText("valor1");
 		statusEl.addElement("cpu-inuse").setText("valor2");
 		statusEl.addElement("mem-idle").setText("valor3");
@@ -120,12 +121,13 @@ public class RendezvousTestHelper {
 			Element itemEl = (Element) itemIterator.next();
 			Attribute id = itemEl.attribute("id");
 			Element statusEl = itemEl.element("status");
+			String cert = itemEl.element("cert").getText();
 			String cpuIdle = statusEl.element("cpu-idle").getText();
 			String cpuInUse = statusEl.element("cpu-inuse").getText();
 			String memIdle = statusEl.element("mem-idle").getText();
 			String memInUse = statusEl.element("mem-inuse").getText();
 			String updated = statusEl.element("updated").getText();
-			//TODO add new things and test new things
+			
 			List<Flavor> flavoursList = new LinkedList<Flavor>();
 			Iterator<Element> flavourIterator = statusEl
 					.elementIterator("flavor");
@@ -141,7 +143,7 @@ public class RendezvousTestHelper {
 			}
 
 			ResourcesInfo resources = new ResourcesInfo(id.getValue(), cpuIdle,
-					cpuInUse, memIdle, memInUse, flavoursList);	
+					cpuInUse, memIdle, memInUse, flavoursList, cert);	
 			WhoIsAliveResponseItem item = new WhoIsAliveResponseItem(resources,
 					updated);
 			aliveItems.add(item);
