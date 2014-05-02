@@ -25,10 +25,14 @@ public class IAmAliveHandler extends AbstractQueryHandler {
 	public IQ handle(IQ iq) {
         String id = iq.getFrom().toBareJID();
 
-        Element statusElement = iq.getElement().element("query")
-                .element("status");
+        Element queryEl = iq.getElement().element("query");
+		Element statusElement = queryEl.element("status");
         
-        String cert = iq.getElement().element("query").element("cert").getText();
+        Element certEl = queryEl.element("cert");
+        String cert = null;
+        if (certEl != null) {
+        	cert = certEl.getText();
+        }
         String cpuIdle = statusElement.element("cpu-idle").getText();
         String cpuInUse = statusElement.element("cpu-inuse").getText();
         String memIdle = statusElement.element("mem-idle").getText();

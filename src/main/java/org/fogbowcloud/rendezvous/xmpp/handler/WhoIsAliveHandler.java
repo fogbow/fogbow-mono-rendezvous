@@ -32,8 +32,10 @@ public class WhoIsAliveHandler extends AbstractQueryHandler {
 		for (RendezvousItem rendezvousItem : aliveIds) {
 			Element itemEl = queryElement.addElement("item");
 			itemEl.addAttribute("id", rendezvousItem.getResourcesInfo().getId());
-			itemEl.addElement("cert").setText(
-					rendezvousItem.getResourcesInfo().getCert());
+			String cert = rendezvousItem.getResourcesInfo().getCert();
+			if (cert != null) {
+				itemEl.addElement("cert").setText(cert);
+			}
 
 			Element statusEl = itemEl.addElement("status");
 			statusEl.addElement("cpu-idle").setText(
