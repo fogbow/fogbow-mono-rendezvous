@@ -25,7 +25,7 @@ public class TestIAmAliveManyClients {
 	private RendezvousTestHelper rendezvousTestHelper;
 	
 	@Before
-	public void setUp() throws ComponentException {
+	public void setUp() throws Exception {
 		rendezvousTestHelper = new RendezvousTestHelper();
 		rendezvousTestHelper.initializeXMPPRendezvousComponent(
 				10000 * RendezvousTestHelper.TEST_DEFAULT_TIMEOUT);
