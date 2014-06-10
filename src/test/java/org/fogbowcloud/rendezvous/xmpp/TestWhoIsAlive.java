@@ -27,7 +27,7 @@ public class TestWhoIsAlive {
 	private RendezvousTestHelper rendezvousTestHelper;
 
 	@Before
-	public void setUp() throws ComponentException {
+	public void setUp() throws Exception {
 		rendezvousTestHelper = new RendezvousTestHelper();
 		rendezvousTestHelper
 				.initializeXMPPRendezvousComponent(RendezvousTestHelper.TEST_DEFAULT_TIMEOUT);
@@ -75,6 +75,7 @@ public class TestWhoIsAlive {
 		Element statusEl = iq.getElement()
 				.addElement("query", RendezvousTestHelper.IAMALIVE_NAMESPACE)
 				.addElement("status");
+		iq.getElement().element("query").addElement("cert").setText("cert");
 		String cpuIdleValue = "value1";
 		String cpuInUseValue = "value2";
 		String memIdleValue = "value3";

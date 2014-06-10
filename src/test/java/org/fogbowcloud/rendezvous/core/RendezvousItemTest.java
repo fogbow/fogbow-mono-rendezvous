@@ -24,7 +24,7 @@ public class RendezvousItemTest {
 		List<Flavor> flavors = new LinkedList<Flavor>();
 		flavors.add(new Flavor("small", "cpu", "mem", 2));
 		RendezvousItem item = new RendezvousItem(new ResourcesInfo("id",
-				"value1", "value2", "value3", "value4", flavors));
+				"value1", "value2", "value3", "value4", flavors, "cert"));
 		Thread.sleep(1);
 		Date after = new Date(System.currentTimeMillis());
 
@@ -39,7 +39,7 @@ public class RendezvousItemTest {
 		List<Flavor> flavors = new LinkedList<Flavor>();
 		flavors.add(new Flavor("small", "cpu", "mem", 2));
 		RendezvousItem item = new RendezvousItem(new ResourcesInfo("id",
-				"value1", "value2", "value3", "value4", flavors));
+				"value1", "value2", "value3", "value4", flavors, "cert"));
 
 		Assert.assertNotNull(item.getFormattedTime());
 	}

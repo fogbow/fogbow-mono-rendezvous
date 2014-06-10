@@ -11,40 +11,43 @@ import org.xmpp.packet.IQ;
 
 public class WhoIsAliveHandler extends AbstractQueryHandler {
 
-    private final static String NAMESPACE = "http://fogbowcloud.org/rendezvous/whoisalive";
-    private Rendezvous rendezvous;
+	private final static String NAMESPACE = "http://fogbowcloud.org/rendezvous/whoisalive";
+	private Rendezvous rendezvous;
 
-    public WhoIsAliveHandler(Rendezvous rendezvous) {
-        super(NAMESPACE);
-        this.rendezvous = rendezvous;
-    }
+	public WhoIsAliveHandler(Rendezvous rendezvous) {
+		super(NAMESPACE);
+		this.rendezvous = rendezvous;
+	}
 
-    public IQ handle(IQ iq) {
-        List<RendezvousItem> aliveIds = rendezvous.whoIsAlive();
-        return createResponse(iq, aliveIds);
-    }
+	public IQ handle(IQ iq) {
+		List<RendezvousItem> aliveIds = rendezvous.whoIsAlive();
+		return createResponse(iq, aliveIds);
+	}
 
-    private IQ createResponse(IQ iq, List<RendezvousItem> aliveIds) {
-        IQ resultIQ = IQ.createResultIQ(iq);
+	private IQ createResponse(IQ iq, List<RendezvousItem> aliveIds) {
+		IQ resultIQ = IQ.createResultIQ(iq);
 
-        Element queryElement = resultIQ.getElement().addElement("query",
-                NAMESPACE);
-        for (RendezvousItem rendezvousItem : aliveIds) {
-            Element itemEl = queryElement.addElement("item");
-            itemEl.addAttribute("id", rendezvousItem.getResourcesInfo().getId());
-            itemEl.addElement("cert");
-            
-            Element statusEl = itemEl.addElement("status");
-            statusEl.addElement("cpu-idle").setText(
-                    rendezvousItem.getResourcesInfo().getCpuIdle());
-            statusEl.addElement("cpu-inuse").setText(
-                    rendezvousItem.getResourcesInfo().getCpuInUse());
-            statusEl.addElement("mem-idle").setText(
-                    rendezvousItem.getResourcesInfo().getMemIdle());
-            statusEl.addElement("mem-inuse").setText(
-                    rendezvousItem.getResourcesInfo().getMemInUse());    
-            
-            List<Flavor> flavours = rendezvousItem.getResourcesInfo()
+		Element queryElement = resultIQ.getElement().addElement("query",
+				NAMESPACE);
+		for (RendezvousItem rendezvousItem : aliveIds) {
+			Element itemEl = queryElement.addElement("item");
+			itemEl.addAttribute("id", rendezvousItem.getResourcesInfo().getId());
+			String cert = rendezvousItem.getResourcesInfo().getCert();
+			if (cert != null) {
+				itemEl.addElement("cert").setText(cert);
+			}
+
+			Element statusEl = itemEl.addElement("status");
+			statusEl.addElement("cpu-idle").setText(
+					rendezvousItem.getResourcesInfo().getCpuIdle());
+			statusEl.addElement("cpu-inuse").setText(
+					rendezvousItem.getResourcesInfo().getCpuInUse());
+			statusEl.addElement("mem-idle").setText(
+					rendezvousItem.getResourcesInfo().getMemIdle());
+			statusEl.addElement("mem-inuse").setText(
+					rendezvousItem.getResourcesInfo().getMemInUse());
+
+			List<Flavor> flavours = rendezvousItem.getResourcesInfo()
 					.getFlavours();
 			for (Flavor f : flavours) {
 				Element flavorElement = statusEl.addElement("flavor");
@@ -56,7 +59,7 @@ public class WhoIsAliveHandler extends AbstractQueryHandler {
 			}
 			statusEl.addElement("updated").setText(
 					String.valueOf(rendezvousItem.getFormattedTime()));
-        }
-        return resultIQ;
-    }
+		}
+		return resultIQ;
+	}
 }
