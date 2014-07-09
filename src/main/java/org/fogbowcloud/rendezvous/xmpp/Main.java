@@ -2,6 +2,7 @@ package org.fogbowcloud.rendezvous.xmpp;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.util.List;
 import java.util.Properties;
 
 public class Main {
@@ -13,8 +14,9 @@ public class Main {
 	private static final String PROP_EXPIRATION = "site_expiration";
 	private static final String DESCRIPTION = "Rendezvous Component";
 	private static final String NAME = "rendezvous";
-
-	private static RendezvousXMPPComponent rendezvousXmppComponent;
+	private static final String NEIGHBORS = "neighbors";
+	
+ 	private static RendezvousXMPPComponent rendezvousXmppComponent;
 
 	static void initializeRendezvousXMPPComponent(String configPath) throws Exception {
 		Properties properties = new Properties();
@@ -26,9 +28,10 @@ public class Main {
 		String server = getServer(properties);
 		int port = getPort(properties);
 		long expiration = getExpiration(properties);
-
+		String[] neighbors = getNeighbors(properties);
+		
 		rendezvousXmppComponent = new RendezvousXMPPComponent(jid, password, server, port,
-				expiration);
+				expiration, neighbors);
 		rendezvousXmppComponent.setDescription(DESCRIPTION);
 		rendezvousXmppComponent.setName(NAME);
 		rendezvousXmppComponent.connect();
@@ -90,7 +93,16 @@ public class Main {
 			throw new IllegalArgumentException();
 		}
 	}
-
+	
+	static String[] getNeighbors(Properties properties) {
+		String neighborsl = properties.getProperty(NEIGHBORS);
+		if (neighborsl.equals("")) {
+			throw new IllegalArgumentException();
+		}
+		String[] neighborIds = neighborsl.split(",");
+		return neighborIds;
+	}
+	
 	public static void main(String[] args) throws Exception {
 		initializeRendezvousXMPPComponent(args[0]);
 	}

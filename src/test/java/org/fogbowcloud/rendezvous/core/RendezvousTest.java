@@ -17,6 +17,7 @@ public class RendezvousTest {
     private final static int TIMEOUT_GRACE = 500;
     private ResourcesInfo resources;
     private List<Flavor> flavors;
+    private String[] neighbors;
     
     @Before 
     public void set() {
@@ -24,16 +25,17 @@ public class RendezvousTest {
 		flavors.add(new Flavor("small", "cpu", "mem", 2));
     	resources = new ResourcesInfo("abc", "value1", "value2",
                 "value3", "value4", flavors, "cert");
+    	neighbors = new String[] {};
     }
     
     @Test(expected = IllegalArgumentException.class)
     public void testRendezvousConstructor() {
-        new RendezvousImpl(-100);
+        new RendezvousImpl(-100, null, null);
     }
 
     @Test
     public void testImAliveSingleElement() {
-        Rendezvous r = new RendezvousImpl();
+        Rendezvous r = new RendezvousImpl(null, neighbors);
         List<Flavor> flavors = new LinkedList<Flavor>();
 		flavors.add(new Flavor("small", "cpu", "mem", 2));
         r.iAmAlive(resources);
@@ -44,7 +46,7 @@ public class RendezvousTest {
 
     @Test
     public void testImAliveManyElements() {
-        Rendezvous r = new RendezvousImpl();
+        Rendezvous r = new RendezvousImpl(null, neighbors);
         for (int i = 0; i < 10; i++) {
             String s = "Element " + i;
             resources = new ResourcesInfo(s, "value1", "value2",
@@ -66,8 +68,8 @@ public class RendezvousTest {
     }
 
     @Test
-    public void testContainsSameIDs() {
-        Rendezvous r = new RendezvousImpl();
+    public void testContainsSameIDs(){
+        Rendezvous r = new RendezvousImpl(null, neighbors);
         r.iAmAlive(resources);
         r.iAmAlive(resources);
         List<RendezvousItem> elementList = r.whoIsAlive();
@@ -76,7 +78,7 @@ public class RendezvousTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testImAliveNullParameter() {
-        Rendezvous r = new RendezvousImpl();
+        Rendezvous r = new RendezvousImpl(null, neighbors);
         ResourcesInfo resources = new ResourcesInfo(null, "value1", "value2",
                 "value3", "value4", flavors, "cert");
         r.iAmAlive(resources);
@@ -84,7 +86,7 @@ public class RendezvousTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testImAliveEmptyParameter() {
-        Rendezvous r = new RendezvousImpl();
+        Rendezvous r = new RendezvousImpl(null, neighbors);
         ResourcesInfo resources = new ResourcesInfo("", "value1", "value2",
                 "value3", "value4", flavors, "cert");
         r.iAmAlive(resources);
@@ -92,13 +94,13 @@ public class RendezvousTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testIAmAliveNullResourceInfo() {
-        Rendezvous r = new RendezvousImpl();
+        Rendezvous r = new RendezvousImpl(null, neighbors);
         r.iAmAlive(null);
     }
 
     @Test
     public void testWhoIsAliveEmpty() {
-        Rendezvous r = new RendezvousImpl();
+        Rendezvous r = new RendezvousImpl(null, neighbors);
         List<RendezvousItem> elementList = r.whoIsAlive();
         Assert.assertEquals(0, elementList.size());
 
@@ -106,7 +108,7 @@ public class RendezvousTest {
 
     @Test
     public void testWhoIsAliveSingleElement() {
-        Rendezvous r = new RendezvousImpl();
+        Rendezvous r = new RendezvousImpl(null, neighbors);
         ResourcesInfo resources = new ResourcesInfo("OnlyElement", "value1",
                 "value2", "value3", "value4", flavors, "cert");
         r.iAmAlive(resources);
@@ -116,7 +118,7 @@ public class RendezvousTest {
 
     @Test
     public void testWhoIsAliveElementValues() throws InterruptedException {
-        Rendezvous r = new RendezvousImpl();
+        Rendezvous r = new RendezvousImpl(null, neighbors);
         ResourcesInfo resources = new ResourcesInfo("id", "value1", "value2",
                 "value3", "value4", flavors, "cert");
 
@@ -144,7 +146,7 @@ public class RendezvousTest {
 
     @Test
     public void testWhoIsAliveElementUpdatedValueNotNull() {
-        Rendezvous r = new RendezvousImpl();
+        Rendezvous r = new RendezvousImpl(null, neighbors);
         r.iAmAlive(resources);
 
         Assert.assertEquals(1, r.whoIsAlive().size());
@@ -156,7 +158,7 @@ public class RendezvousTest {
 
     @Test
     public void testWhoIsAliveManyElements() {
-        Rendezvous r = new RendezvousImpl();
+        Rendezvous r = new RendezvousImpl(null, neighbors);
         for (int i = 0; i < 10; i++) {
             r.iAmAlive(new ResourcesInfo("Element" + (i + 1), "value1",
                     "value2", "value3", "value4", flavors, "cert"));
@@ -169,7 +171,7 @@ public class RendezvousTest {
 
     @Test
     public void testWhoIsAliveAfterTime() throws InterruptedException {
-    	RendezvousImpl r = new RendezvousImpl(TIMEOUT);
+    	RendezvousImpl r = new RendezvousImpl(TIMEOUT, null, neighbors);
 		r.iAmAlive(resources);
 
 		Assert.assertEquals(1, r.whoIsAlive().size());
@@ -190,7 +192,7 @@ public class RendezvousTest {
     @Test
     public void testWhoIsAliveAfterTimeManyElements()
             throws InterruptedException {
-    	RendezvousImpl r = new RendezvousImpl(TIMEOUT);
+    	RendezvousImpl r = new RendezvousImpl(TIMEOUT, null, neighbors);
 
 		r.iAmAlive(resources);
 		Assert.assertEquals(1, r.whoIsAlive().size());
@@ -234,7 +236,7 @@ public class RendezvousTest {
 
     @Test
     public void testConcurrentIAmAlive() throws InterruptedException {
-    	RendezvousImpl r = new RendezvousImpl(TIMEOUT);
+    	RendezvousImpl r = new RendezvousImpl(TIMEOUT, null, neighbors);
 
 		long shortInterval = TIMEOUT / 20;
 
@@ -311,7 +313,7 @@ public class RendezvousTest {
 
     @Test
     public void testConcourrency() throws InterruptedException {
-        RendezvousImpl r = new RendezvousImpl(TIMEOUT);
+        RendezvousImpl r = new RendezvousImpl(TIMEOUT, null, neighbors);
 
         for (int i = 0; i < 1000000; i++) {
             r.iAmAlive(new ResourcesInfo("Element" + i, "value1", "value2",

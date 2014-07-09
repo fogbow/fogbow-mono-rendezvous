@@ -1,17 +1,14 @@
 package org.fogbowcloud.rendezvous.xmpp;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Locale;
-import java.util.TimeZone;
+import java.util.LinkedList;
 
 import org.dom4j.Element;
 import org.fogbowcloud.rendezvous.core.RendezvousItem;
+import org.fogbowcloud.rendezvous.core.RendezvousTestHelper;
 import org.fogbowcloud.rendezvous.core.model.Flavor;
-import org.fogbowcloud.rendezvous.xmpp.model.RendezvousTestHelper;
-import org.fogbowcloud.rendezvous.xmpp.model.WhoIsAliveResponseItem;
 import org.jamppa.client.XMPPClient;
 import org.jivesoftware.smack.XMPPException;
 import org.junit.After;
@@ -34,7 +31,7 @@ public class TestWhoIsAlive {
 	}
 
 	@Test
-	public void testWhoisAliveEmpty() throws XMPPException {
+	public void testWhoisAliveEmpty() throws XMPPException, ParseException {
 		IQ iq = RendezvousTestHelper.createWhoIsAliveIQ();
 		XMPPClient xmppClient = rendezvousTestHelper.createXMPPClient();
 		IQ response = (IQ) xmppClient.syncSend(iq);
@@ -44,7 +41,7 @@ public class TestWhoIsAlive {
 
 	@Test
 	public void testWhoIsAliveAfterTimeout() throws InterruptedException,
-			XMPPException {
+			XMPPException, ParseException {
 		IQ iq = RendezvousTestHelper.createIAmAliveIQ();
 		XMPPClient xmppClient = rendezvousTestHelper.createXMPPClient();
 		IQ response = (IQ) xmppClient.syncSend(iq);
@@ -101,27 +98,25 @@ public class TestWhoIsAlive {
 
 		iq = RendezvousTestHelper.createWhoIsAliveIQ();
 		response = (IQ) xmppClient.syncSend(iq);
-		ArrayList<WhoIsAliveResponseItem> responseItems = RendezvousTestHelper
+		LinkedList<RendezvousItem> responseItems = RendezvousTestHelper
 				.getItemsFromIQ(response);
-		WhoIsAliveResponseItem item = responseItems.get(0);
-		Assert.assertEquals(cpuIdleValue, item.getResources().getCpuIdle());
-		Assert.assertEquals(cpuInUseValue, item.getResources().getCpuInUse());
-		Assert.assertEquals(memIdleValue, item.getResources().getMemIdle());
-		Assert.assertEquals(memInUseValue, item.getResources().getMemInUse());
-		Assert.assertEquals(flavor.getName(), item.getResources().getFlavours()
+		RendezvousItem item = responseItems.get(0);
+		Assert.assertEquals(cpuIdleValue, item.getResourcesInfo().getCpuIdle());
+		Assert.assertEquals(cpuInUseValue, item.getResourcesInfo().getCpuInUse());
+		Assert.assertEquals(memIdleValue, item.getResourcesInfo().getMemIdle());
+		Assert.assertEquals(memInUseValue, item.getResourcesInfo().getMemInUse());
+		Assert.assertEquals(flavor.getName(), item.getResourcesInfo().getFlavours()
 				.get(0).getName());
-		Assert.assertEquals(flavor.getCpu(), item.getResources().getFlavours()
+		Assert.assertEquals(flavor.getCpu(), item.getResourcesInfo().getFlavours()
 				.get(0).getCpu());
-		Assert.assertEquals(flavor.getMem(), item.getResources().getFlavours()
+		Assert.assertEquals(flavor.getMem(), item.getResourcesInfo().getFlavours()
 				.get(0).getMem());
-		Assert.assertEquals(flavor.getCapacity(), item.getResources().getFlavours()
+		Assert.assertEquals(flavor.getCapacity(), item.getResourcesInfo().getFlavours()
 				.get(0).getCapacity());
 		
 		ArrayList<String> aliveIDs = RendezvousTestHelper.getAliveIds(response);
-		SimpleDateFormat format = new SimpleDateFormat(
-				RendezvousItem.ISO_8601_DATE_FORMAT, Locale.ROOT);
-		format.setTimeZone(TimeZone.getTimeZone("GMT"));
-		Date updated = new Date(format.parse(item.getUpdated()).getTime());
+		System.out.println(item.getFormattedTime());
+		Date updated = new Date(item.getLastTime());
 		Assert.assertTrue(updated.after(beforeMessage));
 		Assert.assertTrue(updated.before(afterMessage));
 		Assert.assertTrue(aliveIDs.contains(RendezvousTestHelper
