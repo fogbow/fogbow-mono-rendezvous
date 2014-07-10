@@ -164,7 +164,7 @@ public class RendezvousTestHelper {
 	public static RendezvousResponseItem getItemsFromSyncIQ(IQ iq)
 			throws ParseException {
 		Element queryElement = iq.getElement().element("query");
-		Element neighborsEl = queryElement.element("rendezvousneighbors");
+		Element neighborsEl = queryElement.element("neighbors");
 		Iterator<Element> neighborsIterator = neighborsEl
 				.elementIterator("neighbor");
 		List<String> neighborIds = new LinkedList<String>();
@@ -173,7 +173,7 @@ public class RendezvousTestHelper {
 			String neighbor = itemEl.element("id").getText();
 			neighborIds.add(neighbor);
 		}
-		Element managersEl = queryElement.element("rendezvousmanagers");
+		Element managersEl = queryElement.element("managers");
 		Iterator<Element> managersIterator = managersEl
 				.elementIterator("manager");
 		List<RendezvousItem> managersAlive = new LinkedList<RendezvousItem>();
@@ -231,11 +231,11 @@ public class RendezvousTestHelper {
 		Element queryElement = response.getElement().addElement("query",
 				WHOISALIVESYNC_NAMESPACE);
 
-		Element neighborsEl = queryElement.addElement("rendezvousneighbors");
+		Element neighborsEl = queryElement.addElement("neighbors");
 		Element neighborEl = neighborsEl.addElement("neighbor");
 		neighborEl.addElement("id").setText("id");
 
-		Element managersEl = queryElement.addElement("rendezvousmanagers");
+		Element managersEl = queryElement.addElement("managers");
 		Element managerEl = managersEl.addElement("manager");
 		managerEl.addAttribute("id", "id");
 		managerEl.addElement("cert").setText("cert");

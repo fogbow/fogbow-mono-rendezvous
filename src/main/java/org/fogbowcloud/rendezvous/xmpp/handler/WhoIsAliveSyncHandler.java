@@ -31,7 +31,7 @@ public class WhoIsAliveSyncHandler extends AbstractQueryHandler {
  		IQ response = IQ.createResultIQ(iq);
 		Element queryElement = response.getElement().addElement("query",
 				WHOISALIVESYNC_NAMESPACE);
-		Element neighborsEl = queryElement.addElement("rendezvousneighbors");
+		Element neighborsEl = queryElement.addElement("neighbors");
 		for (Iterator<String> iterator = neighbors.iterator(); iterator
 				.hasNext();) {
 			String neighbor = iterator.next();
@@ -39,7 +39,7 @@ public class WhoIsAliveSyncHandler extends AbstractQueryHandler {
 			neighborEl.addElement("id").setText(neighbor);
 		}
 
-		Element managersEl = queryElement.addElement("rendezvousmanagers");
+		Element managersEl = queryElement.addElement("managers");
 		for (Entry<String, RendezvousItem> entryitem: managersAlive.entrySet()) {
 			RendezvousItem item = entryitem.getValue();
 			Element managerEl = managersEl.addElement("manager");

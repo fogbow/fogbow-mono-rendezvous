@@ -31,7 +31,7 @@ public class RendezvousPacketHelper {
 
 	private static RendezvousResponseItem convertWhoIsAliveSyncResponse(IQ iq) throws ParseException {
 		Element queryElement = iq.getElement().element("query");
-		Element neighborsEl = queryElement.element("rendezvousneighbors");
+		Element neighborsEl = queryElement.element("neighbors");
 		Iterator<Element> neighborsIterator = neighborsEl
 				.elementIterator("neighbor");
 		List<String> neighborIds = new LinkedList<String>();
@@ -40,7 +40,7 @@ public class RendezvousPacketHelper {
 			String neighbor = itemEl.element("id").getText();
 			neighborIds.add(neighbor);
 		}
-		Element managersEl = queryElement.element("rendezvousmanagers");
+		Element managersEl = queryElement.element("managers");
 		Iterator<Element> managersIterator = managersEl
 				.elementIterator("manager");
 		List<RendezvousItem> managersAlive = new LinkedList<RendezvousItem>();
