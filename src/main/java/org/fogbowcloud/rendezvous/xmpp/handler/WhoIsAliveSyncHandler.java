@@ -24,7 +24,7 @@ public class WhoIsAliveSyncHandler extends AbstractQueryHandler {
 	}
 
 	@Override
-	public IQ handle(IQ iq) {		
+	public IQ handle(IQ iq) {
 		Set<String> neighbors = ((RendezvousImpl) rendezvous).getNeighborIds();
 		ConcurrentHashMap<String, RendezvousItem> managersAlive = ((RendezvousImpl) rendezvous)
 	 			.getManagersAlive();
@@ -66,11 +66,9 @@ public class WhoIsAliveSyncHandler extends AbstractQueryHandler {
 			statusEl.addElement("updated").setText(item.getFormattedTime());
 
 		}
-		
 		if(!neighbors.contains(iq.getFrom())) {
-			neighbors.add(iq.getFrom().toFullJID());
+			neighbors.add(iq.getFrom().toBareJID());
 		}
-		
 		return response;
 	}
 

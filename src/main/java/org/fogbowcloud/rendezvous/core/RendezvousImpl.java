@@ -45,6 +45,10 @@ public class RendezvousImpl implements Rendezvous {
 		collectsNotAlive();
 		//TODO continuousSyncWithNeighbors();
 	}
+	
+	public void setPacketSender(PacketSender packetSender) {
+		this.packetSender = packetSender;
+	}
 
 	public RendezvousImpl(PacketSender packetSender, String[] neighbors) {
 		this(TIMEOUT_DEFAULT, packetSender, neighbors);

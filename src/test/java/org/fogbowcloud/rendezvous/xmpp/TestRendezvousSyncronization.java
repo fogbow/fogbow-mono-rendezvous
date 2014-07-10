@@ -1,6 +1,5 @@
 package org.fogbowcloud.rendezvous.xmpp;
 
-import java.text.ParseException;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.concurrent.Semaphore;
@@ -11,7 +10,6 @@ import org.fogbowcloud.rendezvous.core.RendezvousTestHelper;
 import org.fogbowcloud.rendezvous.xmpp.model.RendezvousResponseItem;
 import org.jamppa.client.XMPPClient;
 import org.jivesoftware.smack.PacketListener;
-import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.filter.PacketFilter;
 import org.junit.After;
 import org.junit.Assert;
@@ -136,15 +134,13 @@ public class TestRendezvousSyncronization {
 		RendezvousImpl rendezvous = (RendezvousImpl) rendezvousTestHelper
 				.getRendezvousXmppComponent().getRendezvous();
 		rendezvous.setNeighborIds(new HashSet<String>(Arrays.asList(xmppClient
-				.getJid().toFullJID())));
-		((RendezvousImpl) rendezvousTestHelper.getRendezvousXmppComponent()
-				.getRendezvous()).syncWhoIsAlive();
+				.getJid().toBareJID())));
+		rendezvous.syncWhoIsAlive();
 
 		boolean receivedAll = semaphore.tryAcquire(SEMAPHORE_TIMEOUT,
 				TimeUnit.MINUTES);
 		Assert.assertTrue(receivedAll);
-		Assert.assertEquals(2, ((RendezvousImpl) rendezvousTestHelper
-				.getRendezvousXmppComponent().getRendezvous()).getNeighborIds()
+		Assert.assertEquals(2, rendezvous.getNeighborIds()
 				.size());
 	}
 

@@ -26,16 +26,24 @@ import org.xmpp.packet.Packet;
 
 public class FakeXMPPServer {
 
+	private static final String DEFAULT_RESOURCE = "/Smack";
+	
 	private Map<String, Object> onlineEntities = new HashMap<String, Object>();
 	private Executor executor = Executors.newCachedThreadPool();
 	
 	private void send(final Packet p) throws Exception {
-		Object obj = onlineEntities.get(p.getTo().toBareJID());
-		if (obj instanceof Component) {
-			Component comp = (Component) obj;
+		Object to = onlineEntities.get(p.getTo().toBareJID());
+		Object from = onlineEntities.get(p.getFrom().toBareJID());
+		
+		if (from instanceof XMPPClient) {
+			p.setFrom(new JID(p.getFrom().getNode(), 
+					p.getFrom().getDomain(), DEFAULT_RESOURCE));
+		}
+		if (to instanceof Component) {
+			Component comp = (Component) to;
 			comp.processPacket(p);
-		} else if (obj instanceof XMPPClient) {
-			XMPPClient xmpp = (XMPPClient) obj;
+		} else if (to instanceof XMPPClient) {
+			XMPPClient xmpp = (XMPPClient) to;
 			XMPPConnection conn = xmpp.getConnection();
 			Collection<PacketCollector> collectors = getField(Connection.class, conn, "collectors");
 			for (PacketCollector packetCollector : collectors) {
