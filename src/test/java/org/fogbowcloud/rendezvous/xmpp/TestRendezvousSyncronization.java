@@ -3,8 +3,6 @@ package org.fogbowcloud.rendezvous.xmpp;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -35,8 +33,7 @@ public class TestRendezvousSyncronization {
 	}
 
 	@Test
-	public void testWhoIsAliveiqResponse() throws XMPPException,
-			ComponentException {
+	public void testWhoIsAliveiqResponse() throws Exception {
 		rendezvousTestHelper
 				.initializeXMPPRendezvousComponent(RendezvousTestHelper.TEST_DEFAULT_TIMEOUT);
 		IQ response;
@@ -47,8 +44,7 @@ public class TestRendezvousSyncronization {
 	}
 
 	@Test
-	public void testWhoIsAliveResponseNoNeighbors() throws XMPPException,
-			ParseException, ComponentException {
+	public void testWhoIsAliveResponseNoNeighbors() throws Exception {
 		rendezvousTestHelper
 				.initializeXMPPRendezvousComponent(RendezvousTestHelper.TEST_DEFAULT_TIMEOUT);
 		IQ response;
@@ -65,7 +61,7 @@ public class TestRendezvousSyncronization {
 
 	@Test
 	public void testWhoIsAliveResponseNoManagers1Neighbor()
-			throws XMPPException, ParseException, ComponentException {
+			throws Exception {
 		String[] neighbors = new String[] { RendezvousTestHelper.NEIGHBOR_CLIENT_JID };
 		rendezvousTestHelper.initializeXMPPRendezvousComponent(
 				RendezvousTestHelper.TEST_DEFAULT_TIMEOUT, neighbors);
@@ -83,7 +79,7 @@ public class TestRendezvousSyncronization {
 
 	@Test
 	public void testWhoIsAlive1Neighbors1manager2Neighbors()
-			throws XMPPException, ParseException, ComponentException {
+			throws Exception {
 		String[] neighbors = new String[] {
 				RendezvousTestHelper.NEIGHBOR_CLIENT_JID, "aabc" };
 		rendezvousTestHelper.initializeXMPPRendezvousComponent(
@@ -103,8 +99,7 @@ public class TestRendezvousSyncronization {
 	}
 
 	@Test
-	public void testSendWhoIsAlive() throws XMPPException,
-			InterruptedException, ComponentException {
+	public void testSendWhoIsAlive() throws Exception {
 		String[] neighbors = new String[] { RendezvousTestHelper.NEIGHBOR_CLIENT_JID };
 		rendezvousTestHelper.initializeXMPPRendezvousComponent(
 				RendezvousTestHelper.TEST_DEFAULT_TIMEOUT, neighbors);

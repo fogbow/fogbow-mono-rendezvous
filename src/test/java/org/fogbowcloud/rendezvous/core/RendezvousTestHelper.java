@@ -12,9 +12,11 @@ import org.fogbowcloud.rendezvous.core.model.Flavor;
 import org.fogbowcloud.rendezvous.xmpp.RendezvousXMPPComponent;
 import org.fogbowcloud.rendezvous.xmpp.model.RendezvousResponseItem;
 import org.fogbowcloud.rendezvous.xmpp.model.WhoIsAliveResponseItem;
+import org.fogbowcloud.rendezvous.xmpp.util.FakeXMPPServer;
 import org.jamppa.client.XMPPClient;
 import org.jamppa.client.plugin.xep0077.XEP0077;
 import org.jivesoftware.smack.XMPPException;
+import org.mockito.Mockito;
 import org.xmpp.component.ComponentException;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.IQ.Type;
@@ -38,7 +40,8 @@ public class RendezvousTestHelper {
 	public static final String NEIGHBOR_CLIENT_JID = "neighborClient@test.com/Smack";
 	final String NEIGHBOR_CLIENT_PASSWORD = "neighborClient";
 	private RendezvousXMPPComponent rendezvousXmppComponent;
-
+	private FakeXMPPServer fakeServer = new FakeXMPPServer();
+	
 	public RendezvousXMPPComponent getRendezvousXmppComponent() {
 		return rendezvousXmppComponent;
 	}
@@ -46,25 +49,17 @@ public class RendezvousTestHelper {
 	private ArrayList<XMPPClient> xmppClients = new ArrayList<XMPPClient>();
 
 	public XMPPClient createXMPPClient() throws XMPPException {
-		int clientIndex = this.xmppClients.size();
-
+int clientIndex = this.xmppClients.size();
+		
 		final String client = getClientJid(clientIndex);
 		final String client_pass = getClientPassword(clientIndex);
-
-		XMPPClient xmppClient = new XMPPClient(client, client_pass,
-				SERVER_HOST, SERVER_CLIENT_PORT);
-		XEP0077 register = new XEP0077();
-		xmppClient.registerPlugin(register);
-		xmppClient.connect();
-		try {
-			register.createAccount(client, client_pass);
-		} catch (XMPPException e) {
-		}
-
-		xmppClient.login();
+		
+		XMPPClient xmppClient = Mockito.spy(new XMPPClient(client, client_pass,
+				SERVER_HOST, SERVER_CLIENT_PORT));
+		fakeServer.connect(xmppClient);
 		xmppClient.process(false);
 		xmppClients.add(xmppClient);
-
+		
 		return xmppClient;
 	}
 
@@ -78,36 +73,34 @@ public class RendezvousTestHelper {
 
 	public void disconnectXMPPClients() {
 		for (XMPPClient xmppClient : this.xmppClients) {
-			xmppClient.disconnect();
+			fakeServer.disconnect(xmppClient.getJid().toBareJID());
 		}
 	}
 
 	public void initializeXMPPRendezvousComponent(int timeout)
-			throws ComponentException {
-		rendezvousXmppComponent = new RendezvousXMPPComponent(
+			throws Exception {
+		rendezvousXmppComponent = Mockito.spy(new RendezvousXMPPComponent(
 				RENDEZVOUS_COMPONENT_URL, RENDEZVOUS_COMPONENT_PASS,
-				SERVER_HOST, SERVER_COMPONENT_PORT, timeout,
-				new String[] {});
+				SERVER_HOST, SERVER_COMPONENT_PORT, timeout, new String[] {}));
 		rendezvousXmppComponent.setDescription("Rendezvous Component");
 		rendezvousXmppComponent.setName("rendezvous");
-		rendezvousXmppComponent.connect();
+		fakeServer.connect(rendezvousXmppComponent);
 		rendezvousXmppComponent.process();
 	}
 	
 	public void initializeXMPPRendezvousComponent(int timeout, String[] neighbors)
-			throws ComponentException {
-		rendezvousXmppComponent = new RendezvousXMPPComponent(
+			throws Exception {
+		rendezvousXmppComponent = Mockito.spy(new RendezvousXMPPComponent(
 				RENDEZVOUS_COMPONENT_URL, RENDEZVOUS_COMPONENT_PASS,
-				SERVER_HOST, SERVER_COMPONENT_PORT, timeout,
-				neighbors);
+				SERVER_HOST, SERVER_COMPONENT_PORT, timeout, neighbors));
 		rendezvousXmppComponent.setDescription("Rendezvous Component");
 		rendezvousXmppComponent.setName("rendezvous");
-		rendezvousXmppComponent.connect();
+		fakeServer.connect(rendezvousXmppComponent);
 		rendezvousXmppComponent.process();
 	}
 
 	public void disconnectRendezvousXMPPComponent() throws ComponentException {
-		rendezvousXmppComponent.disconnect();
+		fakeServer.disconnect(rendezvousXmppComponent.getJID().toBareJID());
 	}
 
 	public static IQ createIAmAliveIQ() {
@@ -259,21 +252,13 @@ public class RendezvousTestHelper {
 	public XMPPClient createNeighborClient() throws XMPPException {
 		final String client = NEIGHBOR_CLIENT_JID;
 		final String client_pass = NEIGHBOR_CLIENT_PASSWORD;
-
-		XMPPClient xmppClient = new XMPPClient(client, client_pass,
-				SERVER_HOST, SERVER_CLIENT_PORT);
-		XEP0077 register = new XEP0077();
-		xmppClient.registerPlugin(register);
-		xmppClient.connect();
-		try {
-			register.createAccount(client, client_pass);
-		} catch (XMPPException e) {
-		}
-
-		xmppClient.login();
+		
+		XMPPClient xmppClient = Mockito.spy(new XMPPClient(client, client_pass,
+				SERVER_HOST, SERVER_CLIENT_PORT));
+		fakeServer.connect(xmppClient);
 		xmppClient.process(false);
 		xmppClients.add(xmppClient);
-
+		
 		return xmppClient;
 	}
 }
