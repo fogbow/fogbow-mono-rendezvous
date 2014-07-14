@@ -24,19 +24,21 @@ import org.jamppa.component.PacketSender;
 
 public class RendezvousImpl implements Rendezvous {
 
+	public static final long DEFAULT_TIMEOUT = 3 * 60 * 1000; // in millis
 	private static final Logger LOGGER = Logger.getLogger(RendezvousImpl.class);
+	private static final long MANAGER_EXPIRATION_PERIOD = 60; // in seconds
+	private static final long NEIGHBOR_SYNCHRONIZATION_PERIOD = 60; // in
+																	// seconds
 
 	private final long timeOut;
-	private ScheduledExecutorService executor =  Executors.newScheduledThreadPool(10);
-	private final ConcurrentHashMap<String, RendezvousItem> managersAlive = new ConcurrentHashMap<String, RendezvousItem>();
+	private ScheduledExecutorService executor;
+	private final ConcurrentHashMap<String, RendezvousItem> aliveManagers = new ConcurrentHashMap<String, RendezvousItem>();
 	private boolean inError = false;
 	private DateUtils dateUnit;
 	private Set<String> neighborIds = new HashSet<String>();
-	public static final long TIMEOUT_DEFAULT = 3 * 60 * 1000;
-	private static final long PERIOD = 50;
 	private PacketSender packetSender;
 
-	public RendezvousImpl(long timeOut, PacketSender packetSender, 
+	public RendezvousImpl(long timeOut, PacketSender packetSender,
 			String[] neighbors, ScheduledExecutorService executor) {
 		if (timeOut < 0) {
 			throw new IllegalArgumentException();
@@ -44,20 +46,22 @@ public class RendezvousImpl implements Rendezvous {
 		this.timeOut = timeOut;
 		this.dateUnit = new DateUtils();
 		this.packetSender = packetSender;
-		neighborIds = new HashSet<String>(Arrays.asList(neighbors));
+		this.neighborIds = new HashSet<String>(Arrays.asList(neighbors));
 		this.executor = executor;
 	}
-	
-	public RendezvousImpl(long timeOut, PacketSender packetSender, String[] neighbors) {
-		this(timeOut, packetSender, neighbors, Executors.newScheduledThreadPool(10));
-	}
-	
-	public void setPacketSender(PacketSender packetSender) {
-		this.packetSender = packetSender;
+
+	public RendezvousImpl(long timeOut, PacketSender packetSender,
+			String[] neighbors) {
+		this(timeOut, packetSender, neighbors, Executors
+				.newScheduledThreadPool(10));
 	}
 
 	public RendezvousImpl(PacketSender packetSender, String[] neighbors) {
-		this(TIMEOUT_DEFAULT, packetSender, neighbors);
+		this(DEFAULT_TIMEOUT, packetSender, neighbors);
+	}
+
+	public void setPacketSender(PacketSender packetSender) {
+		this.packetSender = packetSender;
 	}
 
 	public void iAmAlive(ResourcesInfo resourcesInfo) {
@@ -69,13 +73,13 @@ public class RendezvousImpl implements Rendezvous {
 				+ "'; MemInUse : '" + resourcesInfo.getMemInUse()
 				+ "'; CpuIdle : '" + resourcesInfo.getCpuIdle()
 				+ "'; CPuInUse : '" + resourcesInfo.getCpuInUse() + "'");
-		managersAlive.put(resourcesInfo.getId(), new RendezvousItem(
+		aliveManagers.put(resourcesInfo.getId(), new RendezvousItem(
 				resourcesInfo));
 	}
 
 	public List<RendezvousItem> whoIsAlive() {
 		LOGGER.debug("WhoISAlive done.");
-		return new ArrayList<RendezvousItem>(managersAlive.values());
+		return new ArrayList<RendezvousItem>(aliveManagers.values());
 	}
 
 	private void expireDeadManagers() {
@@ -84,11 +88,11 @@ public class RendezvousImpl implements Rendezvous {
 			public void run() {
 				checkExpiredAliveIDs();
 			}
-		}, 0, PERIOD, TimeUnit.MILLISECONDS);
+		}, 0, MANAGER_EXPIRATION_PERIOD, TimeUnit.SECONDS);
 	}
 
 	protected void checkExpiredAliveIDs() {
-		Iterator<Entry<String, RendezvousItem>> iter = managersAlive.entrySet()
+		Iterator<Entry<String, RendezvousItem>> iter = aliveManagers.entrySet()
 				.iterator();
 		while (iter.hasNext()) {
 			try {
@@ -115,32 +119,29 @@ public class RendezvousImpl implements Rendezvous {
 	}
 
 	protected void setLastTime(String id, long lastTime) {
-		if (managersAlive.get(id) != null) {
-			managersAlive.get(id).setLastTime(lastTime);
+		if (aliveManagers.get(id) != null) {
+			aliveManagers.get(id).setLastTime(lastTime);
 		}
 	}
-	
-	//TODO integrate this method 
+
 	public void triggerNeighborsSynchronization() {
 		executor.scheduleAtFixedRate(new TimerTask() {
 			@Override
 			public void run() {
-				syncWhoIsAlive();
+				syncNeighbors();
 			}
-		}, 0, PERIOD, TimeUnit.MILLISECONDS);
+		}, 0, NEIGHBOR_SYNCHRONIZATION_PERIOD, TimeUnit.SECONDS);
 	}
-	
-	public void syncWhoIsAlive() {
-		Iterator<String> iter = neighborIds.iterator();
+
+	public void syncNeighbors() {
 		RendezvousResponseItem responseItem = null;
-		while (iter.hasNext()) {
-			String entry = iter.next();
+		for (String neighbor : neighborIds) {
 			try {
 				responseItem = RendezvousPacketHelper.sendWhoIsAliveSyncIq(
-						entry, packetSender);
+						neighbor, packetSender);
 				merge(responseItem);
-			} catch (ParseException e) {
-				e.printStackTrace();
+			} catch (Throwable e) {
+				LOGGER.warn("Couldn't sync with neighbor " + neighbor, e);
 			}
 		}
 	}
@@ -150,38 +151,29 @@ public class RendezvousImpl implements Rendezvous {
 	}
 
 	public Set<String> getManagersAliveKeys() {
-		return managersAlive.keySet();
-	}
-	
-	public ConcurrentHashMap<String, RendezvousItem> getManagersAlive() {
-		return managersAlive;
-	}
-	
-	// Method for testing
-	public void setNeighborIds(Set<String> neighborIds) {
-		this.neighborIds = neighborIds;
+		return aliveManagers.keySet();
 	}
 
-	// Method for testing
-	public void setManagersAlive(LinkedList<RendezvousItem> managersAlive) {
+	public ConcurrentHashMap<String, RendezvousItem> getManagersAlive() {
+		return aliveManagers;
+	}
+
+	protected void setManagersAlive(LinkedList<RendezvousItem> managersAlive) {
 		for (RendezvousItem item : managersAlive) {
-			this.managersAlive.put(item.getResourcesInfo().getId(), item);
+			this.aliveManagers.put(item.getResourcesInfo().getId(), item);
 		}
 	}
 
 	public void merge(RendezvousResponseItem responseItem) {
 		neighborIds.addAll(responseItem.getNeighbors());
 		for (RendezvousItem item : responseItem.getKnownManagersAlive()) {
-			if (!managersAlive.containsKey(item.getResourcesInfo().getId())) {
-				managersAlive.put(item.getResourcesInfo().getId(), item);
-			}
+			aliveManagers.put(item.getResourcesInfo().getId(), item);
 		}
-
 	}
 
 	@Override
 	public void init() {
 		expireDeadManagers();
-		triggerNeighborsSynchronization();		
+		triggerNeighborsSynchronization();
 	}
 }

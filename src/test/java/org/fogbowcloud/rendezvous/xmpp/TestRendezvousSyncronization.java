@@ -1,7 +1,5 @@
 package org.fogbowcloud.rendezvous.xmpp;
 
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -148,9 +146,7 @@ public class TestRendezvousSyncronization {
 		}, callback);
 		RendezvousImpl rendezvous = (RendezvousImpl) rendezvousTestHelper
 				.getRendezvousXmppComponent().getRendezvous();
-		rendezvous.setNeighborIds(new HashSet<String>(Arrays.asList(xmppClient
-				.getJid().toBareJID())));
-		rendezvous.syncWhoIsAlive();
+		rendezvous.syncNeighbors();
 
 		boolean receivedAll = semaphore.tryAcquire(SEMAPHORE_TIMEOUT,
 				TimeUnit.SECONDS);
@@ -192,16 +188,11 @@ public class TestRendezvousSyncronization {
 			}
 		}, callback);
 
-		ScheduledExecutorService executor = Mockito
-				.mock(ScheduledExecutorService.class);
-		
 		rendezvousTestHelper.initializeXMPPRendezvousComponent(
 				RendezvousTestHelper.TEST_DEFAULT_TIMEOUT, neighbors);
 
 		RendezvousImpl rendezvous = (RendezvousImpl) rendezvousTestHelper
 				.getRendezvousXmppComponent().getRendezvous();
-		rendezvous.setNeighborIds(new HashSet<String>(Arrays.asList(xmppClient
-				.getJid().toBareJID())));
 		boolean receivedAll = semaphore.tryAcquire(SEMAPHORE_TIMEOUT,
 				TimeUnit.SECONDS);
 		Assert.assertTrue(receivedAll);
