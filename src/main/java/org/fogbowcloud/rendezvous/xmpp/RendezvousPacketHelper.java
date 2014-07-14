@@ -26,6 +26,7 @@ public class RendezvousPacketHelper {
 		iq.getElement().addElement("query", WHOISALIVESYNCH_NAMESPACE);
 		IQ response = (IQ) packetSender.syncSendPacket(iq);
 		RendezvousResponseItem responseItem = convertWhoIsAliveSyncResponse(response);
+		
 		return responseItem;
 	}
 

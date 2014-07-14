@@ -7,4 +7,6 @@ public interface Rendezvous {
 	void iAmAlive(ResourcesInfo resourcesInfo);
 	
 	List<RendezvousItem> whoIsAlive();
+
+	void init();
 }

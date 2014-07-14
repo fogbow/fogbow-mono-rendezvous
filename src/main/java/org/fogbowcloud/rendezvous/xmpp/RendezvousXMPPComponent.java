@@ -1,5 +1,7 @@
 package org.fogbowcloud.rendezvous.xmpp;
 
+import java.util.concurrent.Executor;
+
 import org.fogbowcloud.rendezvous.core.Rendezvous;
 import org.fogbowcloud.rendezvous.core.RendezvousImpl;
 import org.fogbowcloud.rendezvous.xmpp.handler.IAmAliveHandler;
@@ -23,6 +25,21 @@ public class RendezvousXMPPComponent extends XMPPComponent {
 		addGetHandler(new IAmAliveHandler(rendezvous));
 		addGetHandler(new WhoIsAliveHandler(rendezvous));
 		addGetHandler(new WhoIsAliveSyncHandler(rendezvous));
+	}
+	
+	public RendezvousXMPPComponent(String jid, String password, String server,
+			int port, long timeout, String[] neighbors, Executor executor) {
+		super(jid, password, server, port);
+		rendezvous = new RendezvousImpl(timeout, this, neighbors, executor);
+		addGetHandler(new IAmAliveHandler(rendezvous));
+		addGetHandler(new WhoIsAliveHandler(rendezvous));
+		addGetHandler(new WhoIsAliveSyncHandler(rendezvous));
+	}
+	
+	@Override
+	public void process() {
+		rendezvous.init();
+		super.process();
 	}
 
 	public Rendezvous getRendezvous() {

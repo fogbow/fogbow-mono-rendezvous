@@ -2,6 +2,8 @@ package org.fogbowcloud.rendezvous.xmpp;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -15,6 +17,8 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
+import org.omg.CORBA.TIMEOUT;
 import org.xmpp.component.ComponentException;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.IQ.Type;
@@ -23,7 +27,7 @@ import org.xmpp.packet.Packet;
 public class TestRendezvousSyncronization {
 
 	private RendezvousTestHelper rendezvousTestHelper;
-	private static final long SEMAPHORE_TIMEOUT = (long) 1; // In minutes
+	private static final long SEMAPHORE_TIMEOUT = 20L; // In minutes
 
 	@Before
 	public void setUp() throws ComponentException {
@@ -58,8 +62,7 @@ public class TestRendezvousSyncronization {
 	}
 
 	@Test
-	public void testWhoIsAliveResponseNoManagers1Neighbor()
-			throws Exception {
+	public void testWhoIsAliveResponseNoManagers1Neighbor() throws Exception {
 		String[] neighbors = new String[] { RendezvousTestHelper.NEIGHBOR_CLIENT_JID };
 		rendezvousTestHelper.initializeXMPPRendezvousComponent(
 				RendezvousTestHelper.TEST_DEFAULT_TIMEOUT, neighbors);
@@ -76,8 +79,7 @@ public class TestRendezvousSyncronization {
 	}
 
 	@Test
-	public void testWhoIsAlive1Neighbors1manager2Neighbors()
-			throws Exception {
+	public void testWhoIsAlive1Neighbors1manager2Neighbors() throws Exception {
 		String[] neighbors = new String[] {
 				RendezvousTestHelper.NEIGHBOR_CLIENT_JID, "aabc" };
 		rendezvousTestHelper.initializeXMPPRendezvousComponent(
@@ -138,10 +140,67 @@ public class TestRendezvousSyncronization {
 		rendezvous.syncWhoIsAlive();
 
 		boolean receivedAll = semaphore.tryAcquire(SEMAPHORE_TIMEOUT,
-				TimeUnit.MINUTES);
+				TimeUnit.SECONDS);
 		Assert.assertTrue(receivedAll);
-		Assert.assertEquals(2, rendezvous.getNeighborIds()
-				.size());
+		Assert.assertEquals(2, rendezvous.getNeighborIds().size());
+	}
+
+	@Test
+	public void testContinuousSync() throws Exception {
+		String[] neighbors = new String[] { RendezvousTestHelper.NEIGHBOR_CLIENT_JID };
+
+		final XMPPClient xmppClient = rendezvousTestHelper
+				.createNeighborClient();
+		final Semaphore semaphore = new Semaphore(0);
+
+		final PacketListener callback = new PacketListener() {
+			public void processPacket(Packet packet) {
+				semaphore.release();
+				xmppClient.send(rendezvousTestHelper
+						.createWhoIsAliveSyncResponse((IQ) packet));
+			}
+		};
+
+		xmppClient.on(new PacketFilter() {
+			@Override
+			public boolean accept(Packet packet) {
+				boolean from = packet
+						.getFrom()
+						.toBareJID()
+						.equals(rendezvousTestHelper
+								.getRendezvousXmppComponent().getJID()
+								.toBareJID());
+				boolean namespace = packet
+						.getElement()
+						.element("query")
+						.getNamespaceURI()
+						.equals(RendezvousPacketHelper.WHOISALIVESYNCH_NAMESPACE);
+				return from && namespace;
+			}
+		}, callback);
+
+		rendezvousTestHelper.initializeXMPPRendezvousComponent(
+				RendezvousTestHelper.TEST_DEFAULT_TIMEOUT, neighbors);
+
+		RendezvousImpl rendezvous = (RendezvousImpl) rendezvousTestHelper
+				.getRendezvousXmppComponent().getRendezvous();
+		rendezvous.setNeighborIds(new HashSet<String>(Arrays.asList(xmppClient
+				.getJid().toBareJID())));
+		boolean receivedAll = semaphore.tryAcquire(SEMAPHORE_TIMEOUT,
+				TimeUnit.SECONDS);
+		Assert.assertTrue(receivedAll);
+	}
+
+	@Test
+	public void testContinuousSyncWithMock() throws Exception {
+		String[] neighbors = new String[] { RendezvousTestHelper.NEIGHBOR_CLIENT_JID };
+		ScheduledExecutorService executor = Mockito
+				.mock(ScheduledExecutorService.class);
+		executor.scheduleAtFixedRate(Mockito.isA(Runnable.class),
+				Mockito.anyLong(), Mockito.anyLong(), Mockito.any(TimeUnit.class));
+		rendezvousTestHelper.initializeXMPPRendezvousComponent(
+				RendezvousTestHelper.TEST_DEFAULT_TIMEOUT, neighbors, executor);
+		Mockito.verify(executor);
 	}
 
 	@After

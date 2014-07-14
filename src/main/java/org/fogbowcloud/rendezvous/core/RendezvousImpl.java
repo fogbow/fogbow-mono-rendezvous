@@ -13,6 +13,11 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.rendezvous.core.model.DateUtils;
@@ -25,7 +30,7 @@ public class RendezvousImpl implements Rendezvous {
 	private static final Logger LOGGER = Logger.getLogger(RendezvousImpl.class);
 
 	private final long timeOut;
-	private final Timer timer = new Timer();
+	private ScheduledExecutorService executor =  Executors.newScheduledThreadPool(10);
 	private final ConcurrentHashMap<String, RendezvousItem> managersAlive = new ConcurrentHashMap<String, RendezvousItem>();
 	private boolean inError = false;
 	private DateUtils dateUnit;
@@ -34,7 +39,7 @@ public class RendezvousImpl implements Rendezvous {
 	private static final long PERIOD = 50;
 	private PacketSender packetSender;
 
-	public RendezvousImpl(long timeOut, PacketSender packetSender, String[] neighbors) {
+	public RendezvousImpl(long timeOut, PacketSender packetSender, String[] neighbors, Executor executor) {
 		if (timeOut < 0) {
 			throw new IllegalArgumentException();
 		}
@@ -42,8 +47,10 @@ public class RendezvousImpl implements Rendezvous {
 		this.dateUnit = new DateUtils();
 		this.packetSender = packetSender;
 		neighborIds = new HashSet<String>(Arrays.asList(neighbors));
-		collectsNotAlive();
-		//TODO continuousSyncWithNeighbors();
+	}
+	
+	public RendezvousImpl(long timeOut, PacketSender packetSender, String[] neighbors) {
+		this(timeOut, packetSender, neighbors, Executors.newScheduledThreadPool(10));
 	}
 	
 	public void setPacketSender(PacketSender packetSender) {
@@ -72,13 +79,13 @@ public class RendezvousImpl implements Rendezvous {
 		return new ArrayList<RendezvousItem>(managersAlive.values());
 	}
 
-	private void collectsNotAlive() {
-		timer.schedule(new TimerTask() {
+	private void expireDeadManagers() {
+		executor.scheduleAtFixedRate(new TimerTask() {
 			@Override
 			public void run() {
 				checkExpiredAliveIDs();
 			}
-		}, 0, PERIOD);
+		}, 0, PERIOD, TimeUnit.MILLISECONDS);
 	}
 
 	protected void checkExpiredAliveIDs() {
@@ -115,13 +122,13 @@ public class RendezvousImpl implements Rendezvous {
 	}
 	
 	//TODO integrate this method 
-	public void continuousSyncWithNeighbors() {
-		timer.schedule(new TimerTask() {
+	public void triggerNeighborsSynchronization() {
+		executor.scheduleAtFixedRate(new TimerTask() {
 			@Override
 			public void run() {
 				syncWhoIsAlive();
 			}
-		}, 0, PERIOD);
+		}, 0, PERIOD, TimeUnit.MILLISECONDS);
 	}
 	
 	public void syncWhoIsAlive() {
@@ -171,5 +178,11 @@ public class RendezvousImpl implements Rendezvous {
 			}
 		}
 
+	}
+
+	@Override
+	public void init() {
+		expireDeadManagers();
+		triggerNeighborsSynchronization();		
 	}
 }

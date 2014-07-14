@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.Executor;
 
 import org.dom4j.Attribute;
 import org.dom4j.Element;
@@ -101,7 +102,21 @@ public class RendezvousTestHelper {
 		fakeServer.connect(rendezvousXmppComponent);
 		rendezvousXmppComponent.process();
 	}
-
+	
+	public void initializeXMPPRendezvousComponent(int timeout,
+			String[] neighbors, Executor executor) throws Exception {
+		RendezvousXMPPComponent comp = new RendezvousXMPPComponent(
+						RENDEZVOUS_COMPONENT_URL, RENDEZVOUS_COMPONENT_PASS,
+						SERVER_HOST, SERVER_COMPONENT_PORT, timeout, neighbors, executor);
+		rendezvousXmppComponent = Mockito.spy(comp);
+		((RendezvousImpl)comp.getRendezvous()).setPacketSender(
+				rendezvousXmppComponent);
+		rendezvousXmppComponent.setDescription("Rendezvous Component");
+		rendezvousXmppComponent.setName("rendezvous");
+		fakeServer.connect(rendezvousXmppComponent);
+		rendezvousXmppComponent.process();
+	}
+	
 	public void disconnectRendezvousXMPPComponent() throws ComponentException {
 		fakeServer.disconnect(rendezvousXmppComponent.getJID().toBareJID());
 	}
