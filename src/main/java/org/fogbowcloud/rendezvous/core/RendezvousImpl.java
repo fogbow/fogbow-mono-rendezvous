@@ -10,13 +10,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
@@ -39,7 +36,8 @@ public class RendezvousImpl implements Rendezvous {
 	private static final long PERIOD = 50;
 	private PacketSender packetSender;
 
-	public RendezvousImpl(long timeOut, PacketSender packetSender, String[] neighbors, Executor executor) {
+	public RendezvousImpl(long timeOut, PacketSender packetSender, 
+			String[] neighbors, ScheduledExecutorService executor) {
 		if (timeOut < 0) {
 			throw new IllegalArgumentException();
 		}
@@ -47,6 +45,7 @@ public class RendezvousImpl implements Rendezvous {
 		this.dateUnit = new DateUtils();
 		this.packetSender = packetSender;
 		neighborIds = new HashSet<String>(Arrays.asList(neighbors));
+		this.executor = executor;
 	}
 	
 	public RendezvousImpl(long timeOut, PacketSender packetSender, String[] neighbors) {

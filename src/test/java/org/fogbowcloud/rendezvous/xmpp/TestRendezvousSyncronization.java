@@ -2,7 +2,6 @@ package org.fogbowcloud.rendezvous.xmpp;
 
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -18,7 +17,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
-import org.omg.CORBA.TIMEOUT;
 import org.xmpp.component.ComponentException;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.IQ.Type;
@@ -36,8 +34,11 @@ public class TestRendezvousSyncronization {
 
 	@Test
 	public void testWhoIsAliveiqResponse() throws Exception {
-		rendezvousTestHelper
-				.initializeXMPPRendezvousComponent(RendezvousTestHelper.TEST_DEFAULT_TIMEOUT);
+		ScheduledExecutorService executor = Mockito
+				.mock(ScheduledExecutorService.class);
+		
+		rendezvousTestHelper.initializeXMPPRendezvousComponent(
+				RendezvousTestHelper.TEST_DEFAULT_TIMEOUT, new String[] {},executor);
 		IQ response;
 		IQ iq = RendezvousTestHelper.createWhoIsAliveSyncIQ();
 		XMPPClient xmppClient = rendezvousTestHelper.createXMPPClient();
@@ -47,8 +48,11 @@ public class TestRendezvousSyncronization {
 
 	@Test
 	public void testWhoIsAliveResponseNoNeighbors() throws Exception {
-		rendezvousTestHelper
-				.initializeXMPPRendezvousComponent(RendezvousTestHelper.TEST_DEFAULT_TIMEOUT);
+		ScheduledExecutorService executor = Mockito
+				.mock(ScheduledExecutorService.class);
+		
+		rendezvousTestHelper.initializeXMPPRendezvousComponent(
+				RendezvousTestHelper.TEST_DEFAULT_TIMEOUT, new String[] {},executor);
 		IQ response;
 		IQ iq = RendezvousTestHelper.createWhoIsAliveSyncIQ();
 		XMPPClient xmppClient = rendezvousTestHelper.createXMPPClient();
@@ -64,8 +68,11 @@ public class TestRendezvousSyncronization {
 	@Test
 	public void testWhoIsAliveResponseNoManagers1Neighbor() throws Exception {
 		String[] neighbors = new String[] { RendezvousTestHelper.NEIGHBOR_CLIENT_JID };
+		ScheduledExecutorService executor = Mockito
+				.mock(ScheduledExecutorService.class);
+		
 		rendezvousTestHelper.initializeXMPPRendezvousComponent(
-				RendezvousTestHelper.TEST_DEFAULT_TIMEOUT, neighbors);
+				RendezvousTestHelper.TEST_DEFAULT_TIMEOUT, neighbors, executor);
 		IQ response;
 		IQ iq = RendezvousTestHelper.createWhoIsAliveSyncIQ();
 		XMPPClient xmppClient = rendezvousTestHelper.createXMPPClient();
@@ -82,8 +89,11 @@ public class TestRendezvousSyncronization {
 	public void testWhoIsAlive1Neighbors1manager2Neighbors() throws Exception {
 		String[] neighbors = new String[] {
 				RendezvousTestHelper.NEIGHBOR_CLIENT_JID, "aabc" };
+		ScheduledExecutorService executor = Mockito
+				.mock(ScheduledExecutorService.class);
+		
 		rendezvousTestHelper.initializeXMPPRendezvousComponent(
-				RendezvousTestHelper.TEST_DEFAULT_TIMEOUT, neighbors);
+				RendezvousTestHelper.TEST_DEFAULT_TIMEOUT, neighbors, executor);
 		IQ iq1 = RendezvousTestHelper.createIAmAliveIQ();
 		XMPPClient xmppClient1 = rendezvousTestHelper.createXMPPClient();
 		xmppClient1.syncSend(iq1);
@@ -101,9 +111,12 @@ public class TestRendezvousSyncronization {
 	@Test
 	public void testSendWhoIsAlive() throws Exception {
 		String[] neighbors = new String[] { RendezvousTestHelper.NEIGHBOR_CLIENT_JID };
+		ScheduledExecutorService executor = Mockito
+				.mock(ScheduledExecutorService.class);
+		
 		rendezvousTestHelper.initializeXMPPRendezvousComponent(
-				RendezvousTestHelper.TEST_DEFAULT_TIMEOUT, neighbors);
-
+				RendezvousTestHelper.TEST_DEFAULT_TIMEOUT, neighbors, executor);
+		
 		final XMPPClient xmppClient = rendezvousTestHelper
 				.createNeighborClient();
 		final Semaphore semaphore = new Semaphore(0);
@@ -179,6 +192,9 @@ public class TestRendezvousSyncronization {
 			}
 		}, callback);
 
+		ScheduledExecutorService executor = Mockito
+				.mock(ScheduledExecutorService.class);
+		
 		rendezvousTestHelper.initializeXMPPRendezvousComponent(
 				RendezvousTestHelper.TEST_DEFAULT_TIMEOUT, neighbors);
 
