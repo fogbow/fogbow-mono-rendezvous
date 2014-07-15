@@ -30,6 +30,7 @@ public class RendezvousPacketHelper {
 		return responseItem;
 	}
 
+	@SuppressWarnings("unchecked")
 	private static RendezvousResponseItem convertWhoIsAliveSyncResponse(IQ iq) throws ParseException {
 		Element queryElement = iq.getElement().element("query");
 		Element neighborsEl = queryElement.element("neighbors");
@@ -55,6 +56,7 @@ public class RendezvousPacketHelper {
 		return rendezvousItem;
 	}
 	
+	@SuppressWarnings("unchecked")
 	public static RendezvousItem getWhoIsAliveResponseItem(
 			Element itemEl) throws ParseException {
 		Attribute id = itemEl.attribute("id");

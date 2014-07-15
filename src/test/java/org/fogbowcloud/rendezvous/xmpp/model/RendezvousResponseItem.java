@@ -7,12 +7,12 @@ import org.fogbowcloud.rendezvous.core.RendezvousItem;
 public class RendezvousResponseItem {
 
 	private List<String> neighbors;
-	private List<RendezvousItem> knownManagersAlive;
+	private List<RendezvousItem> managers;
 
 	public RendezvousResponseItem(List<String> neighbors,
-			List<RendezvousItem> knownManagersAlive) {
+			List<RendezvousItem> managers) {
 		this.neighbors = neighbors;
-		this.knownManagersAlive = knownManagersAlive;
+		this.managers = managers;
 	}
 
 	public List<String> getNeighbors() {
@@ -23,12 +23,11 @@ public class RendezvousResponseItem {
 		this.neighbors = neighbors;
 	}
 
-	public List<RendezvousItem> getKnownManagersAlive() {
-		return knownManagersAlive;
+	public List<RendezvousItem> getManagers() {
+		return managers;
 	}
 
-	public void setKnownManagersAlive(
-			List<RendezvousItem> knownManagersAlive) {
-		this.knownManagersAlive = knownManagersAlive;
+	public void setManagers(List<RendezvousItem> managers) {
+		this.managers = managers;
 	}
 }

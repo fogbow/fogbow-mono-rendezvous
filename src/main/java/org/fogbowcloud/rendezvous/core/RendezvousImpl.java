@@ -1,6 +1,5 @@
 package org.fogbowcloud.rendezvous.core;
 
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.ConcurrentModificationException;
@@ -8,6 +7,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TimerTask;
@@ -32,10 +32,10 @@ public class RendezvousImpl implements Rendezvous {
 
 	private final long timeOut;
 	private ScheduledExecutorService executor;
-	private final ConcurrentHashMap<String, RendezvousItem> aliveManagers = new ConcurrentHashMap<String, RendezvousItem>();
+	private final Map<String, RendezvousItem> aliveManagers = new ConcurrentHashMap<String, RendezvousItem>();
 	private boolean inError = false;
 	private DateUtils dateUnit;
-	private Set<String> neighborIds = new HashSet<String>();
+	private Set<String> neighborsIds = new HashSet<String>();
 	private PacketSender packetSender;
 
 	public RendezvousImpl(long timeOut, PacketSender packetSender,
@@ -46,7 +46,7 @@ public class RendezvousImpl implements Rendezvous {
 		this.timeOut = timeOut;
 		this.dateUnit = new DateUtils();
 		this.packetSender = packetSender;
-		this.neighborIds = new HashSet<String>(Arrays.asList(neighbors));
+		this.neighborsIds = new HashSet<String>(Arrays.asList(neighbors));
 		this.executor = executor;
 	}
 
@@ -91,7 +91,7 @@ public class RendezvousImpl implements Rendezvous {
 		}, 0, MANAGER_EXPIRATION_PERIOD, TimeUnit.SECONDS);
 	}
 
-	protected void checkExpiredAliveIDs() {
+	public void checkExpiredAliveIDs() {
 		Iterator<Entry<String, RendezvousItem>> iter = aliveManagers.entrySet()
 				.iterator();
 		while (iter.hasNext()) {
@@ -135,7 +135,7 @@ public class RendezvousImpl implements Rendezvous {
 
 	public void syncNeighbors() {
 		RendezvousResponseItem responseItem = null;
-		for (String neighbor : neighborIds) {
+		for (String neighbor : neighborsIds) {
 			try {
 				responseItem = RendezvousPacketHelper.sendWhoIsAliveSyncIq(
 						neighbor, packetSender);
@@ -147,14 +147,14 @@ public class RendezvousImpl implements Rendezvous {
 	}
 
 	public Set<String> getNeighborIds() {
-		return neighborIds;
+		return neighborsIds;
 	}
 
 	public Set<String> getManagersAliveKeys() {
 		return aliveManagers.keySet();
 	}
 
-	public ConcurrentHashMap<String, RendezvousItem> getManagersAlive() {
+	public Map<String, RendezvousItem> getManagersAlive() {
 		return aliveManagers;
 	}
 
@@ -165,8 +165,8 @@ public class RendezvousImpl implements Rendezvous {
 	}
 
 	public void merge(RendezvousResponseItem responseItem) {
-		neighborIds.addAll(responseItem.getNeighbors());
-		for (RendezvousItem item : responseItem.getKnownManagersAlive()) {
+		neighborsIds.addAll(responseItem.getNeighbors());
+		for (RendezvousItem item : responseItem.getManagers()) {
 			aliveManagers.put(item.getResourcesInfo().getId(), item);
 		}
 	}

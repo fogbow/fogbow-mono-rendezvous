@@ -33,8 +33,8 @@ public class RendezvousTestHelper {
 	public static final String IAMALIVE_NAMESPACE = "http://fogbowcloud.org/rendezvous/iamalive";
 	public static final String WHOISALIVESYNC_NAMESPACE = "http://fogbowcloud.org/rendezvous/synch/whoisalive";
 
-	public static final int TEST_DEFAULT_TIMEOUT = 10000;
-	public static final int TIMEOUT_GRACE = 500;
+	public static final long TEST_DEFAULT_TIMEOUT = 600;
+	public static final long TIMEOUT_GRACE = 60;
 
 	public static final String NEIGHBOR_CLIENT_JID = "neighborClient@test.com/Smack";
 	final String NEIGHBOR_CLIENT_PASSWORD = "neighborClient";
@@ -76,10 +76,10 @@ public class RendezvousTestHelper {
 		}
 	}
 
-	public void initializeXMPPRendezvousComponent(int timeout) throws Exception {
+	public void initializeXMPPRendezvousComponent(long testDefaultTimeout) throws Exception {
 		RendezvousXMPPComponent comp = new RendezvousXMPPComponent(
 				RENDEZVOUS_COMPONENT_URL, RENDEZVOUS_COMPONENT_PASS,
-				SERVER_HOST, SERVER_COMPONENT_PORT, timeout, new String[] {});
+				SERVER_HOST, SERVER_COMPONENT_PORT, testDefaultTimeout, new String[] {});
 		rendezvousXmppComponent = Mockito.spy(comp);
 		((RendezvousImpl) comp.getRendezvous())
 				.setPacketSender(rendezvousXmppComponent);
@@ -89,11 +89,11 @@ public class RendezvousTestHelper {
 		rendezvousXmppComponent.process();
 	}
 	
-	public void initializeXMPPRendezvousComponent(int timeout,
+	public void initializeXMPPRendezvousComponent(long testDefaultTimeout,
 			String[] neighbors) throws Exception {
 		RendezvousXMPPComponent comp = new RendezvousXMPPComponent(
 						RENDEZVOUS_COMPONENT_URL, RENDEZVOUS_COMPONENT_PASS,
-						SERVER_HOST, SERVER_COMPONENT_PORT, timeout, neighbors);
+						SERVER_HOST, SERVER_COMPONENT_PORT, testDefaultTimeout, neighbors);
 		rendezvousXmppComponent = Mockito.spy(comp);
 		((RendezvousImpl)comp.getRendezvous()).setPacketSender(
 				rendezvousXmppComponent);
@@ -103,11 +103,11 @@ public class RendezvousTestHelper {
 		rendezvousXmppComponent.process();
 	}
 	
-	public void initializeXMPPRendezvousComponent(int timeout,
+	public void initializeXMPPRendezvousComponent(long testDefaultTimeout,
 			String[] neighbors, ScheduledExecutorService executor) throws Exception {
 		RendezvousXMPPComponent comp = new RendezvousXMPPComponent(
 						RENDEZVOUS_COMPONENT_URL, RENDEZVOUS_COMPONENT_PASS,
-						SERVER_HOST, SERVER_COMPONENT_PORT, timeout, neighbors, executor);
+						SERVER_HOST, SERVER_COMPONENT_PORT, testDefaultTimeout, neighbors, executor);
 		rendezvousXmppComponent = Mockito.spy(comp);
 		((RendezvousImpl)comp.getRendezvous()).setPacketSender(
 				rendezvousXmppComponent);

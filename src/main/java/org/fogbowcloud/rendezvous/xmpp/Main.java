@@ -2,7 +2,6 @@ package org.fogbowcloud.rendezvous.xmpp;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.util.List;
 import java.util.Properties;
 
 public class Main {
@@ -14,11 +13,11 @@ public class Main {
 	private static final String PROP_EXPIRATION = "site_expiration";
 	private static final String DESCRIPTION = "Rendezvous Component";
 	private static final String NAME = "rendezvous";
-	private static final String NEIGHBORS = "neighbors";
+	private static final String PROP_NEIGHBORS = "neighbors";
 	
  	private static RendezvousXMPPComponent rendezvousXmppComponent;
 
-	static void initializeRendezvousXMPPComponent(String configPath) throws Exception {
+	private static void initializeRendezvousXMPPComponent(String configPath) throws Exception {
 		Properties properties = new Properties();
 		FileInputStream input = getFileInputStrean(configPath);
 		properties.load(input);
@@ -95,11 +94,11 @@ public class Main {
 	}
 	
 	static String[] getNeighbors(Properties properties) {
-		String neighborsl = properties.getProperty(NEIGHBORS);
-		if (neighborsl.equals("")) {
-			throw new IllegalArgumentException();
+		String neighborsList = properties.getProperty(PROP_NEIGHBORS);
+		if (neighborsList.equals("")) {
+			return new String[]{};
 		}
-		String[] neighborIds = neighborsl.split(",");
+		String[] neighborIds = neighborsList.split(",");
 		return neighborIds;
 	}
 	

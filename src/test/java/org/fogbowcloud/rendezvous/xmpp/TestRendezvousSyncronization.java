@@ -59,7 +59,7 @@ public class TestRendezvousSyncronization {
 		Assert.assertEquals(Type.result, response.getType());
 		RendezvousResponseItem itemsAlive = RendezvousTestHelper
 				.getItemsFromSyncIQ(response);
-		Assert.assertEquals(0, itemsAlive.getKnownManagersAlive().size());
+		Assert.assertEquals(0, itemsAlive.getManagers().size());
 		Assert.assertEquals(0, itemsAlive.getNeighbors().size());
 	}
 
@@ -79,7 +79,7 @@ public class TestRendezvousSyncronization {
 		Assert.assertEquals(Type.result, response.getType());
 		RendezvousResponseItem itemsAlive = RendezvousTestHelper
 				.getItemsFromSyncIQ(response);
-		Assert.assertEquals(0, itemsAlive.getKnownManagersAlive().size());
+		Assert.assertEquals(0, itemsAlive.getManagers().size());
 		Assert.assertEquals(1, itemsAlive.getNeighbors().size());
 	}
 
@@ -102,7 +102,7 @@ public class TestRendezvousSyncronization {
 		Assert.assertEquals(Type.result, response.getType());
 		RendezvousResponseItem itemsAlive = RendezvousTestHelper
 				.getItemsFromSyncIQ(response);
-		Assert.assertEquals(1, itemsAlive.getKnownManagersAlive().size());
+		Assert.assertEquals(1, itemsAlive.getManagers().size());
 		Assert.assertEquals(2, itemsAlive.getNeighbors().size());
 	}
 
@@ -190,9 +190,6 @@ public class TestRendezvousSyncronization {
 
 		rendezvousTestHelper.initializeXMPPRendezvousComponent(
 				RendezvousTestHelper.TEST_DEFAULT_TIMEOUT, neighbors);
-
-		RendezvousImpl rendezvous = (RendezvousImpl) rendezvousTestHelper
-				.getRendezvousXmppComponent().getRendezvous();
 		boolean receivedAll = semaphore.tryAcquire(SEMAPHORE_TIMEOUT,
 				TimeUnit.SECONDS);
 		Assert.assertTrue(receivedAll);

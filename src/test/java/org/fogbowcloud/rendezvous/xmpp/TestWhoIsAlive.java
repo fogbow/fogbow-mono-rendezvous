@@ -4,8 +4,10 @@ import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
+import java.util.concurrent.ScheduledExecutorService;
 
 import org.dom4j.Element;
+import org.fogbowcloud.rendezvous.core.RendezvousImpl;
 import org.fogbowcloud.rendezvous.core.RendezvousItem;
 import org.fogbowcloud.rendezvous.core.RendezvousTestHelper;
 import org.fogbowcloud.rendezvous.core.model.Flavor;
@@ -15,6 +17,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.xmpp.component.ComponentException;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.IQ.Type;
@@ -25,9 +28,12 @@ public class TestWhoIsAlive {
 
 	@Before
 	public void setUp() throws Exception {
+		ScheduledExecutorService executor = Mockito
+				.mock(ScheduledExecutorService.class);
 		rendezvousTestHelper = new RendezvousTestHelper();
-		rendezvousTestHelper
-				.initializeXMPPRendezvousComponent(RendezvousTestHelper.TEST_DEFAULT_TIMEOUT);
+		rendezvousTestHelper.initializeXMPPRendezvousComponent(
+				RendezvousTestHelper.TEST_DEFAULT_TIMEOUT, new String[] {},
+				executor);
 	}
 
 	@Test
@@ -54,8 +60,11 @@ public class TestWhoIsAlive {
 		Assert.assertTrue(aliveIDs.contains(RendezvousTestHelper
 				.getClientJid(0)));
 
+		RendezvousImpl rendezvous = ((RendezvousImpl) rendezvousTestHelper
+				.getRendezvousXmppComponent().getRendezvous());
 		Thread.sleep(RendezvousTestHelper.TEST_DEFAULT_TIMEOUT
 				+ RendezvousTestHelper.TIMEOUT_GRACE);
+		rendezvous.checkExpiredAliveIDs();
 		iq = RendezvousTestHelper.createWhoIsAliveIQ();
 		response = (IQ) xmppClient.syncSend(iq);
 		aliveIDs = RendezvousTestHelper.getAliveIds(response);
@@ -78,7 +87,7 @@ public class TestWhoIsAlive {
 		String memIdleValue = "value3";
 		String memInUseValue = "value4";
 		Flavor flavor = new Flavor("small", "cpu", "mem", 2);
-		
+
 		statusEl.addElement("cpu-idle").setText(cpuIdleValue);
 		statusEl.addElement("cpu-inuse").setText(cpuInUseValue);
 		statusEl.addElement("mem-idle").setText(memIdleValue);
@@ -102,18 +111,20 @@ public class TestWhoIsAlive {
 				.getItemsFromIQ(response);
 		RendezvousItem item = responseItems.get(0);
 		Assert.assertEquals(cpuIdleValue, item.getResourcesInfo().getCpuIdle());
-		Assert.assertEquals(cpuInUseValue, item.getResourcesInfo().getCpuInUse());
+		Assert.assertEquals(cpuInUseValue, item.getResourcesInfo()
+				.getCpuInUse());
 		Assert.assertEquals(memIdleValue, item.getResourcesInfo().getMemIdle());
-		Assert.assertEquals(memInUseValue, item.getResourcesInfo().getMemInUse());
-		Assert.assertEquals(flavor.getName(), item.getResourcesInfo().getFlavours()
-				.get(0).getName());
-		Assert.assertEquals(flavor.getCpu(), item.getResourcesInfo().getFlavours()
-				.get(0).getCpu());
-		Assert.assertEquals(flavor.getMem(), item.getResourcesInfo().getFlavours()
-				.get(0).getMem());
-		Assert.assertEquals(flavor.getCapacity(), item.getResourcesInfo().getFlavours()
-				.get(0).getCapacity());
-		
+		Assert.assertEquals(memInUseValue, item.getResourcesInfo()
+				.getMemInUse());
+		Assert.assertEquals(flavor.getName(), item.getResourcesInfo()
+				.getFlavours().get(0).getName());
+		Assert.assertEquals(flavor.getCpu(), item.getResourcesInfo()
+				.getFlavours().get(0).getCpu());
+		Assert.assertEquals(flavor.getMem(), item.getResourcesInfo()
+				.getFlavours().get(0).getMem());
+		Assert.assertEquals(flavor.getCapacity(), item.getResourcesInfo()
+				.getFlavours().get(0).getCapacity());
+
 		ArrayList<String> aliveIDs = RendezvousTestHelper.getAliveIds(response);
 		System.out.println(item.getFormattedTime());
 		Date updated = new Date(item.getLastTime());
