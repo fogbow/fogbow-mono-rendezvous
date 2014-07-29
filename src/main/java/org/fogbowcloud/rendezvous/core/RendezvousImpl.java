@@ -28,7 +28,7 @@ public class RendezvousImpl implements Rendezvous {
 	private static final Logger LOGGER = Logger.getLogger(RendezvousImpl.class);
 	private static final long MANAGER_EXPIRATION_PERIOD = 60; // in seconds
 	private static final long NEIGHBOR_SYNCHRONIZATION_PERIOD = 60; // in
-																	// seconds
+	private static final int DEFAULT_MAX_WHOISALIVE_MANAGER_COUNT = 101;																// seconds
 
 	private final long timeOut;
 	private ScheduledExecutorService executor;
@@ -37,9 +37,10 @@ public class RendezvousImpl implements Rendezvous {
 	private DateUtils dateUnit;
 	private Set<String> neighborsIds = new HashSet<String>();
 	private PacketSender packetSender;
+	private int maxWhoisaliveManagerCount;
 
 	public RendezvousImpl(long timeOut, PacketSender packetSender,
-			String[] neighbors, ScheduledExecutorService executor) {
+			String[] neighbors, ScheduledExecutorService executor,int maxWhoisaliveManagerCount) {
 		if (timeOut < 0) {
 			throw new IllegalArgumentException();
 		}
@@ -48,12 +49,13 @@ public class RendezvousImpl implements Rendezvous {
 		this.packetSender = packetSender;
 		this.neighborsIds = new HashSet<String>(Arrays.asList(neighbors));
 		this.executor = executor;
+		this.maxWhoisaliveManagerCount = maxWhoisaliveManagerCount;
 	}
 
 	public RendezvousImpl(long timeOut, PacketSender packetSender,
 			String[] neighbors) {
 		this(timeOut, packetSender, neighbors, Executors
-				.newScheduledThreadPool(10));
+				.newScheduledThreadPool(10), DEFAULT_MAX_WHOISALIVE_MANAGER_COUNT);
 	}
 
 	public RendezvousImpl(PacketSender packetSender, String[] neighbors) {
@@ -145,7 +147,11 @@ public class RendezvousImpl implements Rendezvous {
 			}
 		}
 	}
-
+	
+	public int getMaxWhoisaliveManagerCount() {
+		return maxWhoisaliveManagerCount;
+	}
+	
 	public Set<String> getNeighborIds() {
 		return neighborsIds;
 	}

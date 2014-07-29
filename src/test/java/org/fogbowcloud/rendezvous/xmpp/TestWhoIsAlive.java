@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 import org.dom4j.Element;
 import org.fogbowcloud.rendezvous.core.RendezvousImpl;
@@ -12,7 +14,9 @@ import org.fogbowcloud.rendezvous.core.RendezvousItem;
 import org.fogbowcloud.rendezvous.core.RendezvousTestHelper;
 import org.fogbowcloud.rendezvous.core.model.Flavor;
 import org.jamppa.client.XMPPClient;
+import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.filter.PacketIDFilter;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -21,10 +25,13 @@ import org.mockito.Mockito;
 import org.xmpp.component.ComponentException;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.IQ.Type;
+import org.xmpp.packet.Packet;
 
 public class TestWhoIsAlive {
 
+	private static final int XMPP_CLIENT_COUNT = 200;
 	private RendezvousTestHelper rendezvousTestHelper;
+	private long SEMAPHORE_TIMEOUT = 100;
 
 	@Before
 	public void setUp() throws Exception {
@@ -126,13 +133,49 @@ public class TestWhoIsAlive {
 				.getFlavours().get(0).getCapacity());
 
 		ArrayList<String> aliveIDs = RendezvousTestHelper.getAliveIds(response);
-		System.out.println(item.getFormattedTime());
 		Date updated = new Date(item.getLastTime());
 		Assert.assertTrue(updated.after(beforeMessage));
 		Assert.assertTrue(updated.before(afterMessage));
 		Assert.assertTrue(aliveIDs.contains(RendezvousTestHelper
 				.getClientJid(0)));
 		Assert.assertEquals(1, aliveIDs.size());
+	}
+
+	@Test
+	public void testWhoisAlivePagination() throws InterruptedException,
+			XMPPException, ParseException {
+
+		final Semaphore semaphore = new Semaphore(0);
+
+		final PacketListener callback = new PacketListener() {
+			public void processPacket(Packet packet) {
+				semaphore.release();
+			}
+		};
+
+		for (int i = 0; i < XMPP_CLIENT_COUNT; i++) {
+			XMPPClient xmppClient = null;
+			try {
+				xmppClient = rendezvousTestHelper.createXMPPClient();
+			} catch (XMPPException e) {
+				Assert.fail(e.getMessage());
+			}
+			IQ iq = RendezvousTestHelper.createIAmAliveIQ();
+			xmppClient.on(new PacketIDFilter(iq.getID()), callback);
+			xmppClient.send(iq);
+		}
+
+		boolean receivedAll = semaphore.tryAcquire(XMPP_CLIENT_COUNT,
+				SEMAPHORE_TIMEOUT, TimeUnit.MINUTES);
+		Assert.assertTrue(receivedAll);
+
+		XMPPClient xmppClient = rendezvousTestHelper.createXMPPClient();
+		IQ response = (IQ) xmppClient.syncSend(RendezvousTestHelper
+				.createWhoIsAliveIQ());
+
+		ArrayList<String> aliveIDs = RendezvousTestHelper.getAliveIds(response);
+		Assert.assertEquals(RendezvousTestHelper.MAX_WHOISALIVE_MANAGER_COUNT,
+				aliveIDs.size());
 	}
 
 	@After

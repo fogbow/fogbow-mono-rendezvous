@@ -26,9 +26,9 @@ public class RendezvousXMPPComponent extends XMPPComponent {
 	}
 	
 	public RendezvousXMPPComponent(String jid, String password, String server,
-			int port, long timeout, String[] neighbors, ScheduledExecutorService executor) {
+			int port, long timeout, String[] neighbors, ScheduledExecutorService executor, int maxWhoisaliveManagerCount) {
 		super(jid, password, server, port);
-		rendezvous = new RendezvousImpl(timeout, this, neighbors, executor);
+		rendezvous = new RendezvousImpl(timeout, this, neighbors, executor, maxWhoisaliveManagerCount);
 		addGetHandlers();
 	}
 

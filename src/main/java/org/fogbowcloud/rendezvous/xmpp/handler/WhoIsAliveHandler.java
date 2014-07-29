@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.dom4j.Element;
 import org.fogbowcloud.rendezvous.core.Rendezvous;
+import org.fogbowcloud.rendezvous.core.RendezvousImpl;
 import org.fogbowcloud.rendezvous.core.RendezvousItem;
 import org.fogbowcloud.rendezvous.core.model.Flavor;
 import org.jamppa.component.handler.AbstractQueryHandler;
@@ -21,15 +22,21 @@ public class WhoIsAliveHandler extends AbstractQueryHandler {
 
 	public IQ handle(IQ iq) {
 		List<RendezvousItem> aliveIds = rendezvous.whoIsAlive();
-		return createResponse(iq, aliveIds);
+		Element queryEl = iq.getElement().element("query");
+		Element setEl = queryEl.element("set");
+		int max = Integer.parseInt(setEl.element("max").getText());
+		max = Math.min(max, ((RendezvousImpl)rendezvous).getMaxWhoisaliveManagerCount());
+		return createResponse(iq, aliveIds, max);
 	}
 
-	private IQ createResponse(IQ iq, List<RendezvousItem> aliveIds) {
+	private IQ createResponse(IQ iq, List<RendezvousItem> aliveIds, int max) {
 		IQ resultIQ = IQ.createResultIQ(iq);
 
 		Element queryElement = resultIQ.getElement().addElement("query",
 				NAMESPACE);
-		for (RendezvousItem rendezvousItem : aliveIds) {
+		int i;
+		for (i = 0; i < max && i < aliveIds.size(); i++) {
+			RendezvousItem rendezvousItem = aliveIds.get(i);
 			Element itemEl = queryElement.addElement("item");
 			itemEl.addAttribute("id", rendezvousItem.getResourcesInfo().getId());
 			String cert = rendezvousItem.getResourcesInfo().getCert();
@@ -60,6 +67,19 @@ public class WhoIsAliveHandler extends AbstractQueryHandler {
 			statusEl.addElement("updated").setText(
 					String.valueOf(rendezvousItem.getFormattedTime()));
 		}
+		String first = "";
+		String last = "";
+		String count = "0";
+		if (aliveIds.size() > 0) {
+			first = aliveIds.get(0).getResourcesInfo().getId();
+			last = aliveIds.get(i-1).getResourcesInfo().getId();
+			count = "" + i;
+		}
+		
+		Element setEl = queryElement.addElement("set", "http://jabber.org/protocol/rsm");
+		setEl.addElement("first").setText(first);
+		setEl.addElement("last").setText(last);
+		setEl.addElement("count").setText(count);
 		return resultIQ;
 	}
 }

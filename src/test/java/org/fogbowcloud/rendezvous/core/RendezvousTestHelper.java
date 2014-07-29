@@ -37,6 +37,7 @@ public class RendezvousTestHelper {
 	public static final long TIMEOUT_GRACE = 60;
 
 	public static final String NEIGHBOR_CLIENT_JID = "neighborClient@test.com/Smack";
+	public static final int MAX_WHOISALIVE_MANAGER_COUNT = 101;
 	final String NEIGHBOR_CLIENT_PASSWORD = "neighborClient";
 	private RendezvousXMPPComponent rendezvousXmppComponent;
 	private FakeXMPPServer fakeServer = new FakeXMPPServer();
@@ -76,10 +77,12 @@ public class RendezvousTestHelper {
 		}
 	}
 
-	public void initializeXMPPRendezvousComponent(long testDefaultTimeout) throws Exception {
+	public void initializeXMPPRendezvousComponent(long testDefaultTimeout)
+			throws Exception {
 		RendezvousXMPPComponent comp = new RendezvousXMPPComponent(
 				RENDEZVOUS_COMPONENT_URL, RENDEZVOUS_COMPONENT_PASS,
-				SERVER_HOST, SERVER_COMPONENT_PORT, testDefaultTimeout, new String[] {});
+				SERVER_HOST, SERVER_COMPONENT_PORT, testDefaultTimeout,
+				new String[] {});
 		rendezvousXmppComponent = Mockito.spy(comp);
 		((RendezvousImpl) comp.getRendezvous())
 				.setPacketSender(rendezvousXmppComponent);
@@ -88,35 +91,38 @@ public class RendezvousTestHelper {
 		fakeServer.connect(rendezvousXmppComponent);
 		rendezvousXmppComponent.process();
 	}
-	
+
 	public void initializeXMPPRendezvousComponent(long testDefaultTimeout,
 			String[] neighbors) throws Exception {
 		RendezvousXMPPComponent comp = new RendezvousXMPPComponent(
-						RENDEZVOUS_COMPONENT_URL, RENDEZVOUS_COMPONENT_PASS,
-						SERVER_HOST, SERVER_COMPONENT_PORT, testDefaultTimeout, neighbors);
+				RENDEZVOUS_COMPONENT_URL, RENDEZVOUS_COMPONENT_PASS,
+				SERVER_HOST, SERVER_COMPONENT_PORT, testDefaultTimeout,
+				neighbors);
 		rendezvousXmppComponent = Mockito.spy(comp);
-		((RendezvousImpl)comp.getRendezvous()).setPacketSender(
-				rendezvousXmppComponent);
+		((RendezvousImpl) comp.getRendezvous())
+				.setPacketSender(rendezvousXmppComponent);
 		rendezvousXmppComponent.setDescription("Rendezvous Component");
 		rendezvousXmppComponent.setName("rendezvous");
 		fakeServer.connect(rendezvousXmppComponent);
 		rendezvousXmppComponent.process();
 	}
-	
+
 	public void initializeXMPPRendezvousComponent(long testDefaultTimeout,
-			String[] neighbors, ScheduledExecutorService executor) throws Exception {
+			String[] neighbors, ScheduledExecutorService executor)
+			throws Exception {
 		RendezvousXMPPComponent comp = new RendezvousXMPPComponent(
-						RENDEZVOUS_COMPONENT_URL, RENDEZVOUS_COMPONENT_PASS,
-						SERVER_HOST, SERVER_COMPONENT_PORT, testDefaultTimeout, neighbors, executor);
+				RENDEZVOUS_COMPONENT_URL, RENDEZVOUS_COMPONENT_PASS,
+				SERVER_HOST, SERVER_COMPONENT_PORT, testDefaultTimeout,
+				neighbors, executor, MAX_WHOISALIVE_MANAGER_COUNT);
 		rendezvousXmppComponent = Mockito.spy(comp);
-		((RendezvousImpl)comp.getRendezvous()).setPacketSender(
-				rendezvousXmppComponent);
+		((RendezvousImpl) comp.getRendezvous())
+				.setPacketSender(rendezvousXmppComponent);
 		rendezvousXmppComponent.setDescription("Rendezvous Component");
 		rendezvousXmppComponent.setName("rendezvous");
 		fakeServer.connect(rendezvousXmppComponent);
 		rendezvousXmppComponent.process();
 	}
-	
+
 	public void disconnectRendezvousXMPPComponent() throws ComponentException {
 		fakeServer.disconnect(rendezvousXmppComponent.getJID().toBareJID());
 	}
@@ -142,11 +148,19 @@ public class RendezvousTestHelper {
 		}
 		return aliveIds;
 	}
-
+	
+	public static String getSetElement(IQ whoIsAliveResponse, String elementName) {
+		Element queryElement = whoIsAliveResponse.getElement().element(
+				"query");
+		Element setElement = queryElement.element("set");
+		String element= setElement.element(elementName).getText();
+		return element;
+	}
+	
 	@SuppressWarnings("unchecked")
 	public static LinkedList<RendezvousItem> getItemsFromIQ(
-			IQ responseFromWhoIsAliveIQ) throws ParseException {
-		Element queryElement = responseFromWhoIsAliveIQ.getElement().element(
+			IQ whoIsAliveResponse) throws ParseException {
+		Element queryElement = whoIsAliveResponse.getElement().element(
 				"query");
 		Iterator<Element> itemIterator = queryElement.elementIterator("item");
 		LinkedList<RendezvousItem> aliveItems = new LinkedList<RendezvousItem>();
@@ -155,13 +169,22 @@ public class RendezvousTestHelper {
 			Element itemEl = (Element) itemIterator.next();
 			aliveItems.add(getWhoIsAliveResponseItem(itemEl));
 		}
+
+/*		Element setElement = queryElement.element("set");
+		String fist = setElement.element("first").getText();
+		String last = setElement.element("last").getText();
+		int count = Integer.parseInt(setElement.element("count").getText());*/
 		return aliveItems;
 	}
 
 	public static IQ createWhoIsAliveIQ() {
 		IQ iq = new IQ(Type.get);
 		iq.setTo(RENDEZVOUS_COMPONENT_URL);
-		iq.getElement().addElement("query", WHOISALIVE_NAMESPACE);
+		Element queryEl = iq.getElement().addElement("query",
+				WHOISALIVE_NAMESPACE);
+		Element setEl = queryEl.addElement("set",
+				"http://jabber.org/protocol/rsm");
+		setEl.addElement("max").setText("" + MAX_WHOISALIVE_MANAGER_COUNT);
 		return iq;
 	}
 
