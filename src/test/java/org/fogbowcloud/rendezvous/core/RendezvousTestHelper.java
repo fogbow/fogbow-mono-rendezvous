@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.ScheduledExecutorService;
 
 import org.dom4j.Attribute;
@@ -21,7 +22,14 @@ import org.xmpp.packet.IQ;
 import org.xmpp.packet.IQ.Type;
 
 public class RendezvousTestHelper {
-
+	
+	public static final String PROP_EXPIRATION = "site_expiration";
+	public static final String PROP_NEIGHBORS = "neighbors";
+	public static final String PROP_MAX_WHOISALIVE_MANAGER_COUNT = "max_whoisalive_manager_count";
+	public static final String PROP_MAX_WHOISALIVESYNC_MANAGER_COUNT = "max_whoisalivesync_manager_count";
+	public static final String PROP_MAX_WHOISALIVESYNC_NEIGHBOR_COUNT = "max_whoisalivesync_neighbor_count";
+	
+	private static final String HTTP_JABBER_ORG_PROTOCOL_RSM = "http://jabber.org/protocol/rsm";
 	private static final int SERVER_CLIENT_PORT = 5222;
 	private static final int SERVER_COMPONENT_PORT = 5347;
 	private static final String SERVER_HOST = "localhost";
@@ -37,7 +45,9 @@ public class RendezvousTestHelper {
 	public static final long TIMEOUT_GRACE = 60;
 
 	public static final String NEIGHBOR_CLIENT_JID = "neighborClient@test.com/Smack";
-	public static final int MAX_WHOISALIVE_MANAGER_COUNT = 101;
+	public static final int MAX_WHOISALIVE_MANAGER_COUNT = 100;
+	private static final int MAX_WHOISALIVESYNC_MANAGER_COUNT = 100;
+	private static final int MAX_WHOISALIVESYNC_NEIGHBOR_COUNT = 100;
 	final String NEIGHBOR_CLIENT_PASSWORD = "neighborClient";
 	private RendezvousXMPPComponent rendezvousXmppComponent;
 	private FakeXMPPServer fakeServer = new FakeXMPPServer();
@@ -79,10 +89,15 @@ public class RendezvousTestHelper {
 
 	public void initializeXMPPRendezvousComponent(long testDefaultTimeout)
 			throws Exception {
+		Properties properties = Mockito.mock(Properties.class);
+		Mockito.when(properties.getProperty(PROP_EXPIRATION)).thenReturn(testDefaultTimeout + "");
+		Mockito.doReturn("").when(properties).getProperty(PROP_NEIGHBORS);
+		Mockito.doReturn("").when(properties).getProperty(PROP_MAX_WHOISALIVE_MANAGER_COUNT);
+		Mockito.doReturn("").when(properties).getProperty(PROP_MAX_WHOISALIVESYNC_MANAGER_COUNT);
+		Mockito.doReturn("").when(properties).getProperty(PROP_MAX_WHOISALIVESYNC_NEIGHBOR_COUNT);
 		RendezvousXMPPComponent comp = new RendezvousXMPPComponent(
 				RENDEZVOUS_COMPONENT_URL, RENDEZVOUS_COMPONENT_PASS,
-				SERVER_HOST, SERVER_COMPONENT_PORT, testDefaultTimeout,
-				new String[] {});
+				SERVER_HOST, SERVER_COMPONENT_PORT, properties);
 		rendezvousXmppComponent = Mockito.spy(comp);
 		((RendezvousImpl) comp.getRendezvous())
 				.setPacketSender(rendezvousXmppComponent);
@@ -94,10 +109,22 @@ public class RendezvousTestHelper {
 
 	public void initializeXMPPRendezvousComponent(long testDefaultTimeout,
 			String[] neighbors) throws Exception {
+		Properties properties = Mockito.mock(Properties.class);
+		String neighborsString = "";
+		for (int i = 0; i < neighbors.length; i++) {
+			if (i != 0) {
+				neighborsString += ",";
+			}
+			neighborsString += neighbors[i];
+		}
+		Mockito.when(properties.getProperty(PROP_EXPIRATION)).thenReturn(testDefaultTimeout + "");
+		Mockito.when(properties.getProperty(PROP_NEIGHBORS)).thenReturn(neighborsString);
+		Mockito.doReturn("").when(properties).getProperty(PROP_MAX_WHOISALIVE_MANAGER_COUNT);
+		Mockito.doReturn("").when(properties).getProperty(PROP_MAX_WHOISALIVESYNC_MANAGER_COUNT);
+		Mockito.doReturn("").when(properties).getProperty(PROP_MAX_WHOISALIVESYNC_NEIGHBOR_COUNT);
 		RendezvousXMPPComponent comp = new RendezvousXMPPComponent(
 				RENDEZVOUS_COMPONENT_URL, RENDEZVOUS_COMPONENT_PASS,
-				SERVER_HOST, SERVER_COMPONENT_PORT, testDefaultTimeout,
-				neighbors);
+				SERVER_HOST, SERVER_COMPONENT_PORT, properties);
 		rendezvousXmppComponent = Mockito.spy(comp);
 		((RendezvousImpl) comp.getRendezvous())
 				.setPacketSender(rendezvousXmppComponent);
@@ -110,10 +137,22 @@ public class RendezvousTestHelper {
 	public void initializeXMPPRendezvousComponent(long testDefaultTimeout,
 			String[] neighbors, ScheduledExecutorService executor)
 			throws Exception {
+		Properties properties = Mockito.mock(Properties.class);
+		String neighborsString = "";
+		for (int i = 0; i < neighbors.length; i++) {
+			if (i != 0) {
+				neighborsString += ",";
+			}
+			neighborsString += neighbors[i];
+		}
+		Mockito.when(properties.getProperty(PROP_EXPIRATION)).thenReturn(testDefaultTimeout + "");
+		Mockito.when(properties.getProperty(PROP_NEIGHBORS)).thenReturn(neighborsString);
+		Mockito.doReturn("").when(properties).getProperty(PROP_MAX_WHOISALIVE_MANAGER_COUNT);
+		Mockito.doReturn("").when(properties).getProperty(PROP_MAX_WHOISALIVESYNC_MANAGER_COUNT);
+		Mockito.doReturn("").when(properties).getProperty(PROP_MAX_WHOISALIVESYNC_NEIGHBOR_COUNT);
 		RendezvousXMPPComponent comp = new RendezvousXMPPComponent(
 				RENDEZVOUS_COMPONENT_URL, RENDEZVOUS_COMPONENT_PASS,
-				SERVER_HOST, SERVER_COMPONENT_PORT, testDefaultTimeout,
-				neighbors, executor, MAX_WHOISALIVE_MANAGER_COUNT);
+				SERVER_HOST, SERVER_COMPONENT_PORT, properties,  executor);
 		rendezvousXmppComponent = Mockito.spy(comp);
 		((RendezvousImpl) comp.getRendezvous())
 				.setPacketSender(rendezvousXmppComponent);
@@ -149,7 +188,7 @@ public class RendezvousTestHelper {
 		return aliveIds;
 	}
 	
-	public static String getSetElement(IQ whoIsAliveResponse, String elementName) {
+	public static String getSetElementFromWhoIsAlive(IQ whoIsAliveResponse, String elementName) {
 		Element queryElement = whoIsAliveResponse.getElement().element(
 				"query");
 		Element setElement = queryElement.element("set");
@@ -183,7 +222,7 @@ public class RendezvousTestHelper {
 		Element queryEl = iq.getElement().addElement("query",
 				WHOISALIVE_NAMESPACE);
 		Element setEl = queryEl.addElement("set",
-				"http://jabber.org/protocol/rsm");
+				HTTP_JABBER_ORG_PROTOCOL_RSM);
 		setEl.addElement("max").setText("" + MAX_WHOISALIVE_MANAGER_COUNT);
 		return iq;
 	}
@@ -191,10 +230,38 @@ public class RendezvousTestHelper {
 	public static IQ createWhoIsAliveSyncIQ() {
 		IQ iq = new IQ(Type.get);
 		iq.setTo(RENDEZVOUS_COMPONENT_URL);
-		iq.getElement().addElement("query", WHOISALIVESYNC_NAMESPACE);
+		Element queryEl = iq.getElement().addElement("query", WHOISALIVESYNC_NAMESPACE);
+		Element neighborsEl = queryEl.addElement("neighbors");
+		Element setEl = neighborsEl.addElement("set",
+				HTTP_JABBER_ORG_PROTOCOL_RSM);
+		setEl.addElement("max").setText("" + MAX_WHOISALIVESYNC_NEIGHBOR_COUNT);
+		
+		Element managersEl = queryEl.addElement("managers");
+		setEl = managersEl.addElement("set",
+				HTTP_JABBER_ORG_PROTOCOL_RSM);
+		setEl.addElement("max").setText("" + MAX_WHOISALIVESYNC_MANAGER_COUNT);
+		
 		return iq;
 	}
-
+	
+	public String getNeighborsSetElementsFromSyncIQ(String elementName,IQ syncResponse) {
+		Element queryElement = syncResponse.getElement().element(
+				"query");
+		Element neighborsEl = queryElement.element("neighbors");
+		Element setElement = neighborsEl.element("set");
+		String element= setElement.element(elementName).getText();
+		return element;
+	}
+	
+	public String getManagersSetElementsFromSyncIQ(String elementName,IQ syncResponse) {
+		Element queryElement = syncResponse.getElement().element(
+				"query");
+		Element managersEl = queryElement.element("neighbors");
+		Element setElement = managersEl.element("set");
+		String element= setElement.element(elementName).getText();
+		return element;
+	}
+	
 	@SuppressWarnings("unchecked")
 	public static RendezvousResponseItem getItemsFromSyncIQ(IQ iq)
 			throws ParseException {

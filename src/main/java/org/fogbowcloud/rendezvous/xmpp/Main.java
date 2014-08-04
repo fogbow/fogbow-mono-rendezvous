@@ -10,18 +10,20 @@ public class Main {
 	private static final String PROP_PASSWORD = "xmpp_password";
 	private static final String PROP_HOST = "xmpp_host";
 	private static final String PROP_PORT = "xmpp_port";
-	private static final String PROP_EXPIRATION = "site_expiration";
-	private static final String DESCRIPTION = "Rendezvous Component";
 	private static final String NAME = "rendezvous";
+	private static final String DESCRIPTION = "Rendezvous Component";
+	private static final String PROP_EXPIRATION = "site_expiration";
 	private static final String PROP_NEIGHBORS = "neighbors";
 	private static final String PROP_MAX_WHOISALIVE_MANAGER_COUNT = "max_whoisalive_manager_count";
+	private static final String PROP_MAX_WHOISALIVESYNC_MANAGER_COUNT = "max_whoisalivesync_manager_count";
+	private static final String PROP_MAX_WHOISALIVESYNC_NEIGHBOR_COUNT = "max_whoisalivesync_neighbor_count";
 
 	private static RendezvousXMPPComponent rendezvousXmppComponent;
 
 	private static void initializeRendezvousXMPPComponent(String configPath)
 			throws Exception {
 		Properties properties = new Properties();
-		FileInputStream input = getFileInputStrean(configPath);
+		FileInputStream input = getFileInputStream(configPath);
 		properties.load(input);
 
 		String jid = getJID(properties);
@@ -31,24 +33,25 @@ public class Main {
 		long expiration = getExpiration(properties);
 		String[] neighbors = getNeighbors(properties);
 		int maxWhoisaliveManagerCount = getWhoisaliveManagerCount(properties);
+		int maxWhoisalivesyncManagerCount = getWhoisalivesyncManagerCount(properties);
+		int maxWhoisalivesyncNeighborCount = getWhoisalivesyncNeighborCount(properties);
 		rendezvousXmppComponent = new RendezvousXMPPComponent(jid, password,
-				server, port, expiration, neighbors);
+				server, port, properties);
 		rendezvousXmppComponent.setDescription(DESCRIPTION);
 		rendezvousXmppComponent.setName(NAME);
 		rendezvousXmppComponent.connect();
 		rendezvousXmppComponent.process();
 	}
-	
+
 	private static void checkStringEmpty(String string) {
 		if (string == null || string.isEmpty()) {
 			throw new IllegalArgumentException();
 		}
 	}
-	
+
 	private static long checkInvalidInteger(Properties properties, String prop) {
 		try {
-			long expiration = Long.parseLong(properties
-					.getProperty(prop));
+			long expiration = Long.parseLong(properties.getProperty(prop));
 			if (expiration <= 0) {
 				throw new IllegalArgumentException();
 			}
@@ -57,12 +60,23 @@ public class Main {
 			throw new IllegalArgumentException();
 		}
 	}
-	
+
 	private static int getWhoisaliveManagerCount(Properties properties) {
-		return (int) checkInvalidInteger(properties, PROP_MAX_WHOISALIVE_MANAGER_COUNT);
+		return (int) checkInvalidInteger(properties,
+				PROP_MAX_WHOISALIVE_MANAGER_COUNT);
 	}
 
-	static FileInputStream getFileInputStrean(String path)
+	private static int getWhoisalivesyncManagerCount(Properties properties) {
+		return (int) checkInvalidInteger(properties,
+				PROP_MAX_WHOISALIVESYNC_MANAGER_COUNT);
+	}
+
+	private static int getWhoisalivesyncNeighborCount(Properties properties) {
+		return (int) checkInvalidInteger(properties,
+				PROP_MAX_WHOISALIVESYNC_NEIGHBOR_COUNT);
+	}
+
+	static FileInputStream getFileInputStream(String path)
 			throws FileNotFoundException {
 		checkStringEmpty(path);
 		return new FileInputStream(path);

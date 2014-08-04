@@ -4,28 +4,59 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Properties;
+import java.util.concurrent.ScheduledExecutorService;
 
 import org.fogbowcloud.rendezvous.core.model.Flavor;
 import org.fogbowcloud.rendezvous.xmpp.model.RendezvousResponseItem;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.xmpp.component.ComponentException;
 
 public class TestMerge {
 
 	private RendezvousTestHelper rendezvousTestHelper;
+	RendezvousImpl rendezvous;
+	ScheduledExecutorService executor;
+	Properties properties;
 
 	@Before
 	public void setUp() throws ComponentException {
 		rendezvousTestHelper = new RendezvousTestHelper();
+		executor = Mockito.mock(ScheduledExecutorService.class);
+		properties = Mockito.mock(Properties.class);
+		Mockito.doReturn("").when(properties)
+				.getProperty(RendezvousTestHelper.PROP_EXPIRATION);
+		Mockito.doReturn("").when(properties)
+				.getProperty(RendezvousTestHelper.PROP_NEIGHBORS);
+		Mockito.doReturn("")
+				.when(properties)
+				.getProperty(
+						RendezvousTestHelper.PROP_MAX_WHOISALIVE_MANAGER_COUNT);
+		Mockito.doReturn("")
+				.when(properties)
+				.getProperty(
+						RendezvousTestHelper.PROP_MAX_WHOISALIVESYNC_MANAGER_COUNT);
+		Mockito.doReturn("")
+				.when(properties)
+				.getProperty(
+						RendezvousTestHelper.PROP_MAX_WHOISALIVESYNC_NEIGHBOR_COUNT);
+		rendezvous = new RendezvousImpl(null, properties, executor);
+	}
+
+	private void mockNeighbors(String[] neighborIds) {
+		Mockito.when(properties.getProperty("neighbors")).thenReturn(
+				neighborIds.toString());
+		rendezvous = new RendezvousImpl(null, properties, executor);
 	}
 
 	@Test
 	public void testMergeEmptyResponseItem() {
 		// configuring rendezvous
-		String[] neighborIds = new String[] {"IDSENT"};
-		RendezvousImpl rendezvous = new RendezvousImpl(null, neighborIds);
+		String[] neighborIds = new String[] { "IDSENT" };
+		mockNeighbors(neighborIds);
 		LinkedList<RendezvousItem> managersAlive = new LinkedList<RendezvousItem>();
 		rendezvous.setManagersAlive(managersAlive);
 
@@ -43,8 +74,8 @@ public class TestMerge {
 	@Test
 	public void testMergeNoRepeatedElements() {
 		// configuring rendezvous
-		String[] neighborIds = new String[] {"IDSENT"};
-		RendezvousImpl rendezvous = new RendezvousImpl(null, neighborIds);
+		String[] neighborIds = new String[] { "IDSENT" };
+		mockNeighbors(neighborIds);
 		LinkedList<RendezvousItem> managersAlive = new LinkedList<RendezvousItem>(
 				Arrays.asList(new RendezvousItem(new ResourcesInfo("m1",
 						"cpuIdle", "cpuInUse", "memIdle", "memInUse",
@@ -67,8 +98,8 @@ public class TestMerge {
 	@Test
 	public void testMergeRepeatedElements() {
 		// configuring rendezvous
-		String[] neighborIds = new String[] {"r1", "r2","r3"};
-		RendezvousImpl rendezvous = new RendezvousImpl(null, neighborIds);
+		String[] neighborIds = new String[] { "r1", "r2", "r3" };
+		mockNeighbors(neighborIds);
 		LinkedList<RendezvousItem> managersAlive = new LinkedList<RendezvousItem>();
 		RendezvousItem item2 = new RendezvousItem(
 				rendezvousTestHelper.getResources());

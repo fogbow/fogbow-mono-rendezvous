@@ -5,3 +5,5 @@ xmpp_port=5347
 site_expiration=10000
 neighbors=nighborClient@test.com
 max_whoisalive_manager_count=101
+max_whoisalivesync_manager_count=101
+max_whoisalivesync_neighbor_count=101

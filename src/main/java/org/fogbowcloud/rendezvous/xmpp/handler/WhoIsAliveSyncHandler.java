@@ -1,5 +1,6 @@
 package org.fogbowcloud.rendezvous.xmpp.handler;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 
@@ -23,20 +24,38 @@ public class WhoIsAliveSyncHandler extends AbstractQueryHandler {
 
 	@Override
 	public IQ handle(IQ iq) {
-		Set<String> neighbors = ((RendezvousImpl) rendezvous).getNeighborIds();
-		Map<String, RendezvousItem> managersAlive = ((RendezvousImpl) rendezvous)
-				.getManagersAlive();
+		RendezvousImpl rendezvousImpl = (RendezvousImpl) rendezvous;
+
+		Set<String> neighbors = rendezvousImpl.getNeighborIds();
+		String[] orderedNeighbors = (String[]) neighbors.toArray(new String[neighbors.size()]);
+		Arrays.sort(orderedNeighbors);
 		IQ response = IQ.createResultIQ(iq);
 		Element queryElement = response.getElement().addElement("query",
 				WHOISALIVESYNC_NAMESPACE);
+		int maxNeighbors = Math.min(getMaxElement(iq, "neighbors"),
+				rendezvousImpl.getMaxWhoisaliveSyncNeighborCount());
 		Element neighborsEl = queryElement.addElement("neighbors");
-		for (String neighbor : neighbors) {
+		int i;
+		for (i = 0; i < maxNeighbors && i < orderedNeighbors.length; i++) {
 			Element neighborEl = neighborsEl.addElement("neighbor");
-			neighborEl.addElement("id").setText(neighbor);
+			neighborEl.addElement("id").setText(orderedNeighbors[i]);
+		}
+		if (i > 0) {
+			addSet(neighborsEl, orderedNeighbors[0], orderedNeighbors[i - 1], i);
+		} else {
+			addEmptySet(neighborsEl);
 		}
 
+		Map<String, RendezvousItem> managersAlive = rendezvousImpl
+				.getManagersAlive();
+		RendezvousItem[] orderedManagers = (RendezvousItem[]) managersAlive
+				.values().toArray(new RendezvousItem[managersAlive.size()]);
+		Arrays.sort(orderedManagers);
+		int maxManagers = Math.min(getMaxElement(iq, "managers"),
+				rendezvousImpl.getMaxWhoisaliveSyncNeighborCount());
 		Element managersEl = queryElement.addElement("managers");
-		for (RendezvousItem item : managersAlive.values()) {
+		for (i = 0; i < orderedManagers.length && i < maxManagers; i++) {
+			RendezvousItem item = orderedManagers[i];
 			Element managerEl = managersEl.addElement("manager");
 			managerEl.addAttribute("id", item.getResourcesInfo().getId());
 			managerEl.addElement("cert").setText(
@@ -59,10 +78,35 @@ public class WhoIsAliveSyncHandler extends AbstractQueryHandler {
 						flavor.getCapacity().toString());
 			}
 			statusEl.addElement("updated").setText(item.getFormattedTime());
-
 		}
+		if (i > 0) {
+			addSet(managersEl, orderedManagers[0].getResourcesInfo().getId(),
+					orderedManagers[i-1].getResourcesInfo().getId(), i);
+		} else {
+			addEmptySet(managersEl);
+		}
+
 		neighbors.add(iq.getFrom().toBareJID());
 		return response;
 	}
 
+	private void addEmptySet(Element el) {
+		Element setEl = el.addElement("set");
+		setEl.addElement("count").setText("0");
+	}
+
+	private int getMaxElement(IQ iq, String element) {
+		Element queryEl = iq.getElement().element("query");
+		Element neighborsEl = queryEl.element(element);
+		Element setEl = neighborsEl.element("set");
+		String max = setEl.element("max").getText();
+		return Integer.parseInt(max);
+	}
+
+	private void addSet(Element el, String first, String last, int count) {
+		Element setEl = el.addElement("set");
+		setEl.addElement("first").setText(first);
+		setEl.addElement("last").setText(last);
+		setEl.addElement("count").setText(count + "");
+	}
 }

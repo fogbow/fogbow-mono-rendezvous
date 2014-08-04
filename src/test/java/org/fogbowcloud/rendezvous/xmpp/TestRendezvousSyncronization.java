@@ -1,5 +1,7 @@
 package org.fogbowcloud.rendezvous.xmpp;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
@@ -9,7 +11,9 @@ import org.fogbowcloud.rendezvous.core.RendezvousTestHelper;
 import org.fogbowcloud.rendezvous.xmpp.model.RendezvousResponseItem;
 import org.jamppa.client.XMPPClient;
 import org.jivesoftware.smack.PacketListener;
+import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.filter.PacketFilter;
+import org.jivesoftware.smack.filter.PacketIDFilter;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -24,6 +28,7 @@ public class TestRendezvousSyncronization {
 
 	private RendezvousTestHelper rendezvousTestHelper;
 	private static final long SEMAPHORE_TIMEOUT = 20L; // In minutes
+	private static final int XMPP_CLIENT_COUNT = 200;
 
 	@Before
 	public void setUp() throws ComponentException {
@@ -206,7 +211,60 @@ public class TestRendezvousSyncronization {
 				RendezvousTestHelper.TEST_DEFAULT_TIMEOUT, neighbors, executor);
 		Mockito.verify(executor);
 	}
+		
+	@Test
+	public void testWhoIsAliveSyncResponsePagination() throws Exception {
+		List<String> neighborsList = new LinkedList<String>();
+		for (int i = 1; i <= 200; i++) {
+			neighborsList.add("neighbor" + i);
+		}
+		String[] neighbors = new String[neighborsList.size()];
+		neighbors = neighborsList.toArray(neighbors);
+		ScheduledExecutorService executor = Mockito
+				.mock(ScheduledExecutorService.class);
+		
+		rendezvousTestHelper.initializeXMPPRendezvousComponent(
+				RendezvousTestHelper.TEST_DEFAULT_TIMEOUT, neighbors, executor);
+		//sending i am alives
+		sendIAmAlives();
+		//sending whois alive sync
+		IQ iq = RendezvousTestHelper.createWhoIsAliveSyncIQ();
+		XMPPClient xmppClient = rendezvousTestHelper.createXMPPClient();
+		IQ response = (IQ) xmppClient.syncSend(iq);
+		Assert.assertEquals(Type.result, response.getType());
+		RendezvousResponseItem itemsAlive = RendezvousTestHelper
+				.getItemsFromSyncIQ(response);
+		Assert.assertEquals(100, itemsAlive.getManagers().size());
+		Assert.assertEquals(100, itemsAlive.getNeighbors().size());
+		
+	}
 
+	private void sendIAmAlives() throws InterruptedException {
+		final Semaphore semaphore = new Semaphore(0);
+		
+		final PacketListener callback = new PacketListener() {
+			public void processPacket(Packet packet) {
+				semaphore.release();
+			}
+		};
+
+		for (int i = 0; i < XMPP_CLIENT_COUNT; i++) {
+			XMPPClient xmppClient = null;
+			try {
+				xmppClient = rendezvousTestHelper.createXMPPClient();
+			} catch (XMPPException e) {
+				Assert.fail(e.getMessage());
+			}
+			IQ iq = RendezvousTestHelper.createIAmAliveIQ();
+			xmppClient.on(new PacketIDFilter(iq.getID()), callback);
+			xmppClient.send(iq);
+		}
+		
+		boolean receivedAll = semaphore.tryAcquire(XMPP_CLIENT_COUNT, 
+				SEMAPHORE_TIMEOUT, TimeUnit.MINUTES);
+		Assert.assertTrue(receivedAll);
+	}
+	
 	@After
 	public void tearDown() {
 		rendezvousTestHelper.disconnectXMPPClients();

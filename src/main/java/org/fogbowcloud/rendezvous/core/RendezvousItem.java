@@ -7,7 +7,7 @@ import java.util.TimeZone;
 
 import org.fogbowcloud.rendezvous.core.model.DateUtils;
 
-public class RendezvousItem {
+public class RendezvousItem implements Comparable<RendezvousItem>{
 	
     private static final String ISO_8601_DATE_FORMAT_STR = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
     public static final SimpleDateFormat ISO_8601_DATE_FORMAT = new SimpleDateFormat(
@@ -47,4 +47,10 @@ public class RendezvousItem {
     public void setLastTime(long lastTime){
     	this.lastTime = lastTime;
     }
+
+	@Override
+	public int compareTo(RendezvousItem other) {
+		return (this.resourcesInfo.getId()).compareTo(other.getResourcesInfo().getId());
+	}
+
 }
