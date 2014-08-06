@@ -178,6 +178,51 @@ public class TestWhoIsAlive {
 				aliveIDs.size());
 	}
 
+	@Test
+	public void testWhoisAliveRequest2ndPage() throws InterruptedException,
+			XMPPException, ParseException {
+		// do 200 i am live
+		// request first page
+		final Semaphore semaphore = new Semaphore(0);
+
+		final PacketListener callback = new PacketListener() {
+			public void processPacket(Packet packet) {
+				semaphore.release();
+			}
+		};
+
+		for (int i = 0; i < XMPP_CLIENT_COUNT; i++) {
+			XMPPClient xmppClient = null;
+			try {
+				xmppClient = rendezvousTestHelper.createXMPPClient();
+			} catch (XMPPException e) {
+				Assert.fail(e.getMessage());
+			}
+			IQ iq = RendezvousTestHelper.createIAmAliveIQ();
+			xmppClient.on(new PacketIDFilter(iq.getID()), callback);
+			xmppClient.send(iq);
+		}
+
+		boolean receivedAll = semaphore.tryAcquire(XMPP_CLIENT_COUNT,
+				SEMAPHORE_TIMEOUT, TimeUnit.MINUTES);
+		Assert.assertTrue(receivedAll);
+
+		XMPPClient xmppClient = rendezvousTestHelper.createXMPPClient();
+		IQ response = (IQ) xmppClient.syncSend(RendezvousTestHelper
+				.createWhoIsAliveIQ());
+		ArrayList<String> aliveIDs0 = RendezvousTestHelper.getAliveIds(response);
+		String last = rendezvousTestHelper.getSetElementFromWhoIsAlive(
+				response, "last");
+		response = (IQ) xmppClient.syncSend(RendezvousTestHelper
+				.createWhoIsAliveIQ(last));
+		ArrayList<String> aliveIDs = RendezvousTestHelper.getAliveIds(response);
+		Assert.assertEquals(XMPP_CLIENT_COUNT
+				- RendezvousTestHelper.MAX_WHOISALIVE_MANAGER_COUNT,
+				aliveIDs.size());
+		Assert.assertNotEquals(aliveIDs, aliveIDs0);
+
+	}
+
 	@After
 	public void tearDown() throws ComponentException {
 		rendezvousTestHelper.disconnectXMPPClients();

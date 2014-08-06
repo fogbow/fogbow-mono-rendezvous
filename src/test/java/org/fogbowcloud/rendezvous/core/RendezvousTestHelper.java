@@ -215,8 +215,12 @@ public class RendezvousTestHelper {
 		int count = Integer.parseInt(setElement.element("count").getText());*/
 		return aliveItems;
 	}
-
+	
 	public static IQ createWhoIsAliveIQ() {
+		return createWhoIsAliveIQ("");
+	}
+	
+	public static IQ createWhoIsAliveIQ(String after) {
 		IQ iq = new IQ(Type.get);
 		iq.setTo(RENDEZVOUS_COMPONENT_URL);
 		Element queryEl = iq.getElement().addElement("query",
@@ -224,6 +228,9 @@ public class RendezvousTestHelper {
 		Element setEl = queryEl.addElement("set",
 				HTTP_JABBER_ORG_PROTOCOL_RSM);
 		setEl.addElement("max").setText("" + MAX_WHOISALIVE_MANAGER_COUNT);
+		if (!after.isEmpty()) {
+			setEl.addElement("after").setText(after);
+		}
 		return iq;
 	}
 

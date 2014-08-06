@@ -1,5 +1,6 @@
 package org.fogbowcloud.rendezvous.xmpp.handler;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.dom4j.Element;
@@ -22,20 +23,36 @@ public class WhoIsAliveHandler extends AbstractQueryHandler {
 
 	public IQ handle(IQ iq) {
 		List<RendezvousItem> aliveIds = rendezvous.whoIsAlive();
+		Collections.sort(aliveIds);
 		Element queryEl = iq.getElement().element("query");
 		Element setEl = queryEl.element("set");
 		int max = Integer.parseInt(setEl.element("max").getText());
 		max = Math.min(max, ((RendezvousImpl)rendezvous).getMaxWhoisaliveManagerCount());
+		Element lastEl = setEl.element("after");
+		String after = null;
+		if (lastEl != null)  {
+			after = lastEl.getText();
+		}
+		for (RendezvousItem r: aliveIds) {
+			if(r.getResourcesInfo().getId().equals(after)){
+				return createResponse(iq, aliveIds, max, aliveIds.indexOf(r) + 1);
+			}
+		}
 		return createResponse(iq, aliveIds, max);
 	}
 
 	private IQ createResponse(IQ iq, List<RendezvousItem> aliveIds, int max) {
+		return createResponse(iq, aliveIds, max, 0);
+	}
+
+	private IQ createResponse(IQ iq, List<RendezvousItem> aliveIds, int max,
+			int after) {
 		IQ resultIQ = IQ.createResultIQ(iq);
 
 		Element queryElement = resultIQ.getElement().addElement("query",
 				NAMESPACE);
 		int i;
-		for (i = 0; i < max && i < aliveIds.size(); i++) {
+		for (i = after; i < after + max && i < aliveIds.size(); i++) {
 			RendezvousItem rendezvousItem = aliveIds.get(i);
 			Element itemEl = queryElement.addElement("item");
 			itemEl.addAttribute("id", rendezvousItem.getResourcesInfo().getId());
@@ -72,11 +89,12 @@ public class WhoIsAliveHandler extends AbstractQueryHandler {
 		String count = "0";
 		if (aliveIds.size() > 0) {
 			first = aliveIds.get(0).getResourcesInfo().getId();
-			last = aliveIds.get(i-1).getResourcesInfo().getId();
+			last = aliveIds.get(i - 1).getResourcesInfo().getId();
 			count = "" + i;
 		}
-		
-		Element setEl = queryElement.addElement("set", "http://jabber.org/protocol/rsm");
+
+		Element setEl = queryElement.addElement("set",
+				"http://jabber.org/protocol/rsm");
 		setEl.addElement("first").setText(first);
 		setEl.addElement("last").setText(last);
 		setEl.addElement("count").setText(count);
