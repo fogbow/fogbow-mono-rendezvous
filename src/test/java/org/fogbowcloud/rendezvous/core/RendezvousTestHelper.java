@@ -20,6 +20,7 @@ import org.mockito.Mockito;
 import org.xmpp.component.ComponentException;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.IQ.Type;
+import org.xmpp.packet.Packet;
 
 public class RendezvousTestHelper {
 	
@@ -234,7 +235,9 @@ public class RendezvousTestHelper {
 		return iq;
 	}
 
-	public static IQ createWhoIsAliveSyncIQ() {
+	
+	public static Packet createWhoIsAliveSyncIQ(String lastManager,
+			String lastNeighbor) {
 		IQ iq = new IQ(Type.get);
 		iq.setTo(RENDEZVOUS_COMPONENT_URL);
 		Element queryEl = iq.getElement().addElement("query", WHOISALIVESYNC_NAMESPACE);
@@ -242,13 +245,23 @@ public class RendezvousTestHelper {
 		Element setEl = neighborsEl.addElement("set",
 				HTTP_JABBER_ORG_PROTOCOL_RSM);
 		setEl.addElement("max").setText("" + MAX_WHOISALIVESYNC_NEIGHBOR_COUNT);
+		if (!lastNeighbor.isEmpty()) {
+			setEl.addElement("after").setText(lastNeighbor);
+		}
 		
 		Element managersEl = queryEl.addElement("managers");
 		setEl = managersEl.addElement("set",
 				HTTP_JABBER_ORG_PROTOCOL_RSM);
 		setEl.addElement("max").setText("" + MAX_WHOISALIVESYNC_MANAGER_COUNT);
+		if (!lastManager.isEmpty()) {
+			setEl.addElement("after").setText(lastManager);
+		}
 		
 		return iq;
+	}
+	
+	public static IQ createWhoIsAliveSyncIQ() {
+		return (IQ) createWhoIsAliveSyncIQ("", "");
 	}
 	
 	public String getNeighborsSetElementsFromSyncIQ(String elementName,IQ syncResponse) {
@@ -263,7 +276,7 @@ public class RendezvousTestHelper {
 	public String getManagersSetElementsFromSyncIQ(String elementName,IQ syncResponse) {
 		Element queryElement = syncResponse.getElement().element(
 				"query");
-		Element managersEl = queryElement.element("neighbors");
+		Element managersEl = queryElement.element("managers");
 		Element setElement = managersEl.element("set");
 		String element= setElement.element(elementName).getText();
 		return element;

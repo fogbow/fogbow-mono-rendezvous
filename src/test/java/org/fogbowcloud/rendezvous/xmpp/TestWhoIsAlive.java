@@ -211,7 +211,7 @@ public class TestWhoIsAlive {
 		IQ response = (IQ) xmppClient.syncSend(RendezvousTestHelper
 				.createWhoIsAliveIQ());
 		ArrayList<String> aliveIDs0 = RendezvousTestHelper.getAliveIds(response);
-		String last = rendezvousTestHelper.getSetElementFromWhoIsAlive(
+		String last = RendezvousTestHelper.getSetElementFromWhoIsAlive(
 				response, "last");
 		response = (IQ) xmppClient.syncSend(RendezvousTestHelper
 				.createWhoIsAliveIQ(last));
