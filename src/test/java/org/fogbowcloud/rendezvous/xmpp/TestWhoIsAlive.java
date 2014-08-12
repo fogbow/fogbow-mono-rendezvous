@@ -135,6 +135,7 @@ public class TestWhoIsAlive {
 		ArrayList<String> aliveIDs = RendezvousTestHelper.getAliveIds(response);
 		Date updated = new Date(item.getLastTime());
 		Assert.assertTrue(updated.after(beforeMessage));
+		// TODO breaks sometimes
 		Assert.assertTrue(updated.before(afterMessage));
 		Assert.assertTrue(aliveIDs.contains(RendezvousTestHelper
 				.getClientJid(0)));
@@ -176,6 +177,16 @@ public class TestWhoIsAlive {
 		ArrayList<String> aliveIDs = RendezvousTestHelper.getAliveIds(response);
 		Assert.assertEquals(RendezvousTestHelper.MAX_WHOISALIVE_MANAGER_COUNT,
 				aliveIDs.size());
+		Assert.assertEquals(RendezvousTestHelper.getSetElementFromWhoIsAlive(
+				response, "first"), RendezvousTestHelper.getClientJid(0));
+		Assert.assertEquals(
+				RendezvousTestHelper.getSetElementFromWhoIsAlive(response,
+						"last"),
+				RendezvousTestHelper
+						.getClientJid(RendezvousTestHelper.MAX_WHOISALIVE_MANAGER_COUNT - 1));
+		Assert.assertEquals(RendezvousTestHelper.MAX_WHOISALIVE_MANAGER_COUNT
+				+ "", RendezvousTestHelper.getSetElementFromWhoIsAlive(
+				response, "count"));
 	}
 
 	@Test
@@ -210,7 +221,8 @@ public class TestWhoIsAlive {
 		XMPPClient xmppClient = rendezvousTestHelper.createXMPPClient();
 		IQ response = (IQ) xmppClient.syncSend(RendezvousTestHelper
 				.createWhoIsAliveIQ());
-		ArrayList<String> aliveIDs0 = RendezvousTestHelper.getAliveIds(response);
+		ArrayList<String> aliveIDs0 = RendezvousTestHelper
+				.getAliveIds(response);
 		String last = RendezvousTestHelper.getSetElementFromWhoIsAlive(
 				response, "last");
 		response = (IQ) xmppClient.syncSend(RendezvousTestHelper
@@ -220,7 +232,21 @@ public class TestWhoIsAlive {
 				- RendezvousTestHelper.MAX_WHOISALIVE_MANAGER_COUNT,
 				aliveIDs.size());
 		Assert.assertNotEquals(aliveIDs, aliveIDs0);
-
+		Assert.assertEquals(RendezvousTestHelper.MAX_WHOISALIVE_MANAGER_COUNT,
+				aliveIDs.size());
+		Assert.assertEquals(
+				RendezvousTestHelper.getSetElementFromWhoIsAlive(response,
+						"first"),
+				RendezvousTestHelper
+						.getClientJid(RendezvousTestHelper.MAX_WHOISALIVE_MANAGER_COUNT));
+		Assert.assertEquals(
+				RendezvousTestHelper.getSetElementFromWhoIsAlive(response,
+						"last"),
+				RendezvousTestHelper
+						.getClientJid((2 * RendezvousTestHelper.MAX_WHOISALIVE_MANAGER_COUNT) - 1));
+		Assert.assertEquals(RendezvousTestHelper.MAX_WHOISALIVE_MANAGER_COUNT
+				+ "", RendezvousTestHelper.getSetElementFromWhoIsAlive(
+				response, "count"));
 	}
 
 	@After

@@ -75,10 +75,12 @@ public class RendezvousTestHelper {
 	}
 
 	public static String getClientJid(int clientIndex) {
+		clientIndex += 100;
 		return "user" + clientIndex + "@test.com";
 	}
 
 	private static String getClientPassword(int clientIndex) {
+		clientIndex += 100;
 		return "user" + clientIndex;
 	}
 

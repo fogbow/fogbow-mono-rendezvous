@@ -6,8 +6,9 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 import org.fogbowcloud.rendezvous.core.model.DateUtils;
+import org.fogbowcloud.rendezvous.xmpp.util.RSMElement;
 
-public class RendezvousItem implements Comparable<RendezvousItem>{
+public class RendezvousItem extends RSMElement {
 	
     private static final String ISO_8601_DATE_FORMAT_STR = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
     public static final SimpleDateFormat ISO_8601_DATE_FORMAT = new SimpleDateFormat(
@@ -39,6 +40,7 @@ public class RendezvousItem implements Comparable<RendezvousItem>{
         return ISO_8601_DATE_FORMAT.format(new Date(lastTime));
     }
     
+    
     /**
      * This method was implemented just for unit test.
      *  
@@ -49,8 +51,8 @@ public class RendezvousItem implements Comparable<RendezvousItem>{
     }
 
 	@Override
-	public int compareTo(RendezvousItem other) {
-		return (this.resourcesInfo.getId()).compareTo(other.getResourcesInfo().getId());
+	public String getId() {
+		return this.resourcesInfo.getId();
 	}
 
 }
