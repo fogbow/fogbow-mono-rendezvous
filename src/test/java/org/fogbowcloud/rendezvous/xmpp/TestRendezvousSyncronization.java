@@ -277,6 +277,7 @@ public class TestRendezvousSyncronization {
 		
 		response = (IQ) xmppClient.syncSend(RendezvousTestHelper
 				.createWhoIsAliveSyncIQ(lastManager, lastNeighbor));
+		System.out.println(response);
 		RendezvousResponseItem itemsAlive2 = RendezvousTestHelper
 				.getItemsFromSyncIQ(response);
 		Assert.assertEquals(99, itemsAlive2.getManagers().size());
@@ -288,7 +289,7 @@ public class TestRendezvousSyncronization {
 				itemsAlive2.getNeighbors());
 		Assert.assertEquals("neighbor201", rendezvousTestHelper
 				.getNeighborsSetElementsFromSyncIQ("first", response));
-		Assert.assertEquals("neighbor299", rendezvousTestHelper
+		Assert.assertEquals("user299@test.com", rendezvousTestHelper
 				.getNeighborsSetElementsFromSyncIQ("last", response));
 	}
 

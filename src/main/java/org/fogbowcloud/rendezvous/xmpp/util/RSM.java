@@ -29,11 +29,11 @@ public class RSM {
 		return new RSM(queryEl, defaultMax);
 	}
 
-	public List<? extends RSMElement> filter(List<? extends RSMElement> list) {
+	public List<? extends FederationMember> filter(List<? extends FederationMember> list) {
 		int size = list.size();
-		List<RSMElement> orderedList = new LinkedList<RSMElement>(list);
+		List<FederationMember> orderedList = new LinkedList<FederationMember>(list);
 		Collections.sort(orderedList);
-		List<RSMElement> filteredList = new LinkedList<RSMElement>();
+		List<FederationMember> filteredList = new LinkedList<FederationMember>();
 		if (size == 0) {
 			return list;
 		}
@@ -51,7 +51,7 @@ public class RSM {
 	}
 
 	public Element appendSetElements(Element queryElement,
-			List<? extends RSMElement> list) {
+			List<? extends FederationMember> list) {
 		String first = null;
 		String last = null;
 		Integer count = 0;

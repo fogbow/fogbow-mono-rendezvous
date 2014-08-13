@@ -11,7 +11,7 @@ import org.fogbowcloud.rendezvous.core.RendezvousImpl;
 import org.fogbowcloud.rendezvous.core.RendezvousItem;
 import org.fogbowcloud.rendezvous.core.model.Flavor;
 import org.fogbowcloud.rendezvous.xmpp.util.RSM;
-import org.fogbowcloud.rendezvous.xmpp.util.RSMElement;
+import org.fogbowcloud.rendezvous.xmpp.util.FederationMember;
 import org.jamppa.component.handler.AbstractQueryHandler;
 import org.xmpp.packet.IQ;
 
@@ -39,9 +39,9 @@ public class WhoIsAliveSyncHandler extends AbstractQueryHandler {
 		RSM managersRSM = RSM.parse(managersEl, maxManagers);
 
 		Set<String> neighbors = rendezvousImpl.getNeighborIds();
-		List<RSMElement> neighborsList = new LinkedList<RSMElement>();
+		List<FederationMember> neighborsList = new LinkedList<FederationMember>();
 		for (final String neighbor : neighbors) {
-			neighborsList.add(new RSMElement() {
+			neighborsList.add(new FederationMember() {
 				@Override
 				public String getId() {
 					return neighbor;
@@ -60,16 +60,16 @@ public class WhoIsAliveSyncHandler extends AbstractQueryHandler {
 
 	@SuppressWarnings("unchecked")
 	private IQ createResponse(IQ iq, RendezvousImpl rendezvousImpl,
-			List<RSMElement> neighbors, List<RendezvousItem> managers,
+			List<FederationMember> neighbors, List<RendezvousItem> managers,
 			RSM neighborsRsm, RSM managersRsm) {
 		IQ response = IQ.createResultIQ(iq);
 		Element queryElement = response.getElement().addElement("query",
 				WHOISALIVESYNC_NAMESPACE);
 
 		Element neighborsEl = queryElement.addElement("neighbors");
-		List<RSMElement> filteredNeighbors = (List<RSMElement>) neighborsRsm
+		List<FederationMember> filteredNeighbors = (List<FederationMember>) neighborsRsm
 				.filter(neighbors);
-		for (RSMElement neighbor : filteredNeighbors) {
+		for (FederationMember neighbor : filteredNeighbors) {
 			Element neighborEl = neighborsEl.addElement("neighbor");
 			neighborEl.addElement("id").setText(neighbor.getId());
 		}
@@ -77,9 +77,9 @@ public class WhoIsAliveSyncHandler extends AbstractQueryHandler {
 				filteredNeighbors);
 
 		Element managersEl = queryElement.addElement("managers");
-		List<RSMElement> filteredManagers = (List<RSMElement>) managersRsm
+		List<FederationMember> filteredManagers = (List<FederationMember>) managersRsm
 				.filter(managers);
-		for (RSMElement rsmItem : filteredManagers) {
+		for (FederationMember rsmItem : filteredManagers) {
 			RendezvousItem item = (RendezvousItem) rsmItem;
 			Element managerEl = managersEl.addElement("manager");
 			managerEl.addAttribute("id", item.getResourcesInfo().getId());
