@@ -277,7 +277,6 @@ public class TestRendezvousSyncronization {
 		
 		response = (IQ) xmppClient.syncSend(RendezvousTestHelper
 				.createWhoIsAliveSyncIQ(lastManager, lastNeighbor));
-		System.out.println(response);
 		RendezvousResponseItem itemsAlive2 = RendezvousTestHelper
 				.getItemsFromSyncIQ(response);
 		Assert.assertEquals(99, itemsAlive2.getManagers().size());
