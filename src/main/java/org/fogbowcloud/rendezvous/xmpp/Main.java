@@ -4,8 +4,13 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.Properties;
 
+import org.apache.log4j.Logger;
+import org.xmpp.component.ComponentException;
+
 public class Main {
 
+	private static final Logger LOGGER = Logger.getLogger(Main.class);
+	
 	private static final String PROP_JID = "xmpp_jid";
 	private static final String PROP_PASSWORD = "xmpp_password";
 	private static final String PROP_HOST = "xmpp_host";
@@ -14,32 +19,34 @@ public class Main {
 	private static final String DESCRIPTION = "Rendezvous Component";
 	private static final String PROP_EXPIRATION = "site_expiration";
 	private static final String PROP_NEIGHBORS = "neighbors";
-	private static final String PROP_MAX_WHOISALIVE_MANAGER_COUNT = "max_whoisalive_manager_count";
-	private static final String PROP_MAX_WHOISALIVESYNC_MANAGER_COUNT = "max_whoisalivesync_manager_count";
-	private static final String PROP_MAX_WHOISALIVESYNC_NEIGHBOR_COUNT = "max_whoisalivesync_neighbor_count";
 
 	private static RendezvousXMPPComponent rendezvousXmppComponent;
 
-	private static void initializeRendezvousXMPPComponent(String configPath)
-			throws Exception {
+	private static void initializeRendezvousXMPPComponent(String configPath) {
 		Properties properties = new Properties();
-		FileInputStream input = getFileInputStream(configPath);
-		properties.load(input);
+		try {
+			FileInputStream input = getFileInputStream(configPath);
+			properties.load(input);
+			input.close();
+		} catch (Exception e) {
+			LOGGER.error("Configuration file not found.", e);
+			return;
+		}
 
 		String jid = getJID(properties);
 		String password = getPassword(properties);
 		String server = getServer(properties);
 		int port = getPort(properties);
-		long expiration = getExpiration(properties);
-		String[] neighbors = getNeighbors(properties);
-		int maxWhoisaliveManagerCount = getWhoisaliveManagerCount(properties);
-		int maxWhoisalivesyncManagerCount = getWhoisalivesyncManagerCount(properties);
-		int maxWhoisalivesyncNeighborCount = getWhoisalivesyncNeighborCount(properties);
 		rendezvousXmppComponent = new RendezvousXMPPComponent(jid, password,
 				server, port, properties);
 		rendezvousXmppComponent.setDescription(DESCRIPTION);
 		rendezvousXmppComponent.setName(NAME);
-		rendezvousXmppComponent.connect();
+		try {
+			rendezvousXmppComponent.connect();
+		} catch (ComponentException e) {
+			LOGGER.error("Could not connect to XMPP server.", e);
+			return;
+		}
 		rendezvousXmppComponent.process();
 	}
 
@@ -59,21 +66,6 @@ public class Main {
 		} catch (Exception e) {
 			throw new IllegalArgumentException();
 		}
-	}
-
-	private static int getWhoisaliveManagerCount(Properties properties) {
-		return (int) checkInvalidInteger(properties,
-				PROP_MAX_WHOISALIVE_MANAGER_COUNT);
-	}
-
-	private static int getWhoisalivesyncManagerCount(Properties properties) {
-		return (int) checkInvalidInteger(properties,
-				PROP_MAX_WHOISALIVESYNC_MANAGER_COUNT);
-	}
-
-	private static int getWhoisalivesyncNeighborCount(Properties properties) {
-		return (int) checkInvalidInteger(properties,
-				PROP_MAX_WHOISALIVESYNC_NEIGHBOR_COUNT);
 	}
 
 	static FileInputStream getFileInputStream(String path)
@@ -117,7 +109,7 @@ public class Main {
 		return neighborIds;
 	}
 
-	public static void main(String[] args) throws Exception {
+	public static void main(String[] args) {
 		initializeRendezvousXMPPComponent(args[0]);
 	}
 }
