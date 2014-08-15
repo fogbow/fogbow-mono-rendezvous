@@ -5,7 +5,6 @@ import java.io.FileNotFoundException;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
-import org.xmpp.component.ComponentException;
 
 public class Main {
 
@@ -18,7 +17,10 @@ public class Main {
 	private static final String NAME = "rendezvous";
 	private static final String DESCRIPTION = "Rendezvous Component";
 	private static final String PROP_EXPIRATION = "site_expiration";
-	private static final String PROP_NEIGHBORS = "neighbors";
+	private static final String PROP_NEIGHBORS = "neighbors";	
+	private static final String PROP_RETRY_INTERVAL = "xmpp_retry_interval";
+
+	private static final Long DEFAULT_RETRY_INTERVAL = 30000L;
 
 	private static RendezvousXMPPComponent rendezvousXmppComponent;
 
@@ -37,16 +39,22 @@ public class Main {
 		String password = getPassword(properties);
 		String server = getServer(properties);
 		int port = getPort(properties);
+		
 		rendezvousXmppComponent = new RendezvousXMPPComponent(jid, password,
 				server, port, properties);
 		rendezvousXmppComponent.setDescription(DESCRIPTION);
 		rendezvousXmppComponent.setName(NAME);
-		try {
-			rendezvousXmppComponent.connect();
-		} catch (ComponentException e) {
-			LOGGER.error("Could not connect to XMPP server.", e);
-			return;
+		
+		while (true) {
+			try {
+				Thread.sleep(getRetryInterval(properties));
+				rendezvousXmppComponent.connect();
+				break;
+			} catch (Exception e) {
+				LOGGER.error("Could not connect to XMPP server.", e);
+			}			
 		}
+		
 		rendezvousXmppComponent.process();
 	}
 
@@ -74,6 +82,15 @@ public class Main {
 		return new FileInputStream(path);
 	}
 
+	static Long getRetryInterval(Properties properties) {
+		String retryIntervalStr = properties.getProperty(PROP_RETRY_INTERVAL);
+		try {
+			return Long.valueOf(retryIntervalStr);			
+		} catch (Exception e) {
+			return DEFAULT_RETRY_INTERVAL;
+		}
+	}
+	
 	static String getServer(Properties properties) {
 		String server = properties.getProperty(PROP_HOST);
 		checkStringEmpty(server);
