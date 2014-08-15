@@ -47,15 +47,22 @@ public class Main {
 		
 		while (true) {
 			try {
-				Thread.sleep(getRetryInterval(properties));
 				rendezvousXmppComponent.connect();
 				break;
 			} catch (Exception e) {
+				waitRetryInterval(properties);
 				LOGGER.error("Could not connect to XMPP server.", e);
 			}			
 		}
 		
 		rendezvousXmppComponent.process();
+	}
+	
+	private static void waitRetryInterval(Properties properties) {
+		try {
+			Thread.sleep(getRetryInterval(properties));
+		} catch (InterruptedException e) {			
+		}
 	}
 
 	private static void checkStringEmpty(String string) {
