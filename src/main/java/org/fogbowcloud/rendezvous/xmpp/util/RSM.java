@@ -19,7 +19,6 @@ public class RSM {
 		this.max = Math.min(max, defaultMax);
 
 		Element afterEl = setEl.element("after");
-		this.after = "";
 		if (afterEl != null) {
 			this.after = afterEl.getText();
 		}
@@ -34,18 +33,26 @@ public class RSM {
 		List<FederationMember> orderedList = new LinkedList<FederationMember>(list);
 		Collections.sort(orderedList);
 		List<FederationMember> filteredList = new LinkedList<FederationMember>();
-		if (size == 0) {
+		int afterIndex = -1;
+		if (after != null) {
+			for (int i = 0; i < size; i++) {
+				if (this.after.equals(orderedList.get(i).getId())) {
+					afterIndex = i + 1;
+					break;
+				}
+			}
+		} else {
+			afterIndex = 0;
+		}
+		if (size == 0 && after == null) {
 			return list;
 		}
-		int afterIndex = 0;
-		for (int i = 0; i < size; i++) {
-			if (this.after.equals(orderedList.get(i).getId())) {
-				afterIndex = i + 1;
-				break;
+		if (afterIndex != -1) {
+			for (int i = afterIndex; i < afterIndex + max && i < size; i++) {
+				filteredList.add(orderedList.get(i));
 			}
-		}
-		for (int i = afterIndex; i < afterIndex + max && i < size; i++) {
-			filteredList.add(orderedList.get(i));
+		} else {
+			return null;
 		}
 		return filteredList;
 	}

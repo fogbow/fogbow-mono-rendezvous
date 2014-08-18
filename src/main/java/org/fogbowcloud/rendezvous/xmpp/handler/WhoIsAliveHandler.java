@@ -1,6 +1,7 @@
 package org.fogbowcloud.rendezvous.xmpp.handler;
 
 import java.util.List;
+import java.util.concurrent.locks.Condition;
 
 import org.dom4j.Element;
 import org.fogbowcloud.rendezvous.core.Rendezvous;
@@ -10,6 +11,7 @@ import org.fogbowcloud.rendezvous.core.model.Flavor;
 import org.fogbowcloud.rendezvous.xmpp.util.RSM;
 import org.jamppa.component.handler.AbstractQueryHandler;
 import org.xmpp.packet.IQ;
+import org.xmpp.packet.PacketError;
 
 public class WhoIsAliveHandler extends AbstractQueryHandler {
 
@@ -23,9 +25,10 @@ public class WhoIsAliveHandler extends AbstractQueryHandler {
 
 	public IQ handle(IQ iq) {
 		List<RendezvousItem> aliveIds = rendezvous.whoIsAlive();
-		
+
 		Element queryEl = iq.getElement().element("query");
-		int defaultMax = ((RendezvousImpl)rendezvous).getMaxWhoisaliveManagerCount();
+		int defaultMax = ((RendezvousImpl) rendezvous)
+				.getMaxWhoisaliveManagerCount();
 		RSM rsm = RSM.parse(queryEl, defaultMax);
 		return createResponse(iq, rsm, aliveIds);
 	}
@@ -36,9 +39,20 @@ public class WhoIsAliveHandler extends AbstractQueryHandler {
 
 		Element queryElement = resultIQ.getElement().addElement("query",
 				NAMESPACE);
-		List<RendezvousItem> filteredAliveIds = (List<RendezvousItem>) rsm.filter(aliveIds);
-		
-		for (RendezvousItem rendezvousItem: filteredAliveIds) {
+		List<RendezvousItem> filteredAliveIds = (List<RendezvousItem>) rsm
+				.filter(aliveIds);
+
+		if (filteredAliveIds == null) {
+			String from = iq.getFrom().toFullJID();
+			iq.setFrom(iq.getTo());
+			iq.setTo(from);
+			iq.setError(new PacketError(
+					PacketError.Condition.item_not_found,
+					PacketError.Type.cancel));
+			return iq;
+		}
+
+		for (RendezvousItem rendezvousItem : filteredAliveIds) {
 			Element itemEl = queryElement.addElement("item");
 			itemEl.addAttribute("id", rendezvousItem.getResourcesInfo().getId());
 			String cert = rendezvousItem.getResourcesInfo().getCert();

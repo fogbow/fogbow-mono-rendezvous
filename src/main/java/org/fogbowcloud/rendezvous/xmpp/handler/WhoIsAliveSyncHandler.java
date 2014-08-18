@@ -14,6 +14,7 @@ import org.fogbowcloud.rendezvous.xmpp.util.RSM;
 import org.fogbowcloud.rendezvous.xmpp.util.FederationMember;
 import org.jamppa.component.handler.AbstractQueryHandler;
 import org.xmpp.packet.IQ;
+import org.xmpp.packet.PacketError;
 
 public class WhoIsAliveSyncHandler extends AbstractQueryHandler {
 
@@ -66,9 +67,22 @@ public class WhoIsAliveSyncHandler extends AbstractQueryHandler {
 		Element queryElement = response.getElement().addElement("query",
 				WHOISALIVESYNC_NAMESPACE);
 
-		Element neighborsEl = queryElement.addElement("neighbors");
 		List<FederationMember> filteredNeighbors = (List<FederationMember>) neighborsRsm
 				.filter(neighbors);
+		List<FederationMember> filteredManagers = (List<FederationMember>) managersRsm
+				.filter(managers);
+		
+		if (filteredNeighbors == null || filteredManagers == null) {
+			String from = iq.getFrom().toFullJID();
+			iq.setFrom(iq.getTo());
+			iq.setTo(from);
+			iq.setError(new PacketError(
+					PacketError.Condition.item_not_found,
+					PacketError.Type.cancel));
+			return iq;
+		}
+		Element neighborsEl = queryElement.addElement("neighbors");
+		
 		for (FederationMember neighbor : filteredNeighbors) {
 			Element neighborEl = neighborsEl.addElement("neighbor");
 			neighborEl.addElement("id").setText(neighbor.getId());
@@ -76,9 +90,7 @@ public class WhoIsAliveSyncHandler extends AbstractQueryHandler {
 		neighborsRsm.appendSetElements(queryElement.element("neighbors"),
 				filteredNeighbors);
 
-		Element managersEl = queryElement.addElement("managers");
-		List<FederationMember> filteredManagers = (List<FederationMember>) managersRsm
-				.filter(managers);
+		Element managersEl = queryElement.addElement("managers");	
 		for (FederationMember rsmItem : filteredManagers) {
 			RendezvousItem item = (RendezvousItem) rsmItem;
 			Element managerEl = managersEl.addElement("manager");

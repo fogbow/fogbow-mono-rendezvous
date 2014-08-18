@@ -23,13 +23,13 @@ import org.xmpp.packet.IQ.Type;
 import org.xmpp.packet.Packet;
 
 public class RendezvousTestHelper {
-	
+
 	public static final String PROP_EXPIRATION = "site_expiration";
 	public static final String PROP_NEIGHBORS = "neighbors";
 	public static final String PROP_MAX_WHOISALIVE_MANAGER_COUNT = "max_whoisalive_manager_count";
 	public static final String PROP_MAX_WHOISALIVESYNC_MANAGER_COUNT = "max_whoisalivesync_manager_count";
 	public static final String PROP_MAX_WHOISALIVESYNC_NEIGHBOR_COUNT = "max_whoisalivesync_neighbor_count";
-	
+
 	private static final String HTTP_JABBER_ORG_PROTOCOL_RSM = "http://jabber.org/protocol/rsm";
 	private static final int SERVER_CLIENT_PORT = 5222;
 	private static final int SERVER_COMPONENT_PORT = 5347;
@@ -46,9 +46,37 @@ public class RendezvousTestHelper {
 	public static final long TIMEOUT_GRACE = 60;
 
 	public static final String NEIGHBOR_CLIENT_JID = "neighborClient@test.com/Smack";
-	public static final int MAX_WHOISALIVE_MANAGER_COUNT = 100;
-	private static final int MAX_WHOISALIVESYNC_MANAGER_COUNT = 100;
-	private static final int MAX_WHOISALIVESYNC_NEIGHBOR_COUNT = 100;
+	private static int maxWhoIsAliveManagerCount = 100;
+	private static int maxWhoIsAliveSyncManagerCount = 100;
+	private static int maxWhoIsAliveSyncNeighborCount = 100;
+
+	public static int getMaxWhoIsAliveManagerCount() {
+		return maxWhoIsAliveManagerCount;
+	}
+
+	public static void setMaxWhoIsAliveManagerCount(
+			int maxWhoIsAliveManagerCount) {
+		RendezvousTestHelper.maxWhoIsAliveManagerCount = maxWhoIsAliveManagerCount;
+	}
+
+	public static int getMaxWhoIsAliveSyncManagerCount() {
+		return maxWhoIsAliveSyncManagerCount;
+	}
+
+	public static void setMaxWhoIsAliveSyncManagerCount(
+			int maxWhoIsAliveSyncManagerCount) {
+		RendezvousTestHelper.maxWhoIsAliveSyncManagerCount = maxWhoIsAliveSyncManagerCount;
+	}
+
+	public static int getMaxWhoIsAliveSyncNeighborCount() {
+		return maxWhoIsAliveSyncNeighborCount;
+	}
+
+	public static void setMaxWhoIsAliveSyncNeighborCount(
+			int maxWhoIsAliveSyncNeighborCount) {
+		RendezvousTestHelper.maxWhoIsAliveSyncNeighborCount = maxWhoIsAliveSyncNeighborCount;
+	}
+
 	final String NEIGHBOR_CLIENT_PASSWORD = "neighborClient";
 	private RendezvousXMPPComponent rendezvousXmppComponent;
 	private FakeXMPPServer fakeServer = new FakeXMPPServer();
@@ -93,11 +121,15 @@ public class RendezvousTestHelper {
 	public void initializeXMPPRendezvousComponent(long testDefaultTimeout)
 			throws Exception {
 		Properties properties = Mockito.mock(Properties.class);
-		Mockito.when(properties.getProperty(PROP_EXPIRATION)).thenReturn(testDefaultTimeout + "");
+		Mockito.when(properties.getProperty(PROP_EXPIRATION)).thenReturn(
+				testDefaultTimeout + "");
 		Mockito.doReturn("").when(properties).getProperty(PROP_NEIGHBORS);
-		Mockito.doReturn("").when(properties).getProperty(PROP_MAX_WHOISALIVE_MANAGER_COUNT);
-		Mockito.doReturn("").when(properties).getProperty(PROP_MAX_WHOISALIVESYNC_MANAGER_COUNT);
-		Mockito.doReturn("").when(properties).getProperty(PROP_MAX_WHOISALIVESYNC_NEIGHBOR_COUNT);
+		Mockito.doReturn("").when(properties)
+				.getProperty(PROP_MAX_WHOISALIVE_MANAGER_COUNT);
+		Mockito.doReturn("").when(properties)
+				.getProperty(PROP_MAX_WHOISALIVESYNC_MANAGER_COUNT);
+		Mockito.doReturn("").when(properties)
+				.getProperty(PROP_MAX_WHOISALIVESYNC_NEIGHBOR_COUNT);
 		RendezvousXMPPComponent comp = new RendezvousXMPPComponent(
 				RENDEZVOUS_COMPONENT_URL, RENDEZVOUS_COMPONENT_PASS,
 				SERVER_HOST, SERVER_COMPONENT_PORT, properties);
@@ -120,11 +152,16 @@ public class RendezvousTestHelper {
 			}
 			neighborsString += neighbors[i];
 		}
-		Mockito.when(properties.getProperty(PROP_EXPIRATION)).thenReturn(testDefaultTimeout + "");
-		Mockito.when(properties.getProperty(PROP_NEIGHBORS)).thenReturn(neighborsString);
-		Mockito.doReturn("").when(properties).getProperty(PROP_MAX_WHOISALIVE_MANAGER_COUNT);
-		Mockito.doReturn("").when(properties).getProperty(PROP_MAX_WHOISALIVESYNC_MANAGER_COUNT);
-		Mockito.doReturn("").when(properties).getProperty(PROP_MAX_WHOISALIVESYNC_NEIGHBOR_COUNT);
+		Mockito.when(properties.getProperty(PROP_EXPIRATION)).thenReturn(
+				testDefaultTimeout + "");
+		Mockito.when(properties.getProperty(PROP_NEIGHBORS)).thenReturn(
+				neighborsString);
+		Mockito.doReturn("").when(properties)
+				.getProperty(PROP_MAX_WHOISALIVE_MANAGER_COUNT);
+		Mockito.doReturn("").when(properties)
+				.getProperty(PROP_MAX_WHOISALIVESYNC_MANAGER_COUNT);
+		Mockito.doReturn("").when(properties)
+				.getProperty(PROP_MAX_WHOISALIVESYNC_NEIGHBOR_COUNT);
 		RendezvousXMPPComponent comp = new RendezvousXMPPComponent(
 				RENDEZVOUS_COMPONENT_URL, RENDEZVOUS_COMPONENT_PASS,
 				SERVER_HOST, SERVER_COMPONENT_PORT, properties);
@@ -148,14 +185,19 @@ public class RendezvousTestHelper {
 			}
 			neighborsString += neighbors[i];
 		}
-		Mockito.when(properties.getProperty(PROP_EXPIRATION)).thenReturn(testDefaultTimeout + "");
-		Mockito.when(properties.getProperty(PROP_NEIGHBORS)).thenReturn(neighborsString);
-		Mockito.doReturn("").when(properties).getProperty(PROP_MAX_WHOISALIVE_MANAGER_COUNT);
-		Mockito.doReturn("").when(properties).getProperty(PROP_MAX_WHOISALIVESYNC_MANAGER_COUNT);
-		Mockito.doReturn("").when(properties).getProperty(PROP_MAX_WHOISALIVESYNC_NEIGHBOR_COUNT);
+		Mockito.when(properties.getProperty(PROP_EXPIRATION)).thenReturn(
+				testDefaultTimeout + "");
+		Mockito.when(properties.getProperty(PROP_NEIGHBORS)).thenReturn(
+				neighborsString);
+		Mockito.doReturn("").when(properties)
+				.getProperty(PROP_MAX_WHOISALIVE_MANAGER_COUNT);
+		Mockito.doReturn("").when(properties)
+				.getProperty(PROP_MAX_WHOISALIVESYNC_MANAGER_COUNT);
+		Mockito.doReturn("").when(properties)
+				.getProperty(PROP_MAX_WHOISALIVESYNC_NEIGHBOR_COUNT);
 		RendezvousXMPPComponent comp = new RendezvousXMPPComponent(
 				RENDEZVOUS_COMPONENT_URL, RENDEZVOUS_COMPONENT_PASS,
-				SERVER_HOST, SERVER_COMPONENT_PORT, properties,  executor);
+				SERVER_HOST, SERVER_COMPONENT_PORT, properties, executor);
 		rendezvousXmppComponent = Mockito.spy(comp);
 		((RendezvousImpl) comp.getRendezvous())
 				.setPacketSender(rendezvousXmppComponent);
@@ -190,20 +232,19 @@ public class RendezvousTestHelper {
 		}
 		return aliveIds;
 	}
-	
-	public static String getSetElementFromWhoIsAlive(IQ whoIsAliveResponse, String elementName) {
-		Element queryElement = whoIsAliveResponse.getElement().element(
-				"query");
+
+	public static String getSetElementFromWhoIsAlive(IQ whoIsAliveResponse,
+			String elementName) {
+		Element queryElement = whoIsAliveResponse.getElement().element("query");
 		Element setElement = queryElement.element("set");
-		String element= setElement.element(elementName).getText();
+		String element = setElement.element(elementName).getText();
 		return element;
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	public static LinkedList<RendezvousItem> getItemsFromIQ(
 			IQ whoIsAliveResponse) throws ParseException {
-		Element queryElement = whoIsAliveResponse.getElement().element(
-				"query");
+		Element queryElement = whoIsAliveResponse.getElement().element("query");
 		Iterator<Element> itemIterator = queryElement.elementIterator("item");
 		LinkedList<RendezvousItem> aliveItems = new LinkedList<RendezvousItem>();
 
@@ -211,79 +252,84 @@ public class RendezvousTestHelper {
 			Element itemEl = (Element) itemIterator.next();
 			aliveItems.add(getWhoIsAliveResponseItem(itemEl));
 		}
-
-/*		Element setElement = queryElement.element("set");
-		String fist = setElement.element("first").getText();
-		String last = setElement.element("last").getText();
-		int count = Integer.parseInt(setElement.element("count").getText());*/
 		return aliveItems;
 	}
-	
+
 	public static IQ createWhoIsAliveIQ() {
-		return createWhoIsAliveIQ("");
+		return createWhoIsAliveIQ(null);
 	}
-	
+
 	public static IQ createWhoIsAliveIQ(String after) {
+		return createWhoIsAliveIQ(after, maxWhoIsAliveManagerCount);
+	}
+
+	public static IQ createWhoIsAliveIQ(String after, int max) {
 		IQ iq = new IQ(Type.get);
 		iq.setTo(RENDEZVOUS_COMPONENT_URL);
 		Element queryEl = iq.getElement().addElement("query",
 				WHOISALIVE_NAMESPACE);
-		Element setEl = queryEl.addElement("set",
-				HTTP_JABBER_ORG_PROTOCOL_RSM);
-		setEl.addElement("max").setText("" + MAX_WHOISALIVE_MANAGER_COUNT);
-		if (!after.isEmpty()) {
+		Element setEl = queryEl.addElement("set", HTTP_JABBER_ORG_PROTOCOL_RSM);
+		setEl.addElement("max").setText(Integer.toString(max));
+		if (after != null) {
 			setEl.addElement("after").setText(after);
 		}
 		return iq;
 	}
 
-	
 	public static Packet createWhoIsAliveSyncIQ(String lastManager,
 			String lastNeighbor) {
 		IQ iq = new IQ(Type.get);
 		iq.setTo(RENDEZVOUS_COMPONENT_URL);
-		Element queryEl = iq.getElement().addElement("query", WHOISALIVESYNC_NAMESPACE);
+		Element queryEl = iq.getElement().addElement("query",
+				WHOISALIVESYNC_NAMESPACE);
 		Element neighborsEl = queryEl.addElement("neighbors");
 		Element setEl = neighborsEl.addElement("set",
 				HTTP_JABBER_ORG_PROTOCOL_RSM);
-		setEl.addElement("max").setText("" + MAX_WHOISALIVESYNC_NEIGHBOR_COUNT);
+		setEl.addElement("max").setText("" + maxWhoIsAliveSyncNeighborCount);
 		if (!lastNeighbor.isEmpty()) {
 			setEl.addElement("after").setText(lastNeighbor);
 		}
-		
+
 		Element managersEl = queryEl.addElement("managers");
-		setEl = managersEl.addElement("set",
-				HTTP_JABBER_ORG_PROTOCOL_RSM);
-		setEl.addElement("max").setText("" + MAX_WHOISALIVESYNC_MANAGER_COUNT);
+		setEl = managersEl.addElement("set", HTTP_JABBER_ORG_PROTOCOL_RSM);
+		setEl.addElement("max").setText("" + maxWhoIsAliveSyncManagerCount);
 		if (!lastManager.isEmpty()) {
 			setEl.addElement("after").setText(lastManager);
 		}
-		
+
 		return iq;
 	}
-	
+
 	public static IQ createWhoIsAliveSyncIQ() {
 		return (IQ) createWhoIsAliveSyncIQ("", "");
 	}
-	
-	public String getNeighborsSetElementsFromSyncIQ(String elementName,IQ syncResponse) {
-		Element queryElement = syncResponse.getElement().element(
-				"query");
+
+	public String getNeighborsSetElementsFromSyncIQ(String elementName,
+			IQ syncResponse) {
+		Element queryElement = syncResponse.getElement().element("query");
 		Element neighborsEl = queryElement.element("neighbors");
 		Element setElement = neighborsEl.element("set");
-		String element= setElement.element(elementName).getText();
+		Element elementEl = setElement.element(elementName);
+		if (elementEl == null) {
+			return null;
+		}
+		String element = elementEl.getText();
 		return element;
 	}
-	
-	public String getManagersSetElementsFromSyncIQ(String elementName,IQ syncResponse) {
-		Element queryElement = syncResponse.getElement().element(
-				"query");
+
+	public String getManagersSetElementsFromSyncIQ(String elementName,
+			IQ syncResponse) {
+		Element queryElement = syncResponse.getElement().element("query");
 		Element managersEl = queryElement.element("managers");
 		Element setElement = managersEl.element("set");
-		String element= setElement.element(elementName).getText();
+		Element elementEl = setElement.element(elementName);
+		if (elementEl == null) {
+			return null;
+		}
+		String element = elementEl.getText();
 		return element;
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	public static RendezvousResponseItem getItemsFromSyncIQ(IQ iq)
 			throws ParseException {
