@@ -73,7 +73,7 @@ public class RendezvousImpl implements Rendezvous {
 
 	private String[] getNeighborsFromProperties() {
 		String neighborsList = properties.getProperty(PROP_NEIGHBORS);
-		if (neighborsList.isEmpty()) {
+		if (neighborsList == null || neighborsList.isEmpty()) {
 			return new String[] {};
 		}
 		String[] neighborIds = neighborsList.split(",");
@@ -81,10 +81,11 @@ public class RendezvousImpl implements Rendezvous {
 	}
 
 	private long parseLongFromConfiguration(String propName, long defaultVaue) {
-		if (properties.getProperty(propName).isEmpty()) {
+		String propValue = properties.getProperty(propName);
+		if (propValue == null || propValue.isEmpty()) {
 			return defaultVaue;
 		}
-		long timeOut = Long.parseLong(properties.getProperty(propName));
+		long timeOut = Long.parseLong(propValue);
 		if (timeOut < 0) {
 			throw new IllegalArgumentException();
 		}
