@@ -12,15 +12,22 @@ public class RSM {
 	private String after;
 
 	public RSM(Element queryEl, int defaultMax) {
-		Element setEl = queryEl.element("set");
+		Element setEl = queryEl.element("set");		
 
-		String maxString = setEl.element("max").getText();
-		int max = Integer.parseInt(maxString);
-		this.max = Math.min(max, defaultMax);
+		if (setEl != null) {
+			int max;
+			if (setEl.element("max") != null || setEl.element("max").getText().isEmpty()) {
+				String maxString = setEl.element("max").getText();
+				max = Integer.parseInt(maxString);
+			} else {
+				max = Integer.MAX_VALUE;
+			}
+			this.max = Math.min(max, defaultMax);
 
-		Element afterEl = setEl.element("after");
-		if (afterEl != null) {
-			this.after = afterEl.getText();
+			Element afterEl = setEl.element("after");
+			if (afterEl != null) {
+				this.after = afterEl.getText();
+			}
 		}
 	}
 
