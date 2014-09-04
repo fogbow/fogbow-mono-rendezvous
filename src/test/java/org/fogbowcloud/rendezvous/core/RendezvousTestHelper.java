@@ -262,7 +262,15 @@ public class RendezvousTestHelper {
 	public static IQ createWhoIsAliveIQ(String after) {
 		return createWhoIsAliveIQ(after, maxWhoIsAliveManagerCount);
 	}
-
+	
+	public static IQ createWhoIsAliveIQNoRsm() {
+		IQ iq = new IQ(Type.get);
+		iq.setTo(RENDEZVOUS_COMPONENT_URL);
+		Element queryEl = iq.getElement().addElement("query",
+				WHOISALIVE_NAMESPACE);
+		return iq;
+	}
+	
 	public static IQ createWhoIsAliveIQ(String after, int max) {
 		IQ iq = new IQ(Type.get);
 		iq.setTo(RENDEZVOUS_COMPONENT_URL);
@@ -299,7 +307,15 @@ public class RendezvousTestHelper {
 
 		return iq;
 	}
-
+	
+	public static Packet createWhoIsAliveSyncIQNoRsm() {
+		IQ iq = new IQ(Type.get);
+		iq.setTo(RENDEZVOUS_COMPONENT_URL);
+		Element queryEl = iq.getElement().addElement("query",
+				WHOISALIVESYNC_NAMESPACE);
+		return iq;
+	}
+	
 	public static IQ createWhoIsAliveSyncIQ() {
 		return (IQ) createWhoIsAliveSyncIQ("", "");
 	}

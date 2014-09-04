@@ -33,7 +33,8 @@ public class WhoIsAliveSyncHandler extends AbstractQueryHandler {
 
 		Element queryEl = iq.getElement().element("query");
 		Element neighborsEl = queryEl.element("neighbors");
-		RSM neighborsRSM = RSM.parse(neighborsEl, maxNeighbors);
+        RSM neighborsRSM = RSM.parse(neighborsEl, maxNeighbors);
+
 
 		Element managersEl = queryEl.element("managers");
 		int maxManagers = rendezvousImpl.getMaxWhoisaliveSyncNeighborCount();
