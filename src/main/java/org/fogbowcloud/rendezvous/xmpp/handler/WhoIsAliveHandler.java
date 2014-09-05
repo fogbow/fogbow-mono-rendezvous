@@ -1,7 +1,6 @@
 package org.fogbowcloud.rendezvous.xmpp.handler;
 
 import java.util.List;
-import java.util.concurrent.locks.Condition;
 
 import org.dom4j.Element;
 import org.fogbowcloud.rendezvous.core.Rendezvous;

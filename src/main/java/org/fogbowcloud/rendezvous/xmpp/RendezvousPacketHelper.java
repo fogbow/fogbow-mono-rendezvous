@@ -61,7 +61,8 @@ public class RendezvousPacketHelper {
 			Element itemEl) throws ParseException {
 		Attribute id = itemEl.attribute("id");
 		Element statusEl = itemEl.element("status");
-		String cert = itemEl.element("cert").getText();
+		Element certEl = itemEl.element("cert");
+		String cert = certEl == null ? null : certEl.getText();
 		String cpuIdle = statusEl.element("cpu-idle").getText();
 		String cpuInUse = statusEl.element("cpu-inuse").getText();
 		String memIdle = statusEl.element("mem-idle").getText();

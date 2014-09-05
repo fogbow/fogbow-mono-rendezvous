@@ -96,8 +96,10 @@ public class WhoIsAliveSyncHandler extends AbstractQueryHandler {
 			RendezvousItem item = (RendezvousItem) rsmItem;
 			Element managerEl = managersEl.addElement("manager");
 			managerEl.addAttribute("id", item.getResourcesInfo().getId());
-			managerEl.addElement("cert").setText(
-					item.getResourcesInfo().getCert());
+			String cert = item.getResourcesInfo().getCert();
+			if (cert != null) {
+				managerEl.addElement("cert").setText(cert);
+			}
 			Element statusEl = managerEl.addElement("status");
 			statusEl.addElement("cpu-idle").setText(
 					item.getResourcesInfo().getCpuIdle());
