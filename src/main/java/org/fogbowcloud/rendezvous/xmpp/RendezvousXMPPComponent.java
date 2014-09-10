@@ -10,6 +10,7 @@ import org.fogbowcloud.rendezvous.xmpp.handler.IAmAliveHandler;
 import org.fogbowcloud.rendezvous.xmpp.handler.WhoIsAliveHandler;
 import org.fogbowcloud.rendezvous.xmpp.handler.WhoIsAliveSyncHandler;
 import org.jamppa.component.XMPPComponent;
+import org.xmpp.packet.IQ;
 
 public class RendezvousXMPPComponent extends XMPPComponent {
 
@@ -32,6 +33,11 @@ public class RendezvousXMPPComponent extends XMPPComponent {
 		addGetHandler(new IAmAliveHandler(rendezvous));
 		addGetHandler(new WhoIsAliveHandler(rendezvous));
 		addGetHandler(new WhoIsAliveSyncHandler(rendezvous));
+	}
+	
+	@Override
+	protected void handleIQError(IQ iq) {
+		super.handleIQResult(iq);
 	}
 
 	@Override
