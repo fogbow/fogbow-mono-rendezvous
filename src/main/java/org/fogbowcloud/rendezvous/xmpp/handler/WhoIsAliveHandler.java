@@ -4,10 +4,13 @@ import java.util.List;
 
 import org.dom4j.Element;
 import org.fogbowcloud.rendezvous.core.Rendezvous;
+import org.fogbowcloud.rendezvous.core.RendezvousImpl;
 import org.fogbowcloud.rendezvous.core.RendezvousItem;
 import org.fogbowcloud.rendezvous.core.model.Flavor;
+import org.fogbowcloud.rendezvous.xmpp.util.RSM;
 import org.jamppa.component.handler.AbstractQueryHandler;
 import org.xmpp.packet.IQ;
+import org.xmpp.packet.PacketError;
 
 public class WhoIsAliveHandler extends AbstractQueryHandler {
 
@@ -21,15 +24,34 @@ public class WhoIsAliveHandler extends AbstractQueryHandler {
 
 	public IQ handle(IQ iq) {
 		List<RendezvousItem> aliveIds = rendezvous.whoIsAlive();
-		return createResponse(iq, aliveIds);
+
+		Element queryEl = iq.getElement().element("query");
+		int defaultMax = ((RendezvousImpl) rendezvous)
+				.getMaxWhoisaliveManagerCount();
+		RSM rsm = RSM.parse(queryEl, defaultMax);
+		return createResponse(iq, rsm, aliveIds);
 	}
 
-	private IQ createResponse(IQ iq, List<RendezvousItem> aliveIds) {
+	@SuppressWarnings("unchecked")
+	private IQ createResponse(IQ iq, RSM rsm, List<RendezvousItem> aliveIds) {
 		IQ resultIQ = IQ.createResultIQ(iq);
 
 		Element queryElement = resultIQ.getElement().addElement("query",
 				NAMESPACE);
-		for (RendezvousItem rendezvousItem : aliveIds) {
+		List<RendezvousItem> filteredAliveIds = (List<RendezvousItem>) rsm
+				.filter(aliveIds);
+
+		if (filteredAliveIds == null) {
+			String from = iq.getFrom().toFullJID();
+			iq.setFrom(iq.getTo());
+			iq.setTo(from);
+			iq.setError(new PacketError(
+					PacketError.Condition.item_not_found,
+					PacketError.Type.cancel));
+			return iq;
+		}
+
+		for (RendezvousItem rendezvousItem : filteredAliveIds) {
 			Element itemEl = queryElement.addElement("item");
 			itemEl.addAttribute("id", rendezvousItem.getResourcesInfo().getId());
 			String cert = rendezvousItem.getResourcesInfo().getCert();
@@ -60,6 +82,7 @@ public class WhoIsAliveHandler extends AbstractQueryHandler {
 			statusEl.addElement("updated").setText(
 					String.valueOf(rendezvousItem.getFormattedTime()));
 		}
+		queryElement = rsm.appendSetElements(queryElement, filteredAliveIds);
 		return resultIQ;
 	}
 }

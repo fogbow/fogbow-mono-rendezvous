@@ -18,13 +18,13 @@ public class TestMainClass {
 
 	@Before
 	public void setUp() throws IOException {
-		this.fileInputStream = Main.getFileInputStrean(DEFAULT_PATH_TEST_VALUE_EMPTY);
+		this.fileInputStream = Main.getFileInputStream(DEFAULT_PATH_TEST_VALUE_EMPTY);
 		this.properties.load(fileInputStream);
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testMainPathFileConfigNull() throws FileNotFoundException {
-		Main.getFileInputStrean(null);
+		Main.getFileInputStream(null);
 	}
 
 	@Test(expected = IllegalArgumentException.class)
@@ -54,7 +54,7 @@ public class TestMainClass {
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testMainFileConfigValuePortString() throws IOException {
-		this.fileInputStream = Main.getFileInputStrean(PATH_TEST_VALUE_WRONG);
+		this.fileInputStream = Main.getFileInputStream(PATH_TEST_VALUE_WRONG);
 		this.properties.load(fileInputStream);
 
 		Main.getPort(this.properties);
@@ -62,7 +62,7 @@ public class TestMainClass {
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testMainFileConfigValueExpirationString() throws IOException {
-		this.fileInputStream = Main.getFileInputStrean(PATH_TEST_VALUE_WRONG);
+		this.fileInputStream = Main.getFileInputStream(PATH_TEST_VALUE_WRONG);
 		this.properties.load(fileInputStream);
 
 		Main.getExpiration(this.properties);

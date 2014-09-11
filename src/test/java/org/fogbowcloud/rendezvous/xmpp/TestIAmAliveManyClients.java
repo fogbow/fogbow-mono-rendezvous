@@ -1,10 +1,11 @@
 package org.fogbowcloud.rendezvous.xmpp;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
-import org.fogbowcloud.rendezvous.xmpp.model.RendezvousTestHelper;
+import org.fogbowcloud.rendezvous.core.RendezvousTestHelper;
 import org.jamppa.client.XMPPClient;
 import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.XMPPException;
@@ -33,7 +34,7 @@ public class TestIAmAliveManyClients {
 
 	@Test
 	public void testIamAliveManyClientsWithSemaphore()
-			throws InterruptedException, XMPPException, ComponentException {
+			throws InterruptedException, XMPPException, ComponentException, ParseException {
 		final Semaphore semaphore = new Semaphore(0);
 		
 		final PacketListener callback = new PacketListener() {

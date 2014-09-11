@@ -1,8 +1,9 @@
 package org.fogbowcloud.rendezvous.xmpp;
 
+import java.text.ParseException;
 import java.util.ArrayList;
 
-import org.fogbowcloud.rendezvous.xmpp.model.RendezvousTestHelper;
+import org.fogbowcloud.rendezvous.core.RendezvousTestHelper;
 import org.jamppa.client.XMPPClient;
 import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.XMPPException;
@@ -41,7 +42,7 @@ public class TestIAmAlive {
 	}
 
 	@Test
-	public void testSyncImAliveSingleElement() throws XMPPException {
+	public void testSyncImAliveSingleElement() throws XMPPException, ParseException {
 		IQ response;
 		IQ iq = RendezvousTestHelper.createIAmAliveIQ();
 		XMPPClient xmppClient = rendezvousTestHelper.createXMPPClient();
@@ -79,7 +80,7 @@ public class TestIAmAlive {
 	}
 
 	@Test
-	public void testIamAlive2EqualElements() throws XMPPException {
+	public void testIamAlive2EqualElements() throws XMPPException, ParseException {
 		IQ response;
 		IQ iq = RendezvousTestHelper.createIAmAliveIQ();
 		XMPPClient xmppClient = rendezvousTestHelper.createXMPPClient();
@@ -99,7 +100,7 @@ public class TestIAmAlive {
 	}
 
 	@Test
-	public void testIamAlive2Clients() throws XMPPException {
+	public void testIamAlive2Clients() throws XMPPException, ParseException {
 		XMPPClient xmppClient1 = rendezvousTestHelper.createXMPPClient();
 		XMPPClient xmppClient2 = rendezvousTestHelper.createXMPPClient();
 		IQ iq = RendezvousTestHelper.createIAmAliveIQ();

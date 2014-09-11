@@ -8,4 +8,5 @@ public interface Rendezvous {
 	
 	List<RendezvousItem> whoIsAlive();
 
+	void init();
 }

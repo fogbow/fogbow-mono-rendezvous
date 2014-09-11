@@ -6,9 +6,17 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 import org.fogbowcloud.rendezvous.core.model.DateUtils;
+import org.fogbowcloud.rendezvous.xmpp.util.FederationMember;
 
-public class RendezvousItem {
-    public static final String ISO_8601_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
+public class RendezvousItem extends FederationMember {
+	
+    private static final String ISO_8601_DATE_FORMAT_STR = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
+    public static final SimpleDateFormat ISO_8601_DATE_FORMAT = new SimpleDateFormat(
+    		ISO_8601_DATE_FORMAT_STR, Locale.ROOT);
+    static {
+    	ISO_8601_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("GMT"));
+    }
+    
     private long lastTime;
     private ResourcesInfo resourcesInfo;
 
@@ -29,21 +37,22 @@ public class RendezvousItem {
     }
 
     public String getFormattedTime() {
-        SimpleDateFormat dateFormatISO8601 = new SimpleDateFormat(
-                ISO_8601_DATE_FORMAT, Locale.ROOT);
-        dateFormatISO8601.setTimeZone(TimeZone.getTimeZone("GMT"));
-        
-        Date date = new Date(lastTime);
-
-        return dateFormatISO8601.format(date);
+        return ISO_8601_DATE_FORMAT.format(new Date(lastTime));
     }
+    
     
     /**
      * This method was implemented just for unit test.
      *  
      * @param lastTime
      */
-    protected void setLastTime(long lastTime){
+    public void setLastTime(long lastTime){
     	this.lastTime = lastTime;
     }
+
+	@Override
+	public String getId() {
+		return this.resourcesInfo.getId();
+	}
+
 }
