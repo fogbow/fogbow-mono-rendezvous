@@ -176,6 +176,7 @@ public class RendezvousImpl implements Rendezvous {
 				LOGGER.warn("Couldn't sync with neighbor " + neighbor, e);
 			}
 		}
+		checkExpiredAliveIDs();
 	}
 
 	public Set<String> getNeighborIds() {
