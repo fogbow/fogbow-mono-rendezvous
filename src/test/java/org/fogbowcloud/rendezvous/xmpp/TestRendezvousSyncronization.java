@@ -1,11 +1,13 @@
 package org.fogbowcloud.rendezvous.xmpp;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
+import org.dom4j.Element;
 import org.fogbowcloud.rendezvous.core.RendezvousImpl;
 import org.fogbowcloud.rendezvous.core.RendezvousTestHelper;
 import org.fogbowcloud.rendezvous.xmpp.model.RendezvousResponseItem;
@@ -21,9 +23,9 @@ import org.junit.Test;
 import org.mockito.Mockito;
 import org.xmpp.component.ComponentException;
 import org.xmpp.packet.IQ;
-import org.xmpp.packet.PacketError;
 import org.xmpp.packet.IQ.Type;
 import org.xmpp.packet.Packet;
+import org.xmpp.packet.PacketError;
 
 public class TestRendezvousSyncronization {
 
@@ -459,5 +461,81 @@ public class TestRendezvousSyncronization {
 			rendezvousTestHelper.disconnectRendezvousXMPPComponent();
 		} catch (ComponentException e) {
 		}
+	}
+
+	@Test
+	public void testSync2Rendezvous() throws Exception {
+		int testDefaultTimeout = 1000;
+
+		String nameRendezvousOne = rendezvousTestHelper.RENDEZVOUS_COMPONENT_URL;
+		String nameRendezvousTwo = "rendezvous2.test.com";
+
+		rendezvousTestHelper.initializeTwoXMPPRendezvousComponent(testDefaultTimeout,
+				nameRendezvousOne, nameRendezvousTwo);
+
+		XMPPClient xmppClient1 = rendezvousTestHelper.createXMPPClient();
+		XMPPClient xmppClient2 = rendezvousTestHelper.createXMPPClient();
+		XMPPClient xmppClient3 = rendezvousTestHelper.createXMPPClient();
+
+		IQ iqRendezvousOne = createIAmAliveIQ(nameRendezvousOne);
+		IQ iqRendezvousTwo = createIAmAliveIQ(nameRendezvousTwo);
+
+		// IAmALive Rendezvous One
+		xmppClient1.syncSend(iqRendezvousOne);
+		// IAmALive Rendezvous One
+		xmppClient2.syncSend(iqRendezvousOne);
+
+		IQ iqWho = RendezvousTestHelper.createWhoIsAliveIQ();
+		ArrayList<String> aliveIDs = RendezvousTestHelper.getAliveIds((IQ) xmppClient1
+				.syncSend(iqWho));
+		Assert.assertEquals(2, aliveIDs.size());
+
+		// IAmALive Rendezvous Two
+		xmppClient3.syncSend(iqRendezvousTwo);
+
+		RendezvousImpl rendezvousOne = (RendezvousImpl) rendezvousTestHelper
+				.getRendezvousXmppComponent().getRendezvous();
+		RendezvousImpl rendezvousTwo = (RendezvousImpl) rendezvousTestHelper
+				.getRendezvousXmppComponentNumberTwo().getRendezvous();
+		// First cycle of checking and synchronization
+		checkAndSyncBothRendezvous(rendezvousOne, rendezvousTwo);
+
+		aliveIDs = RendezvousTestHelper.getAliveIds((IQ) xmppClient1.syncSend(iqWho));
+		Assert.assertEquals(3, aliveIDs.size());
+
+		// Expected to expire
+		Thread.sleep(testDefaultTimeout);
+
+		// IAmALive Rendezvous One
+		rendezvousTestHelper.createXMPPClient().syncSend(iqRendezvousOne);
+		// IAmALive Rendezvous One
+		rendezvousTestHelper.createXMPPClient().syncSend(iqRendezvousOne);
+		// Second cycle of checking and synchronization
+		checkAndSyncBothRendezvous(rendezvousOne, rendezvousTwo);
+
+		aliveIDs = RendezvousTestHelper.getAliveIds((IQ) xmppClient1.syncSend(iqWho));
+		Assert.assertEquals(2, aliveIDs.size());
+	}
+
+	private void checkAndSyncBothRendezvous(RendezvousImpl rendezvousOne,
+			RendezvousImpl rendezvousTwo) {
+		rendezvousOne.checkExpiredAliveIDs();
+		rendezvousOne.syncNeighbors();
+		rendezvousTwo.checkExpiredAliveIDs();
+		rendezvousTwo.syncNeighbors();
+	}
+
+	private IQ createIAmAliveIQ(String nameRendezvous) {
+		IQ iq2 = new IQ(Type.get);
+		iq2.setTo(nameRendezvous);
+		Element statusEl2 = iq2.getElement()
+				.addElement("query", "http://fogbowcloud.org/rendezvous/iamalive")
+				.addElement("status");
+		iq2.getElement().element("query").addElement("cert").setText("cert");
+		statusEl2.addElement("cpu-idle").setText("1");
+		statusEl2.addElement("cpu-inuse").setText("2");
+		statusEl2.addElement("mem-idle").setText("3");
+		statusEl2.addElement("mem-inuse").setText("4");
+		return iq2;
 	}
 }
