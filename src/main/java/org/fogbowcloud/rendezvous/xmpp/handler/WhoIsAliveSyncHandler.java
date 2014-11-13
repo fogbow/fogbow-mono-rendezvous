@@ -118,6 +118,9 @@ public class WhoIsAliveSyncHandler extends AbstractQueryHandler {
 						flavor.getCapacity().toString());
 			}
 			statusEl.addElement("updated").setText(item.getFormattedTime());
+			
+			statusEl.addElement("quiet-for").setText(
+					String.valueOf(System.currentTimeMillis() - item.getLastTime()));		
 		}
 		managersRsm.appendSetElements(queryElement.element("managers"),
 				filteredManagers);

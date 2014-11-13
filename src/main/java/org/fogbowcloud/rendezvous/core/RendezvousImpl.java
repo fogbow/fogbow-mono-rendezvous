@@ -111,6 +111,7 @@ public class RendezvousImpl implements Rendezvous {
 
 	public List<RendezvousItem> whoIsAlive() {
 		LOGGER.debug("WhoISAlive done.");
+		checkExpiredAliveIDs();
 		return new ArrayList<RendezvousItem>(aliveManagers.values());
 	}
 
@@ -130,8 +131,7 @@ public class RendezvousImpl implements Rendezvous {
 			try {
 				Entry<String, RendezvousItem> entry = iter.next();
 				RendezvousItem rendezvousItem = entry.getValue();
-				if ((rendezvousItem.getLastTime() + timeOut) < dateUnit
-						.currentTimeMillis()) {
+				if ((rendezvousItem.getLastTime() + timeOut) < dateUnit.currentTimeMillis()) {
 					iter.remove();
 					LOGGER.info(rendezvousItem.getResourcesInfo().getId()
 							+ " expired.");
@@ -176,6 +176,7 @@ public class RendezvousImpl implements Rendezvous {
 				LOGGER.warn("Couldn't sync with neighbor " + neighbor, e);
 			}
 		}
+		checkExpiredAliveIDs();
 	}
 
 	public Set<String> getNeighborIds() {

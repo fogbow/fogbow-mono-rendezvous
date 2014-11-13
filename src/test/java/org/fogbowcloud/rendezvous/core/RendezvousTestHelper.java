@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
 import org.dom4j.Attribute;
@@ -79,11 +80,17 @@ public class RendezvousTestHelper {
 
 	final String NEIGHBOR_CLIENT_PASSWORD = "neighborClient";
 	private RendezvousXMPPComponent rendezvousXmppComponent;
+	private RendezvousXMPPComponent rendezvousXmppComponentNumberTwo;
+		
 	private FakeXMPPServer fakeServer = new FakeXMPPServer();
 
 	public RendezvousXMPPComponent getRendezvousXmppComponent() {
 		return rendezvousXmppComponent;
 	}
+	
+	public RendezvousXMPPComponent getRendezvousXmppComponentNumberTwo() {
+		return rendezvousXmppComponentNumberTwo;
+	}	
 
 	private ArrayList<XMPPClient> xmppClients = new ArrayList<XMPPClient>();
 
@@ -439,7 +446,9 @@ public class RendezvousTestHelper {
 		flavorElement.addElement("capacity").setText("5");
 
 		statusEl.addElement("updated").setText(
-				"2012-10-01T09:45:00.000UTC+00:00");
+				"2012-10-01T09:45:00.000UTC+00:00");		
+		statusEl.addElement("quiet-for").setText("1");
+		
 		return response;
 	}
 
@@ -454,5 +463,47 @@ public class RendezvousTestHelper {
 		xmppClients.add(xmppClient);
 
 		return xmppClient;
+	}
+
+	public void initializeTwoXMPPRendezvousComponent(long testDefaultTimeout,
+			String nameRendezvousOne, String nameRendezvousTwo)
+			throws Exception {				
+		ScheduledExecutorService executor = Executors.newScheduledThreadPool(10);
+		
+		Properties properties = Mockito.mock(Properties.class);
+		Mockito.when(properties.getProperty(PROP_EXPIRATION)).thenReturn(
+				testDefaultTimeout + "");
+		Mockito.when(properties.getProperty(PROP_NEIGHBORS)).thenReturn(
+				nameRendezvousTwo);
+		Mockito.doReturn("").when(properties)
+				.getProperty(PROP_MAX_WHOISALIVE_MANAGER_COUNT);
+		Mockito.doReturn("").when(properties)
+				.getProperty(PROP_MAX_WHOISALIVESYNC_MANAGER_COUNT);
+		Mockito.doReturn("").when(properties)
+				.getProperty(PROP_MAX_WHOISALIVESYNC_NEIGHBOR_COUNT);
+						
+		RendezvousXMPPComponent compOne = new RendezvousXMPPComponent(
+				nameRendezvousOne, RENDEZVOUS_COMPONENT_PASS,
+				SERVER_HOST, SERVER_COMPONENT_PORT, properties, executor);
+		rendezvousXmppComponent = Mockito.spy(compOne);
+		((RendezvousImpl) compOne.getRendezvous())
+				.setPacketSender(rendezvousXmppComponent);
+		rendezvousXmppComponent.setDescription("Rendezvous Component One");
+		rendezvousXmppComponent.setName("rendezvous one");
+		fakeServer.connect(rendezvousXmppComponent);
+		rendezvousXmppComponent.process();
+		
+		rendezvousXmppComponent.getRendezvous();
+		
+		RendezvousXMPPComponent compTwo = new RendezvousXMPPComponent(
+				nameRendezvousTwo, RENDEZVOUS_COMPONENT_PASS,
+				SERVER_HOST, SERVER_COMPONENT_PORT, properties, executor);
+		rendezvousXmppComponentNumberTwo = Mockito.spy(compTwo);
+		((RendezvousImpl) compTwo.getRendezvous())
+				.setPacketSender(rendezvousXmppComponent);
+		rendezvousXmppComponentNumberTwo.setDescription("Rendezvous Component Tow");
+		rendezvousXmppComponentNumberTwo.setName("rendezvous two");
+		fakeServer.connect(rendezvousXmppComponentNumberTwo);
+		rendezvousXmppComponentNumberTwo.process();				
 	}
 }

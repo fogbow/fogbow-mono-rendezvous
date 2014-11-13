@@ -221,20 +221,19 @@ public class RendezvousTest {
 
 		// mocking data
 		long currentTime = new DateUtils().currentTimeMillis();
-		long halfTimeoutInterval = TIMEOUT / 2 + TIMEOUT_GRACE;
+		long halfTimeoutInterval = TIMEOUT / 2 + TIMEOUT_GRACE - 10;
 		long firstPassageOfTime = currentTime + halfTimeoutInterval;
 		long secondPassageOfTime = firstPassageOfTime + halfTimeoutInterval;
 		long thirdPassageOfTime = secondPassageOfTime + halfTimeoutInterval;
 
 		DateUtils dateMock = Mockito.mock(DateUtils.class);
-		Mockito.when(dateMock.currentTimeMillis()).thenReturn(
-				firstPassageOfTime, secondPassageOfTime, secondPassageOfTime,
+		Mockito.when(dateMock.currentTimeMillis()).thenReturn(firstPassageOfTime,
+				firstPassageOfTime, secondPassageOfTime, secondPassageOfTime, secondPassageOfTime,
 				thirdPassageOfTime);
 		rendezvous.setDateUnit(dateMock);
 
 		// first passage of time
 
-		rendezvous.checkExpiredAliveIDs();
 		Assert.assertEquals(1, rendezvous.whoIsAlive().size());
 
 		// IAmAlive of new id
@@ -247,12 +246,10 @@ public class RendezvousTest {
 
 		// second passage of time
 
-		rendezvous.checkExpiredAliveIDs();
 		Assert.assertEquals(1, rendezvous.whoIsAlive().size());
 
 		// third passage of time
 
-		rendezvous.checkExpiredAliveIDs();
 		Assert.assertEquals(0, rendezvous.whoIsAlive().size());
 	}
 
