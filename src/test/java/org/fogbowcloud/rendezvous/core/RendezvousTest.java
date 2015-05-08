@@ -30,7 +30,7 @@ public class RendezvousTest {
 		flavors = new LinkedList<Flavor>();
 		flavors.add(new Flavor("small", "cpu", "mem", 2));
 		resources = new ResourcesInfo("abc", "value1", "value2", "value3",
-				"value4", flavors, "cert");
+				"value4", "value5", "value6", flavors, "cert");
 		neighbors = new String[] {};
 		executor = Mockito.mock(ScheduledExecutorService.class);
 		properties = Mockito.mock(Properties.class);
@@ -77,7 +77,7 @@ public class RendezvousTest {
 		for (int i = 0; i < 10; i++) {
 			String s = "Element " + i;
 			resources = new ResourcesInfo(s, "value1", "value2", "value3",
-					"value4", flavors, "cert");
+					"value4", "value5", "value6", flavors, "cert");
 			rendezvous.iAmAlive(resources);
 			List<RendezvousItem> elementList = rendezvous.whoIsAlive();
 			Assert.assertTrue(containsId(elementList, s));
@@ -105,14 +105,14 @@ public class RendezvousTest {
 	@Test(expected = IllegalArgumentException.class)
 	public void testImAliveNullParameter() {
 		ResourcesInfo resources = new ResourcesInfo(null, "value1", "value2",
-				"value3", "value4", flavors, "cert");
+				"value3", "value4", "value5", "value6", flavors, "cert");
 		rendezvous.iAmAlive(resources);
 	}
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testImAliveEmptyParameter() {
 		ResourcesInfo resources = new ResourcesInfo("", "value1", "value2",
-				"value3", "value4", flavors, "cert");
+				"value3", "value4", "value5", "value6", flavors, "cert");
 		rendezvous.iAmAlive(resources);
 	}
 
@@ -131,7 +131,7 @@ public class RendezvousTest {
 	@Test
 	public void testWhoIsAliveSingleElement() {
 		ResourcesInfo resources = new ResourcesInfo("OnlyElement", "value1",
-				"value2", "value3", "value4", flavors, "cert");
+				"value2", "value3", "value4", "value5", "value6", flavors, "cert");
 		rendezvous.iAmAlive(resources);
 		Assert.assertEquals(1, rendezvous.whoIsAlive().size());
 		Assert.assertTrue(containsId(rendezvous.whoIsAlive(), "OnlyElement"));
@@ -140,7 +140,7 @@ public class RendezvousTest {
 	@Test
 	public void testWhoIsAliveElementValues() throws InterruptedException {
 		ResourcesInfo resources = new ResourcesInfo("id", "value1", "value2",
-				"value3", "value4", flavors, "cert");
+				"value3", "value4", "value5", "value6", flavors, "cert");
 
 		Date beforeMessage = new Date(System.currentTimeMillis());
 		Thread.sleep(1);
@@ -179,7 +179,7 @@ public class RendezvousTest {
 	public void testWhoIsAliveManyElements() {
 		for (int i = 0; i < 10; i++) {
 			rendezvous.iAmAlive(new ResourcesInfo("Element" + (i + 1),
-					"value1", "value2", "value3", "value4", flavors, "cert"));
+					"value1", "value2", "value3", "value4", "value5", "value6", flavors, "cert"));
 		}
 
 		for (int i = 0; i < 10; i++) {
@@ -238,7 +238,7 @@ public class RendezvousTest {
 
 		// IAmAlive of new id
 		ResourcesInfo resources2 = new ResourcesInfo("id2", "value1", "value2",
-				"value3", "value4", flavors, "cert");
+				"value3", "value4", "value5", "value6", flavors, "cert");
 		rendezvous.iAmAlive(resources2);
 		rendezvous.setLastTime("id2", firstPassageOfTime + 3);
 
@@ -272,7 +272,7 @@ public class RendezvousTest {
 			// IAmAlive of new id
 			String id = "Element" + i;
 			rendezvous.iAmAlive(new ResourcesInfo(id, "value1", "value2",
-					"value3", "value4", flavors, "cert"));
+					"value3", "value4", "value5", "value6", flavors, "cert"));
 			rendezvous.setLastTime(id, currentTime);
 
 			// mocking date to check expired
@@ -295,7 +295,7 @@ public class RendezvousTest {
 			// IAmAlive client from already existing client
 			String id = "Element" + i;
 			rendezvous.iAmAlive(new ResourcesInfo(id, "value1", "value2",
-					"value3", "value4", flavors, "cert"));
+					"value3", "value4", "value5", "value6", flavors, "cert"));
 			((RendezvousImpl) rendezvous).setLastTime(id, currentTime);
 
 			// mocking date to check expired
@@ -338,7 +338,7 @@ public class RendezvousTest {
 		
 		for (int i = 0; i < 1000000; i++) {
 			rendezvous.iAmAlive(new ResourcesInfo("Element" + i, "value1",
-					"value2", "value3", "value4", flavors, "cert"));
+					"value2", "value3", "value4", "value5", "value6", flavors, "cert"));
 		}
 
 		Assert.assertFalse(rendezvous.getInError());

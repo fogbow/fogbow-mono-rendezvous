@@ -12,7 +12,6 @@ import org.dom4j.Element;
 import org.fogbowcloud.rendezvous.core.RendezvousImpl;
 import org.fogbowcloud.rendezvous.core.RendezvousItem;
 import org.fogbowcloud.rendezvous.core.RendezvousTestHelper;
-import org.fogbowcloud.rendezvous.core.model.Flavor;
 import org.jamppa.client.XMPPClient;
 import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.XMPPException;
@@ -132,19 +131,15 @@ public class TestWhoIsAlive {
 		String cpuInUseValue = "value2";
 		String memIdleValue = "value3";
 		String memInUseValue = "value4";
-		Flavor flavor = new Flavor("small", "cpu", "mem", 2);
+		String instancesIdleValue = "value5";
+		String instancesInUseValue = "value6";
 
 		statusEl.addElement("cpu-idle").setText(cpuIdleValue);
 		statusEl.addElement("cpu-inuse").setText(cpuInUseValue);
 		statusEl.addElement("mem-idle").setText(memIdleValue);
 		statusEl.addElement("mem-inuse").setText(memInUseValue);
-
-		Element flavorElement = statusEl.addElement("flavor");
-		flavorElement.addElement("name").setText(flavor.getName());
-		flavorElement.addElement("cpu").setText(flavor.getCpu());
-		flavorElement.addElement("mem").setText(flavor.getMem());
-		flavorElement.addElement("capacity").setText(
-				flavor.getCapacity().toString());
+		statusEl.addElement("instances-idle").setText(instancesIdleValue);
+		statusEl.addElement("instances-inuse").setText(instancesInUseValue);		
 
 		Date beforeMessage = new Date(System.currentTimeMillis());
 		response = (IQ) xmppClient.syncSend(iq);
@@ -162,14 +157,6 @@ public class TestWhoIsAlive {
 		Assert.assertEquals(memIdleValue, item.getResourcesInfo().getMemIdle());
 		Assert.assertEquals(memInUseValue, item.getResourcesInfo()
 				.getMemInUse());
-		Assert.assertEquals(flavor.getName(), item.getResourcesInfo()
-				.getFlavours().get(0).getName());
-		Assert.assertEquals(flavor.getCpu(), item.getResourcesInfo()
-				.getFlavours().get(0).getCpu());
-		Assert.assertEquals(flavor.getMem(), item.getResourcesInfo()
-				.getFlavours().get(0).getMem());
-		Assert.assertEquals(flavor.getCapacity(), item.getResourcesInfo()
-				.getFlavours().get(0).getCapacity());
 
 		ArrayList<String> aliveIDs = RendezvousTestHelper.getAliveIds(response);
 		Date updated = new Date(item.getLastTime());

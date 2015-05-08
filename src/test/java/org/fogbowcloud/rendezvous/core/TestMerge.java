@@ -77,8 +77,8 @@ public class TestMerge {
 		String[] neighborIds = new String[] { "IDSENT" };
 		mockNeighbors(neighborIds);
 		LinkedList<RendezvousItem> managersAlive = new LinkedList<RendezvousItem>(
-				Arrays.asList(new RendezvousItem(new ResourcesInfo("m1",
-						"cpuIdle", "cpuInUse", "memIdle", "memInUse",
+				Arrays.asList(new RendezvousItem(new ResourcesInfo("m1", "cpuIdle", "cpuInUse",
+						"memIdle", "memInUse", "instanceIdle", "instanceInUse",
 						new ArrayList<Flavor>(), "cert"))));
 		rendezvous.setManagersAlive(managersAlive);
 

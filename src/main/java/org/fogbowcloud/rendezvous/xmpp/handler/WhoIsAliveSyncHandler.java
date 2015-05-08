@@ -9,9 +9,8 @@ import org.dom4j.Element;
 import org.fogbowcloud.rendezvous.core.Rendezvous;
 import org.fogbowcloud.rendezvous.core.RendezvousImpl;
 import org.fogbowcloud.rendezvous.core.RendezvousItem;
-import org.fogbowcloud.rendezvous.core.model.Flavor;
-import org.fogbowcloud.rendezvous.xmpp.util.RSM;
 import org.fogbowcloud.rendezvous.xmpp.util.FederationMember;
+import org.fogbowcloud.rendezvous.xmpp.util.RSM;
 import org.jamppa.component.handler.AbstractQueryHandler;
 import org.xmpp.packet.IQ;
 import org.xmpp.packet.PacketError;
@@ -109,14 +108,11 @@ public class WhoIsAliveSyncHandler extends AbstractQueryHandler {
 					item.getResourcesInfo().getMemIdle());
 			statusEl.addElement("mem-inuse").setText(
 					item.getResourcesInfo().getMemInUse());
-			for (Flavor flavor : item.getResourcesInfo().getFlavours()) {
-				Element flavorElement = statusEl.addElement("flavor");
-				flavorElement.addElement("name").setText(flavor.getName());
-				flavorElement.addElement("cpu").setText(flavor.getCpu());
-				flavorElement.addElement("mem").setText(flavor.getMem());
-				flavorElement.addElement("capacity").setText(
-						flavor.getCapacity().toString());
-			}
+			statusEl.addElement("instances-idle").setText(
+					item.getResourcesInfo().getInstanceIdle());
+			statusEl.addElement("instances-inuse").setText(
+					item.getResourcesInfo().getInstanceInUse());
+			
 			statusEl.addElement("updated").setText(item.getFormattedTime());
 			
 			statusEl.addElement("quiet-for").setText(

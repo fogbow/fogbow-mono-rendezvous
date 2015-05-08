@@ -11,18 +11,48 @@ public class ResourcesInfo {
 	private String cpuInUse;
 	private String memIdle;
 	private String memInUse;
+	private String instanceInUse;
+	private String instanceIdle;
 	private List<Flavor> flavours;
 	private String cert;
 	
-	public ResourcesInfo(String id, String cpuIdle, String cpuInUse,
-			String memIdle, String memInUse, List<Flavor> flavours, String cert) {
-		this.setCert(cert);
+	
+	
+	public ResourcesInfo(String id, String cpuIdle, String cpuInUse, String memIdle,
+			String memInUse, String instanceIdle, String instanceInUse, List<Flavor> flavours,
+			String cert) {
+		super();
 		setId(id);
 		setCpuIdle(cpuIdle);
 		setCpuInUse(cpuInUse);
 		setMemIdle(memIdle);
 		setMemInUse(memInUse);
+		setInstanceIdle(instanceIdle);
+		setInstanceInUse(instanceInUse);
 		this.setFlavours(flavours);
+		this.setCert(cert);
+	}
+	
+	public String getInstanceInUse() {
+		return instanceInUse;
+	}
+	
+	public void setInstanceInUse(String instanceInUse) {
+		if (instanceInUse == null || instanceInUse.isEmpty()) {
+			throw new IllegalArgumentException("ResourceInfo instances-inuse is invalid.");
+		}		
+		this.instanceInUse = instanceInUse;
+	}
+	
+	public String getInstanceIdle() {
+		return instanceIdle;
+	}
+	
+	public void setInstanceIdle(String instanceIdle) {
+		if (instanceIdle == null || instanceIdle.isEmpty()) {
+			throw new IllegalArgumentException("ResourceInfo instances-idle is invalid.");
+		}
+		this.instanceIdle = instanceIdle;
 	}
 
 	public String getId() {

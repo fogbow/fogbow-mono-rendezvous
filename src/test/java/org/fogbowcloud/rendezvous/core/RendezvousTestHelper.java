@@ -228,6 +228,8 @@ public class RendezvousTestHelper {
 		statusEl.addElement("cpu-inuse").setText("valor2");
 		statusEl.addElement("mem-idle").setText("valor3");
 		statusEl.addElement("mem-inuse").setText("valor4");
+		statusEl.addElement("instances-idle").setText("valor5");
+		statusEl.addElement("instances-inuse").setText("valor6");		
 		return iq;
 	}
 
@@ -390,23 +392,12 @@ public class RendezvousTestHelper {
 		String cpuInUse = statusEl.element("cpu-inuse").getText();
 		String memIdle = statusEl.element("mem-idle").getText();
 		String memInUse = statusEl.element("mem-inuse").getText();
+		String instancesIdle = statusEl.element("instances-idle").getText();
+		String instancesInUse = statusEl.element("instances-inuse").getText();		
 		String updated = statusEl.element("updated").getText();
 
-		List<Flavor> flavoursList = new LinkedList<Flavor>();
-		Iterator<Element> flavourIterator = statusEl.elementIterator("flavor");
-		while (flavourIterator.hasNext()) {
-			Element flavour = (Element) flavourIterator.next();
-			String name = flavour.element("name").getText();
-			String cpu = flavour.element("cpu").getText();
-			String mem = flavour.element("mem").getText();
-			int capacity = Integer.parseInt(flavour.element("capacity")
-					.getText());
-			Flavor flavor = new Flavor(name, cpu, mem, capacity);
-			flavoursList.add(flavor);
-		}
-
 		ResourcesInfo resources = new ResourcesInfo(id.getValue(), cpuIdle,
-				cpuInUse, memIdle, memInUse, flavoursList, cert);
+				cpuInUse, memIdle, memInUse, instancesIdle, instancesInUse, new ArrayList<Flavor>(), cert);
 		RendezvousItem item = new RendezvousItem(resources);
 		item.setLastTime(RendezvousItem.ISO_8601_DATE_FORMAT.parse(updated)
 				.getTime());
@@ -415,8 +406,8 @@ public class RendezvousTestHelper {
 
 	public ResourcesInfo getResources() {
 		List<Flavor> flavours = new LinkedList<Flavor>();
-		ResourcesInfo resources = new ResourcesInfo("id", "cpuIdle",
-				"cpuInUse", "memIdle", "memInUse", flavours, "cert");
+		ResourcesInfo resources = new ResourcesInfo("id", "cpuIdle", "cpuInUse", "memIdle",
+				"memInUse", "instanceIdle", "instanceInUSe", flavours, "cert");
 		return resources;
 	}
 
@@ -438,6 +429,8 @@ public class RendezvousTestHelper {
 		statusEl.addElement("cpu-inuse").setText("cpu-inuse");
 		statusEl.addElement("mem-idle").setText("mem-idle");
 		statusEl.addElement("mem-inuse").setText("mem-inuse");
+		statusEl.addElement("instances-idle").setText("instances-idle");
+		statusEl.addElement("instances-inuse").setText("instances-inuse");		
 
 		Element flavorElement = statusEl.addElement("flavor");
 		flavorElement.addElement("name").setText("flavor");
