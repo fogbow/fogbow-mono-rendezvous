@@ -1,8 +1,6 @@
 package org.fogbowcloud.rendezvous.xmpp.handler;
 
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.ArrayList;
 
 import org.dom4j.Element;
 import org.fogbowcloud.rendezvous.core.Rendezvous;
@@ -21,7 +19,6 @@ public class IAmAliveHandler extends AbstractQueryHandler {
         this.rendezvous = rendezvous;
     }
 
-    @SuppressWarnings("unchecked")
 	public IQ handle(IQ iq) {
         String id = iq.getFrom().toBareJID();
 
@@ -37,22 +34,11 @@ public class IAmAliveHandler extends AbstractQueryHandler {
         String cpuInUse = statusElement.element("cpu-inuse").getText();
         String memIdle = statusElement.element("mem-idle").getText();
         String memInUse = statusElement.element("mem-inuse").getText();
+        String instanceIdle = statusElement.element("instances-idle").getText();
+        String instanceInUse = statusElement.element("instances-inuse").getText();
         
-        List<Flavor> flavoursList = new LinkedList<Flavor>();
-		Iterator<Element> flavourIterator = statusElement
-				.elementIterator("flavor");
-		while(flavourIterator.hasNext()) {
-			Element flavour = (Element) flavourIterator.next();
-			String name = flavour.element("name").getText();
-			String cpu = flavour.element("cpu").getText();
-			String mem = flavour.element("mem").getText();
-			int capacity = Integer.parseInt(flavour.element("capacity")
-					.getText());
-			Flavor flavor = new Flavor(name, cpu, mem, capacity);
-			flavoursList.add(flavor);
-		}
-        ResourcesInfo resources = new ResourcesInfo(id ,cpuIdle, cpuInUse, memIdle,
-                memInUse, flavoursList, cert);
+        ResourcesInfo resources = new ResourcesInfo(id, cpuIdle, cpuInUse, memIdle,
+                memInUse, instanceIdle, instanceInUse, new ArrayList<Flavor>(), cert);
         //TODO handle certificate?
         rendezvous.iAmAlive(resources);
 

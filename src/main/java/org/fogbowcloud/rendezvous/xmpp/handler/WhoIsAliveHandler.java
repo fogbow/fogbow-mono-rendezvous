@@ -68,17 +68,11 @@ public class WhoIsAliveHandler extends AbstractQueryHandler {
 					rendezvousItem.getResourcesInfo().getMemIdle());
 			statusEl.addElement("mem-inuse").setText(
 					rendezvousItem.getResourcesInfo().getMemInUse());
+			statusEl.addElement("instances-idle").setText(
+					rendezvousItem.getResourcesInfo().getInstanceIdle());			
+			statusEl.addElement("instances-inuse").setText(
+					rendezvousItem.getResourcesInfo().getInstanceInUse());
 
-			List<Flavor> flavours = rendezvousItem.getResourcesInfo()
-					.getFlavours();
-			for (Flavor f : flavours) {
-				Element flavorElement = statusEl.addElement("flavor");
-				flavorElement.addElement("name").setText(f.getName());
-				flavorElement.addElement("cpu").setText(f.getCpu());
-				flavorElement.addElement("mem").setText(f.getMem());
-				flavorElement.addElement("capacity").setText(
-						f.getCapacity().toString());
-			}
 			statusEl.addElement("updated").setText(
 					String.valueOf(rendezvousItem.getFormattedTime()));
 		}

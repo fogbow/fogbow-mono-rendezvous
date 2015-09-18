@@ -22,42 +22,53 @@ public class ResourceInfoTest {
     
     @Test(expected=IllegalArgumentException.class)
     public void testNullId() {
-        new ResourcesInfo(null, "value1", "value2", "value3", "value4", flavors, "cert");
+        new ResourcesInfo(null, "value1", "value2", "value3", "value4", "value5", "value6", flavors, "cert");
     }
     
     @Test(expected=IllegalArgumentException.class)
     public void testEmptyId() {
-        new ResourcesInfo("", "value1", "value2", "value3", "value4", flavors, "cert");
+        new ResourcesInfo("", "value1", "value2", "value3", "value4", "value5", "value6", flavors, "cert");
     }
     
     @Test(expected=IllegalArgumentException.class)
     public void testNullCpuIdle() {
-        new ResourcesInfo("id", null, "value2", "value3", "value4", flavors, "cert");
+        new ResourcesInfo("id", null, "value2", "value3", "value4", "value5", "value6", flavors, "cert");
     }
     
     @Test(expected=IllegalArgumentException.class)
     public void testNullCpuInUse() {
-        new ResourcesInfo("id", "value1", null, "value3", "value4", flavors, "cert");
+        new ResourcesInfo("id", "value1", null, "value3", "value4", "value5", "value6", flavors, "cert");
     }
     
     @Test(expected=IllegalArgumentException.class)
     public void testNullMemIdle() {
-        new ResourcesInfo("id", "value1", "value2", null, "value4", flavors, "cert");
+        new ResourcesInfo("id", "value1", "value2", null, "value4", "value5", "value6", flavors, "cert");
     }
     
     @Test(expected=IllegalArgumentException.class)
     public void testNullMemInUse() {
-        new ResourcesInfo("id", "value1", "value2", "value3",null, flavors, "cert");
+        new ResourcesInfo("id", "value1", "value2", "value3",null, "value5", "value6", flavors, "cert");
     }
+    
+    @Test(expected=IllegalArgumentException.class)
+    public void testNullInstancesIdle() {
+        new ResourcesInfo("id", "value1", "value2", "value3", "value3", null, "value6", flavors, "cert");
+    }
+    
+    @Test(expected=IllegalArgumentException.class)
+    public void testNullInstancesInUse() {
+        new ResourcesInfo("id", "value1", "value2", "value3","value3" , "value5", null, flavors, "cert");
+    }    
     
     @Test
     public void testValidValues(){
-        ResourcesInfo resources = new ResourcesInfo("id", "value1", "value2", "value3", "value4", flavors, "cert");
+        ResourcesInfo resources = new ResourcesInfo("id", "value1", "value2", "value3", "value4", "value5", "value6", flavors, "cert");
         Assert.assertEquals("id", resources.getId());
         Assert.assertEquals("value1", resources.getCpuIdle());
         Assert.assertEquals("value2", resources.getCpuInUse());
         Assert.assertEquals("value3", resources.getMemIdle());
         Assert.assertEquals("value4", resources.getMemInUse());
-        
+        Assert.assertEquals("value5", resources.getInstanceIdle());
+        Assert.assertEquals("value6", resources.getInstanceInUse());
     }
 }

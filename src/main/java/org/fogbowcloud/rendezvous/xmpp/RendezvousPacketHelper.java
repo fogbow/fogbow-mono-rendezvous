@@ -1,6 +1,7 @@
 package org.fogbowcloud.rendezvous.xmpp;
 
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -55,7 +56,6 @@ public class RendezvousPacketHelper {
 		return rendezvousItem;
 	}
 
-	@SuppressWarnings("unchecked")
 	public static RendezvousItem getWhoIsAliveResponseItem(Element itemEl) throws ParseException {
 		Attribute id = itemEl.attribute("id");
 		Element statusEl = itemEl.element("status");
@@ -65,23 +65,12 @@ public class RendezvousPacketHelper {
 		String cpuInUse = statusEl.element("cpu-inuse").getText();
 		String memIdle = statusEl.element("mem-idle").getText();
 		String memInUse = statusEl.element("mem-inuse").getText();
-		String updated = statusEl.element("updated").getText();
+		String instanceIdle = statusEl.element("instances-idle").getText();
+		String instanceInUse = statusEl.element("instances-inuse").getText();		
 		long quietFor = Long.parseLong(statusEl.element("quiet-for").getText());
 
-		List<Flavor> flavoursList = new LinkedList<Flavor>();
-		Iterator<Element> flavourIterator = statusEl.elementIterator("flavor");
-		while (flavourIterator.hasNext()) {
-			Element flavour = (Element) flavourIterator.next();
-			String name = flavour.element("name").getText();
-			String cpu = flavour.element("cpu").getText();
-			String mem = flavour.element("mem").getText();
-			int capacity = Integer.parseInt(flavour.element("capacity").getText());
-			Flavor flavor = new Flavor(name, cpu, mem, capacity);
-			flavoursList.add(flavor);
-		}
-
 		ResourcesInfo resources = new ResourcesInfo(id.getValue(), cpuIdle, cpuInUse, memIdle,
-				memInUse, flavoursList, cert);
+				memInUse, instanceIdle, instanceInUse, new ArrayList<Flavor>(), cert);
 		RendezvousItem item = new RendezvousItem(resources);
 		item.setLastTime(System.currentTimeMillis() - quietFor);
 		return item;

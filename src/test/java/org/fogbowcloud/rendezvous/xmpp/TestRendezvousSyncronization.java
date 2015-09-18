@@ -467,7 +467,7 @@ public class TestRendezvousSyncronization {
 	public void testSync2Rendezvous() throws Exception {
 		int testDefaultTimeout = 1000;
 
-		String nameRendezvousOne = rendezvousTestHelper.RENDEZVOUS_COMPONENT_URL;
+		String nameRendezvousOne = RendezvousTestHelper.RENDEZVOUS_COMPONENT_URL;
 		String nameRendezvousTwo = "rendezvous2.test.com";
 
 		rendezvousTestHelper.initializeTwoXMPPRendezvousComponent(testDefaultTimeout,
@@ -536,6 +536,8 @@ public class TestRendezvousSyncronization {
 		statusEl2.addElement("cpu-inuse").setText("2");
 		statusEl2.addElement("mem-idle").setText("3");
 		statusEl2.addElement("mem-inuse").setText("4");
+		statusEl2.addElement("instances-idle").setText("5");
+		statusEl2.addElement("instances-inuse").setText("6");		
 		return iq2;
 	}
 }
