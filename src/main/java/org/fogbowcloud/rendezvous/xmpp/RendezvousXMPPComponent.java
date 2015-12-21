@@ -26,11 +26,11 @@ public class RendezvousXMPPComponent extends XMPPComponent {
 			int port, Properties properties, ScheduledExecutorService executor) {
 		super(jid, password, server, port);
 		rendezvous = new RendezvousImpl(this, properties, executor);
-		addGetHandlers();
+		addGetHandlers(properties);
 	}
 
-	private void addGetHandlers() {
-		addGetHandler(new IAmAliveHandler(rendezvous));
+	private void addGetHandlers(Properties properties) {
+		addGetHandler(new IAmAliveHandler(rendezvous, properties));
 		addGetHandler(new WhoIsAliveHandler(rendezvous));
 		addGetHandler(new WhoIsAliveSyncHandler(rendezvous));
 	}
