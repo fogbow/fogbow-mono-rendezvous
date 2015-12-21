@@ -24,7 +24,6 @@ import org.jamppa.component.PacketSender;
 
 public class RendezvousImpl implements Rendezvous {
 
-	public static final long DEFAULT_TIMEOUT = 3 * 60 * 1000; // in millis
 	private static final Logger LOGGER = Logger.getLogger(RendezvousImpl.class);
 	private static final long MANAGER_EXPIRATION_PERIOD = 60; // in seconds
 	private static final long NEIGHBOR_SYNCHRONIZATION_PERIOD = 60; // in
@@ -32,13 +31,16 @@ public class RendezvousImpl implements Rendezvous {
 	private static final int DEFAULT_MAX_WHOISALIVESYNC_MANAGER_COUNT = 100;
 	private static final int DEFAULT_MAX_WHOISALIVESYNC_NEIGHBOR_COUNT = 100;// seconds
 
-	private static final String PROP_EXPIRATION = "site_expiration";
 	private static final String PROP_NEIGHBORS = "neighbors";
 	private static final String PROP_MAX_WHOISALIVE_MANAGER_COUNT = "max_whoisalive_manager_count";
 	private static final String PROP_MAX_WHOISALIVESYNC_MANAGER_COUNT = "max_whoisalivesync_manager_count";
 	private static final String PROP_MAX_WHOISALIVESYNC_NEIGHBOR_COUNT = "max_whoisalivesync_neighbor_count";
+	
+	public static final String PROP_I_AM_ALIVE_PERIOD = "iamalive_period";
+	public static final long DEFAULT_I_AM_ALIVE_PERIOD = 3 * 60 * 1000; // in millis
+	public static final String PROP_I_AM_ALIVE_MAX_MESSAGE_LOST = "iamalive_max_message_lost";
+	public static final int DEFAULT_I_AM_ALIVE_MAX_MESSAGE_LOST = 3;
 
-	private long timeOut;
 	private ScheduledExecutorService executor;
 	private final Map<String, RendezvousItem> aliveManagers = new ConcurrentHashMap<String, RendezvousItem>();
 	private boolean inError = false;
@@ -53,8 +55,6 @@ public class RendezvousImpl implements Rendezvous {
 	public RendezvousImpl(PacketSender packetSender, Properties properties,
 			ScheduledExecutorService executor) {
 		this.properties = properties;
-		this.timeOut = parseLongFromConfiguration(PROP_EXPIRATION,
-				DEFAULT_TIMEOUT);
 		this.dateUnit = new DateUtils();
 		this.packetSender = packetSender;
 		this.executor = executor;
@@ -96,17 +96,13 @@ public class RendezvousImpl implements Rendezvous {
 		this.packetSender = packetSender;
 	}
 
-	public void iAmAlive(ResourcesInfo resourcesInfo) {
-		if (resourcesInfo == null) {
+	public void iAmAlive(RendezvousItem rendezvousItem) {
+		if (rendezvousItem == null) {
 			throw new IllegalArgumentException();
-		}
-		LOGGER.info("Receiving iAmAlive from '" + resourcesInfo.getId()
-				+ "': MemIdle : '" + resourcesInfo.getMemIdle()
-				+ "'; MemInUse : '" + resourcesInfo.getMemInUse()
-				+ "'; CpuIdle : '" + resourcesInfo.getCpuIdle()
-				+ "'; CPuInUse : '" + resourcesInfo.getCpuInUse() + "'");
-		aliveManagers.put(resourcesInfo.getId(), new RendezvousItem(
-				resourcesInfo));
+		}	
+	
+		LOGGER.info("Receiving iAmAlive from '" + rendezvousItem.getMemberId() + "'");		
+		aliveManagers.put(rendezvousItem.getMemberId(), rendezvousItem);
 	}
 
 	public List<RendezvousItem> whoIsAlive() {
@@ -131,10 +127,9 @@ public class RendezvousImpl implements Rendezvous {
 			try {
 				Entry<String, RendezvousItem> entry = iter.next();
 				RendezvousItem rendezvousItem = entry.getValue();
-				if ((rendezvousItem.getLastTime() + timeOut) < dateUnit.currentTimeMillis()) {
+				if (rendezvousItem.getLastTime() + rendezvousItem.getTimeout() < dateUnit.currentTimeMillis()) {
 					iter.remove();
-					LOGGER.info(rendezvousItem.getResourcesInfo().getId()
-							+ " expired.");
+					LOGGER.info(rendezvousItem.getMemberId() + " expired.");
 				}
 			} catch (ConcurrentModificationException e) {
 				inError = true;
@@ -146,7 +141,7 @@ public class RendezvousImpl implements Rendezvous {
 		return inError;
 	}
 
-	protected void setDateUnit(DateUtils dataUnit) {
+	public void setDateUnit(DateUtils dataUnit) {
 		this.dateUnit = dataUnit;
 	}
 
@@ -169,8 +164,8 @@ public class RendezvousImpl implements Rendezvous {
 		RendezvousResponseItem responseItem = null;
 		for (String neighbor : neighborsIds) {
 			try {
-				responseItem = RendezvousPacketHelper.sendWhoIsAliveSyncIq(
-						neighbor, packetSender);
+				responseItem = RendezvousPacketHelper
+						.sendWhoIsAliveSyncIq(neighbor, packetSender);
 				merge(responseItem);
 			} catch (Throwable e) {
 				LOGGER.warn("Couldn't sync with neighbor " + neighbor, e);
@@ -193,14 +188,17 @@ public class RendezvousImpl implements Rendezvous {
 
 	protected void setManagersAlive(LinkedList<RendezvousItem> managersAlive) {
 		for (RendezvousItem item : managersAlive) {
-			this.aliveManagers.put(item.getResourcesInfo().getId(), item);
+			this.aliveManagers.put(item.getMemberId(), item);
 		}
 	}
 
 	public void merge(RendezvousResponseItem responseItem) {
-		neighborsIds.addAll(responseItem.getNeighbors());
 		for (RendezvousItem item : responseItem.getManagers()) {
-			aliveManagers.put(item.getResourcesInfo().getId(), item);
+			RendezvousItem currentRendezvousItem = aliveManagers.get(item.getMemberId());
+			if (currentRendezvousItem != null && currentRendezvousItem.isOlderThan(item)) {
+				continue;
+			}
+			aliveManagers.put(item.getMemberId(), item);
 		}
 	}
 

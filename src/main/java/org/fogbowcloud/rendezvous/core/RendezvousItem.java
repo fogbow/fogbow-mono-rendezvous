@@ -9,50 +9,90 @@ import org.fogbowcloud.rendezvous.core.model.DateUtils;
 import org.fogbowcloud.rendezvous.xmpp.util.FederationMember;
 
 public class RendezvousItem extends FederationMember {
+
+	private static final String ISO_8601_DATE_FORMAT_STR = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
+	public static final SimpleDateFormat ISO_8601_DATE_FORMAT = new SimpleDateFormat(
+			ISO_8601_DATE_FORMAT_STR, Locale.ROOT);
+	static {
+		ISO_8601_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("GMT"));
+	}
+
+	private DateUtils dateUtils;
+	private String memberId;
+	private long lastTime;
+	private long timeout;
+	private String cert;
+
+	public RendezvousItem(String federationMemberId, String cert) {
+		this(federationMemberId, cert, 0);
+	}
 	
-    private static final String ISO_8601_DATE_FORMAT_STR = "yyyy-MM-dd'T'HH:mm:ss.SSSZ";
-    public static final SimpleDateFormat ISO_8601_DATE_FORMAT = new SimpleDateFormat(
-    		ISO_8601_DATE_FORMAT_STR, Locale.ROOT);
-    static {
-    	ISO_8601_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("GMT"));
-    }
-    
-    private long lastTime;
-    private ResourcesInfo resourcesInfo;
+	public RendezvousItem(String federationMemberId, String cert, long timeout) {
+		this(federationMemberId);
+		setCert(cert);
+		setTimeout(timeout);
+	}
 
-    public RendezvousItem(ResourcesInfo resourcesInfo) {
-        if (resourcesInfo == null) {
-            throw new IllegalArgumentException();
-        }
-        lastTime = new DateUtils().currentTimeMillis();
-        this.resourcesInfo = resourcesInfo;
-    }
+	public RendezvousItem(String federationMemberId) {
+		if (federationMemberId == null || federationMemberId.isEmpty()) {
+			throw new IllegalArgumentException();
+		}
+		setMemberId(federationMemberId);
+		setLastTime(new DateUtils().currentTimeMillis());
+		this.dateUtils = new DateUtils();
+	}
 
-    public ResourcesInfo getResourcesInfo() {
-        return resourcesInfo;
-    }
+	public long getLastTime() {
+		return lastTime;
+	}
 
-    public long getLastTime() {
-        return lastTime;
-    }
+	public String getMemberId() {
+		return memberId;
+	}
 
-    public String getFormattedTime() {
-        return ISO_8601_DATE_FORMAT.format(new Date(lastTime));
-    }
-    
-    
-    /**
-     * This method was implemented just for unit test.
-     *  
-     * @param lastTime
-     */
-    public void setLastTime(long lastTime){
-    	this.lastTime = lastTime;
-    }
+	public void setMemberId(String memberId) {
+		this.memberId = memberId;
+	}
 
-	@Override
-	public String getId() {
-		return this.resourcesInfo.getId();
+	public String getCert() {
+		return cert;
+	}
+
+	public void setCert(String cert) {
+		this.cert = cert;
+	}
+
+	public long getTimeout() {
+		return timeout;
+	}
+
+	public void setTimeout(long timeout) {
+		this.timeout = timeout;
+	}
+
+	public String getFormattedTime() {
+		return ISO_8601_DATE_FORMAT.format(new Date(lastTime));
+	}
+
+	/**
+	 * This method was implemented just for unit test.
+	 * 
+	 * @param lastTime
+	 */
+	public void setLastTime(long lastTime) {
+		this.lastTime = lastTime;
+	}
+		
+	public void setDateUtils(DateUtils dateUtils) {
+		this.dateUtils = dateUtils;
+	}
+
+	public boolean isOlderThan(RendezvousItem rendezvousItem) {
+		long now = dateUtils.currentTimeMillis();
+		if ((now - lastTime) > (now - rendezvousItem.getLastTime())) {
+			return true;
+		}
+		return false;
 	}
 
 }

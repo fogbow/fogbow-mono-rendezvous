@@ -2,7 +2,6 @@ package org.fogbowcloud.rendezvous.xmpp;
 
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.LinkedList;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.Semaphore;
@@ -12,6 +11,7 @@ import org.dom4j.Element;
 import org.fogbowcloud.rendezvous.core.RendezvousImpl;
 import org.fogbowcloud.rendezvous.core.RendezvousItem;
 import org.fogbowcloud.rendezvous.core.RendezvousTestHelper;
+import org.fogbowcloud.rendezvous.core.model.DateUtils;
 import org.jamppa.client.XMPPClient;
 import org.jivesoftware.smack.PacketListener;
 import org.jivesoftware.smack.XMPPException;
@@ -107,8 +107,13 @@ public class TestWhoIsAlive {
 
 		RendezvousImpl rendezvous = ((RendezvousImpl) rendezvousTestHelper
 				.getRendezvousXmppComponent().getRendezvous());
-		Thread.sleep(RendezvousTestHelper.TEST_DEFAULT_TIMEOUT
-				+ RendezvousTestHelper.TIMEOUT_GRACE);
+		
+		DateUtils dateMock = Mockito.mock(DateUtils.class);
+		Mockito.when(dateMock.currentTimeMillis()).thenReturn(
+				System.currentTimeMillis() + RendezvousTestHelper.TEST_DEFAULT_TIMEOUT
+						* RendezvousTestHelper.DEFAULT_WAIT_FREQUENCY_TIMES);
+		rendezvous.setDateUnit(dateMock);		
+		
 		rendezvous.checkExpiredAliveIDs();
 		iq = RendezvousTestHelper.createWhoIsAliveIQ();
 		response = (IQ) xmppClient.syncSend(iq);
@@ -123,27 +128,13 @@ public class TestWhoIsAlive {
 		IQ response;
 		IQ iq = new IQ(Type.get);
 		iq.setTo(RendezvousTestHelper.RENDEZVOUS_COMPONENT_URL);
+		@SuppressWarnings("unused")
 		Element statusEl = iq.getElement()
 				.addElement("query", RendezvousTestHelper.IAMALIVE_NAMESPACE)
 				.addElement("status");
-		iq.getElement().element("query").addElement("cert").setText("cert");
-		String cpuIdleValue = "value1";
-		String cpuInUseValue = "value2";
-		String memIdleValue = "value3";
-		String memInUseValue = "value4";
-		String instancesIdleValue = "value5";
-		String instancesInUseValue = "value6";
+		iq.getElement().element("query").addElement("cert").setText("cert");	
 
-		statusEl.addElement("cpu-idle").setText(cpuIdleValue);
-		statusEl.addElement("cpu-inuse").setText(cpuInUseValue);
-		statusEl.addElement("mem-idle").setText(memIdleValue);
-		statusEl.addElement("mem-inuse").setText(memInUseValue);
-		statusEl.addElement("instances-idle").setText(instancesIdleValue);
-		statusEl.addElement("instances-inuse").setText(instancesInUseValue);		
-
-		Date beforeMessage = new Date(System.currentTimeMillis());
 		response = (IQ) xmppClient.syncSend(iq);
-		Date afterMessage = new Date(System.currentTimeMillis());
 		Assert.assertEquals(Type.result, response.getType());
 
 		iq = RendezvousTestHelper.createWhoIsAliveIQ();
@@ -151,17 +142,8 @@ public class TestWhoIsAlive {
 		LinkedList<RendezvousItem> responseItems = RendezvousTestHelper
 				.getItemsFromIQ(response);
 		RendezvousItem item = responseItems.get(0);
-		Assert.assertEquals(cpuIdleValue, item.getResourcesInfo().getCpuIdle());
-		Assert.assertEquals(cpuInUseValue, item.getResourcesInfo()
-				.getCpuInUse());
-		Assert.assertEquals(memIdleValue, item.getResourcesInfo().getMemIdle());
-		Assert.assertEquals(memInUseValue, item.getResourcesInfo()
-				.getMemInUse());
 
 		ArrayList<String> aliveIDs = RendezvousTestHelper.getAliveIds(response);
-		Date updated = new Date(item.getLastTime());
-		Assert.assertTrue(updated.compareTo(beforeMessage) >= 0);
-		Assert.assertTrue(updated.compareTo(afterMessage) <= 0);
 		Assert.assertTrue(aliveIDs.contains(RendezvousTestHelper
 				.getClientJid(0)));
 		Assert.assertEquals(1, aliveIDs.size());
@@ -349,7 +331,7 @@ public class TestWhoIsAlive {
 		XMPPClient xmppClient = rendezvousTestHelper.createXMPPClient();
 		IQ response = (IQ) xmppClient.syncSend(RendezvousTestHelper
 				.createWhoIsAliveIQ(null, 0));
-		ArrayList<String> aliveIDs = RendezvousTestHelper.getAliveIds(response);
+		RendezvousTestHelper.getAliveIds(response);
 		String count = RendezvousTestHelper.getSetElementFromWhoIsAlive(
 				response, "count");
 		Assert.assertEquals(0, Integer.parseInt(count));
@@ -384,6 +366,7 @@ public class TestWhoIsAlive {
 
 		XMPPClient xmppClient = rendezvousTestHelper.createXMPPClient();
 		try {
+			@SuppressWarnings("unused")
 			IQ response = (IQ) xmppClient.syncSend(RendezvousTestHelper
 					.createWhoIsAliveIQ("NotFoundString"));
 			Assert.fail();
