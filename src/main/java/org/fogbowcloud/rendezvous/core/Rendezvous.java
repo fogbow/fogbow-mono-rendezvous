@@ -4,7 +4,7 @@ import java.util.List;
 
 public interface Rendezvous {
 
-	void iAmAlive(ResourcesInfo resourcesInfo);
+	void iAmAlive(RendezvousItem rendezvousItem);
 	
 	List<RendezvousItem> whoIsAlive();
 

@@ -11,7 +11,6 @@ import java.util.concurrent.ScheduledExecutorService;
 
 import org.dom4j.Attribute;
 import org.dom4j.Element;
-import org.fogbowcloud.rendezvous.core.model.Flavor;
 import org.fogbowcloud.rendezvous.xmpp.RendezvousXMPPComponent;
 import org.fogbowcloud.rendezvous.xmpp.model.RendezvousResponseItem;
 import org.fogbowcloud.rendezvous.xmpp.util.FakeXMPPServer;
@@ -25,6 +24,7 @@ import org.xmpp.packet.Packet;
 
 public class RendezvousTestHelper {
 
+	public static final int DEFAULT_WAIT_FREQUENCY_TIMES = 3;
 	public static final String PROP_EXPIRATION = "site_expiration";
 	public static final String PROP_NEIGHBORS = "neighbors";
 	public static final String PROP_MAX_WHOISALIVE_MANAGER_COUNT = "max_whoisalive_manager_count";
@@ -81,8 +81,18 @@ public class RendezvousTestHelper {
 	final String NEIGHBOR_CLIENT_PASSWORD = "neighborClient";
 	private RendezvousXMPPComponent rendezvousXmppComponent;
 	private RendezvousXMPPComponent rendezvousXmppComponentNumberTwo;
+	private RendezvousXMPPComponent rendezvousXmppComponentNumberThree;
 		
 	private FakeXMPPServer fakeServer = new FakeXMPPServer();
+
+	public RendezvousXMPPComponent getRendezvousXmppComponentNumberThree() {
+		return rendezvousXmppComponentNumberThree;
+	}
+
+	public void setRendezvousXmppComponentNumberThree(
+			RendezvousXMPPComponent rendezvousXmppComponentNumberThree) {
+		this.rendezvousXmppComponentNumberThree = rendezvousXmppComponentNumberThree;
+	}
 
 	public RendezvousXMPPComponent getRendezvousXmppComponent() {
 		return rendezvousXmppComponent;
@@ -95,9 +105,18 @@ public class RendezvousTestHelper {
 	private ArrayList<XMPPClient> xmppClients = new ArrayList<XMPPClient>();
 
 	public XMPPClient createXMPPClient() throws XMPPException {
+		return createXMPPClient(null);
+	}
+	
+	public XMPPClient createXMPPClient(String clientJID) throws XMPPException {
 		int clientIndex = this.xmppClients.size();
 
-		final String client = getClientJid(clientIndex);
+		final String client;
+		if (clientJID == null) {
+			client = getClientJid(clientIndex);			
+		} else {
+			client = clientJID;			
+		}
 		final String client_pass = getClientPassword(clientIndex);
 
 		XMPPClient xmppClient = Mockito.spy(new XMPPClient(client, client_pass,
@@ -129,7 +148,7 @@ public class RendezvousTestHelper {
 			throws Exception {
 		Properties properties = Mockito.mock(Properties.class);
 		Mockito.when(properties.getProperty(PROP_EXPIRATION)).thenReturn(
-				testDefaultTimeout + "");
+				String.valueOf(testDefaultTimeout));
 		Mockito.doReturn("").when(properties).getProperty(PROP_NEIGHBORS);
 		Mockito.doReturn("").when(properties)
 				.getProperty(PROP_MAX_WHOISALIVE_MANAGER_COUNT);
@@ -192,8 +211,8 @@ public class RendezvousTestHelper {
 			}
 			neighborsString += neighbors[i];
 		}
-		Mockito.when(properties.getProperty(PROP_EXPIRATION)).thenReturn(
-				testDefaultTimeout + "");
+		Mockito.when(properties.getProperty(RendezvousImpl.PROP_I_AM_ALIVE_PERIOD)).thenReturn(
+				testDefaultTimeout + "");		
 		Mockito.when(properties.getProperty(PROP_NEIGHBORS)).thenReturn(
 				neighborsString);
 		Mockito.doReturn("").when(properties)
@@ -221,15 +240,10 @@ public class RendezvousTestHelper {
 	public static IQ createIAmAliveIQ() {
 		IQ iq = new IQ(Type.get);
 		iq.setTo(RENDEZVOUS_COMPONENT_URL);
+		@SuppressWarnings("unused")
 		Element statusEl = iq.getElement()
 				.addElement("query", IAMALIVE_NAMESPACE).addElement("status");
 		iq.getElement().element("query").addElement("cert").setText("cert");
-		statusEl.addElement("cpu-idle").setText("valor1");
-		statusEl.addElement("cpu-inuse").setText("valor2");
-		statusEl.addElement("mem-idle").setText("valor3");
-		statusEl.addElement("mem-inuse").setText("valor4");
-		statusEl.addElement("instances-idle").setText("valor5");
-		statusEl.addElement("instances-inuse").setText("valor6");		
 		return iq;
 	}
 
@@ -237,7 +251,7 @@ public class RendezvousTestHelper {
 			throws ParseException {
 		ArrayList<String> aliveIds = new ArrayList<String>();
 		for (RendezvousItem item : getItemsFromIQ(whoIsAliveResponse)) {
-			aliveIds.add(item.getResourcesInfo().getId());
+			aliveIds.add(item.getMemberId());
 		}
 		return aliveIds;
 	}
@@ -275,8 +289,8 @@ public class RendezvousTestHelper {
 	public static IQ createWhoIsAliveIQNoRsm() {
 		IQ iq = new IQ(Type.get);
 		iq.setTo(RENDEZVOUS_COMPONENT_URL);
-		Element queryEl = iq.getElement().addElement("query",
-				WHOISALIVE_NAMESPACE);
+		@SuppressWarnings("unused")
+		Element queryEl = iq.getElement().addElement("query", WHOISALIVE_NAMESPACE);
 		return iq;
 	}
 	
@@ -293,22 +307,21 @@ public class RendezvousTestHelper {
 		return iq;
 	}
 
-	public static Packet createWhoIsAliveSyncIQ(String lastManager,
-			String lastNeighbor) {
+	public static Packet createWhoIsAliveSyncIQ(String lastManager) {
 		IQ iq = new IQ(Type.get);
 		iq.setTo(RENDEZVOUS_COMPONENT_URL);
 		Element queryEl = iq.getElement().addElement("query",
 				WHOISALIVESYNC_NAMESPACE);
-		Element neighborsEl = queryEl.addElement("neighbors");
-		Element setEl = neighborsEl.addElement("set",
-				HTTP_JABBER_ORG_PROTOCOL_RSM);
-		setEl.addElement("max").setText("" + maxWhoIsAliveSyncNeighborCount);
-		if (!lastNeighbor.isEmpty()) {
-			setEl.addElement("after").setText(lastNeighbor);
-		}
+//		Element neighborsEl = queryEl.addElement("neighbors");
+//		Element setEl = neighborsEl.addElement("set",
+//				HTTP_JABBER_ORG_PROTOCOL_RSM);
+//		setEl.addElement("max").setText("" + maxWhoIsAliveSyncNeighborCount);
+//		if (!lastNeighbor.isEmpty()) {
+//			setEl.addElement("after").setText(lastNeighbor);
+//		}
 
 		Element managersEl = queryEl.addElement("managers");
-		setEl = managersEl.addElement("set", HTTP_JABBER_ORG_PROTOCOL_RSM);
+		Element setEl = managersEl.addElement("set", HTTP_JABBER_ORG_PROTOCOL_RSM);
 		setEl.addElement("max").setText("" + maxWhoIsAliveSyncManagerCount);
 		if (!lastManager.isEmpty()) {
 			setEl.addElement("after").setText(lastManager);
@@ -320,27 +333,27 @@ public class RendezvousTestHelper {
 	public static Packet createWhoIsAliveSyncIQNoRsm() {
 		IQ iq = new IQ(Type.get);
 		iq.setTo(RENDEZVOUS_COMPONENT_URL);
-		Element queryEl = iq.getElement().addElement("query",
-				WHOISALIVESYNC_NAMESPACE);
+		@SuppressWarnings("unused")
+		Element queryEl = iq.getElement().addElement("query", WHOISALIVESYNC_NAMESPACE);
 		return iq;
 	}
 	
 	public static IQ createWhoIsAliveSyncIQ() {
-		return (IQ) createWhoIsAliveSyncIQ("", "");
+		return (IQ) createWhoIsAliveSyncIQ("");
 	}
 
-	public String getNeighborsSetElementsFromSyncIQ(String elementName,
-			IQ syncResponse) {
-		Element queryElement = syncResponse.getElement().element("query");
-		Element neighborsEl = queryElement.element("neighbors");
-		Element setElement = neighborsEl.element("set");
-		Element elementEl = setElement.element(elementName);
-		if (elementEl == null) {
-			return null;
-		}
-		String element = elementEl.getText();
-		return element;
-	}
+//	public String getNeighborsSetElementsFromSyncIQ(String elementName,
+//			IQ syncResponse) {
+//		Element queryElement = syncResponse.getElement().element("query");
+//		Element neighborsEl = queryElement.element("neighbors");
+//		Element setElement = neighborsEl.element("set");
+//		Element elementEl = setElement.element(elementName);
+//		if (elementEl == null) {
+//			return null;
+//		}
+//		String element = elementEl.getText();
+//		return element;
+//	}
 
 	public String getManagersSetElementsFromSyncIQ(String elementName,
 			IQ syncResponse) {
@@ -359,15 +372,6 @@ public class RendezvousTestHelper {
 	public static RendezvousResponseItem getItemsFromSyncIQ(IQ iq)
 			throws ParseException {
 		Element queryElement = iq.getElement().element("query");
-		Element neighborsEl = queryElement.element("neighbors");
-		Iterator<Element> neighborsIterator = neighborsEl
-				.elementIterator("neighbor");
-		List<String> neighborIds = new LinkedList<String>();
-		while (neighborsIterator.hasNext()) {
-			Element itemEl = (Element) neighborsIterator.next();
-			String neighbor = itemEl.element("id").getText();
-			neighborIds.add(neighbor);
-		}
 		Element managersEl = queryElement.element("managers");
 		Iterator<Element> managersIterator = managersEl
 				.elementIterator("manager");
@@ -376,40 +380,24 @@ public class RendezvousTestHelper {
 			Element itemEl = (Element) managersIterator.next();
 			managersAlive.add(getWhoIsAliveResponseItem(itemEl));
 		}
-		RendezvousResponseItem rendezvousItem = new RendezvousResponseItem(
-				neighborIds, managersAlive);
+		RendezvousResponseItem rendezvousItem = new RendezvousResponseItem(managersAlive);
 
 		return rendezvousItem;
 	}
 
-	@SuppressWarnings("unchecked")
 	public static RendezvousItem getWhoIsAliveResponseItem(Element itemEl)
 			throws ParseException {
 		Attribute id = itemEl.attribute("id");
-		Element statusEl = itemEl.element("status");
 		String cert = itemEl.element("cert").getText();
-		String cpuIdle = statusEl.element("cpu-idle").getText();
-		String cpuInUse = statusEl.element("cpu-inuse").getText();
-		String memIdle = statusEl.element("mem-idle").getText();
-		String memInUse = statusEl.element("mem-inuse").getText();
-		String instancesIdle = statusEl.element("instances-idle").getText();
-		String instancesInUse = statusEl.element("instances-inuse").getText();		
-		String updated = statusEl.element("updated").getText();
 
-		ResourcesInfo resources = new ResourcesInfo(id.getValue(), cpuIdle,
-				cpuInUse, memIdle, memInUse, instancesIdle, instancesInUse, new ArrayList<Flavor>(), cert);
-		RendezvousItem item = new RendezvousItem(resources);
-		item.setLastTime(RendezvousItem.ISO_8601_DATE_FORMAT.parse(updated)
-				.getTime());
+		RendezvousItem item = new RendezvousItem(id.getValue(), cert);
 		return item;
 	}
 
-	public ResourcesInfo getResources() {
-		List<Flavor> flavours = new LinkedList<Flavor>();
-		ResourcesInfo resources = new ResourcesInfo("id", "cpuIdle", "cpuInUse", "memIdle",
-				"memInUse", "instanceIdle", "instanceInUSe", flavours, "cert");
-		return resources;
+	public RendezvousItem getRendezvousItem() {
+		return new RendezvousItem("id", "cert");
 	}
+	
 
 	public IQ createWhoIsAliveSyncResponse(IQ iq) {
 		IQ response = IQ.createResultIQ(iq);
@@ -425,18 +413,6 @@ public class RendezvousTestHelper {
 		managerEl.addAttribute("id", "id");
 		managerEl.addElement("cert").setText("cert");
 		Element statusEl = managerEl.addElement("status");
-		statusEl.addElement("cpu-idle").setText("cpu-idle");
-		statusEl.addElement("cpu-inuse").setText("cpu-inuse");
-		statusEl.addElement("mem-idle").setText("mem-idle");
-		statusEl.addElement("mem-inuse").setText("mem-inuse");
-		statusEl.addElement("instances-idle").setText("instances-idle");
-		statusEl.addElement("instances-inuse").setText("instances-inuse");		
-
-		Element flavorElement = statusEl.addElement("flavor");
-		flavorElement.addElement("name").setText("flavor");
-		flavorElement.addElement("cpu").setText("cpu");
-		flavorElement.addElement("mem").setText("mem");
-		flavorElement.addElement("capacity").setText("5");
 
 		statusEl.addElement("updated").setText(
 				"2012-10-01T09:45:00.000UTC+00:00");		
@@ -460,12 +436,23 @@ public class RendezvousTestHelper {
 
 	public void initializeTwoXMPPRendezvousComponent(long testDefaultTimeout,
 			String nameRendezvousOne, String nameRendezvousTwo)
+			throws Exception {	
+		initializeTwoXMPPRendezvousComponent(testDefaultTimeout,
+				nameRendezvousOne, nameRendezvousTwo, null);
+	}
+	
+	public void initializeTwoXMPPRendezvousComponent(long testDefaultTimeout,
+			String nameRendezvousOne, String nameRendezvousTwo, String nameRendezvousThree)
 			throws Exception {				
 		ScheduledExecutorService executor = Executors.newScheduledThreadPool(10);
 		
 		Properties properties = Mockito.mock(Properties.class);
 		Mockito.when(properties.getProperty(PROP_EXPIRATION)).thenReturn(
 				testDefaultTimeout + "");
+		Mockito.when(properties.getProperty(RendezvousImpl.PROP_I_AM_ALIVE_PERIOD))
+				.thenReturn(testDefaultTimeout + "");
+		Mockito.when(properties.getProperty(RendezvousImpl.PROP_I_AM_ALIVE_MAX_MESSAGE_LOST))
+		        .thenReturn(String.valueOf(DEFAULT_WAIT_FREQUENCY_TIMES));		
 		Mockito.when(properties.getProperty(PROP_NEIGHBORS)).thenReturn(
 				nameRendezvousTwo);
 		Mockito.doReturn("").when(properties)
@@ -497,6 +484,33 @@ public class RendezvousTestHelper {
 		rendezvousXmppComponentNumberTwo.setDescription("Rendezvous Component Tow");
 		rendezvousXmppComponentNumberTwo.setName("rendezvous two");
 		fakeServer.connect(rendezvousXmppComponentNumberTwo);
-		rendezvousXmppComponentNumberTwo.process();				
+		rendezvousXmppComponentNumberTwo.process();
+		
+		if (nameRendezvousThree != null) {
+						
+			properties = Mockito.mock(Properties.class);
+			Mockito.when(properties.getProperty(PROP_EXPIRATION)).thenReturn(
+					testDefaultTimeout + "");
+			Mockito.when(properties.getProperty(PROP_NEIGHBORS)).thenReturn(
+					nameRendezvousTwo + "," + nameRendezvousOne);
+			Mockito.doReturn("").when(properties)
+					.getProperty(PROP_MAX_WHOISALIVE_MANAGER_COUNT);
+			Mockito.doReturn("").when(properties)
+					.getProperty(PROP_MAX_WHOISALIVESYNC_MANAGER_COUNT);
+			Mockito.doReturn("").when(properties)
+					.getProperty(PROP_MAX_WHOISALIVESYNC_NEIGHBOR_COUNT);			
+			
+			RendezvousXMPPComponent compThree = new RendezvousXMPPComponent(
+					nameRendezvousThree, RENDEZVOUS_COMPONENT_PASS,
+					SERVER_HOST, SERVER_COMPONENT_PORT, properties, executor);
+			rendezvousXmppComponentNumberThree = Mockito.spy(compThree);
+			((RendezvousImpl) compThree.getRendezvous())
+					.setPacketSender(rendezvousXmppComponent);
+			rendezvousXmppComponentNumberThree.setDescription("Rendezvous Component Three");
+			rendezvousXmppComponentNumberThree.setName("rendezvous Three");
+			fakeServer.connect(rendezvousXmppComponentNumberThree);
+			rendezvousXmppComponentNumberThree.process();
+		}
+		
 	}
 }

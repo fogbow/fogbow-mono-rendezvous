@@ -1,6 +1,7 @@
 package org.fogbowcloud.rendezvous.xmpp;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.ScheduledExecutorService;
@@ -10,6 +11,8 @@ import java.util.concurrent.TimeUnit;
 import org.dom4j.Element;
 import org.fogbowcloud.rendezvous.core.RendezvousImpl;
 import org.fogbowcloud.rendezvous.core.RendezvousTestHelper;
+import org.fogbowcloud.rendezvous.core.model.DateUtils;
+import org.fogbowcloud.rendezvous.xmpp.handler.WhoIsAliveSyncHandler;
 import org.fogbowcloud.rendezvous.xmpp.model.RendezvousResponseItem;
 import org.jamppa.client.XMPPClient;
 import org.jivesoftware.smack.PacketListener;
@@ -33,6 +36,7 @@ public class TestRendezvousSyncronization {
 	private static final long SEMAPHORE_TIMEOUT = 20L; // In minutes
 	private static final int XMPP_CLIENT_COUNT = 200;
 
+	@SuppressWarnings("static-access")
 	@Before
 	public void setUp() throws ComponentException {
 		rendezvousTestHelper = new RendezvousTestHelper();
@@ -74,7 +78,6 @@ public class TestRendezvousSyncronization {
 		RendezvousResponseItem itemsAlive = RendezvousTestHelper
 				.getItemsFromSyncIQ(response);
 		Assert.assertEquals(0, itemsAlive.getManagers().size());
-		Assert.assertEquals(0, itemsAlive.getNeighbors().size());
 	}
 
 	@Test
@@ -94,7 +97,6 @@ public class TestRendezvousSyncronization {
 		RendezvousResponseItem itemsAlive = RendezvousTestHelper
 				.getItemsFromSyncIQ(response);
 		Assert.assertEquals(0, itemsAlive.getManagers().size());
-		Assert.assertEquals(1, itemsAlive.getNeighbors().size());
 	}
 
 	@Test
@@ -117,7 +119,6 @@ public class TestRendezvousSyncronization {
 		RendezvousResponseItem itemsAlive = RendezvousTestHelper
 				.getItemsFromSyncIQ(response);
 		Assert.assertEquals(1, itemsAlive.getManagers().size());
-		Assert.assertEquals(2, itemsAlive.getNeighbors().size());
 	}
 
 	@Test
@@ -154,7 +155,7 @@ public class TestRendezvousSyncronization {
 						.getElement()
 						.element("query")
 						.getNamespaceURI()
-						.equals(RendezvousPacketHelper.WHOISALIVESYNCH_NAMESPACE);
+						.equals(WhoIsAliveSyncHandler.WHOISALIVESYNC_NAMESPACE);
 				return from && namespace;
 			}
 		}, callback);
@@ -165,7 +166,6 @@ public class TestRendezvousSyncronization {
 		boolean receivedAll = semaphore.tryAcquire(SEMAPHORE_TIMEOUT,
 				TimeUnit.SECONDS);
 		Assert.assertTrue(receivedAll);
-		Assert.assertEquals(2, rendezvous.getNeighborIds().size());
 	}
 
 	@Test
@@ -197,7 +197,7 @@ public class TestRendezvousSyncronization {
 						.getElement()
 						.element("query")
 						.getNamespaceURI()
-						.equals(RendezvousPacketHelper.WHOISALIVESYNCH_NAMESPACE);
+						.equals(WhoIsAliveSyncHandler.WHOISALIVESYNC_NAMESPACE);
 				return from && namespace;
 			}
 		}, callback);
@@ -245,7 +245,6 @@ public class TestRendezvousSyncronization {
 		RendezvousResponseItem itemsAlive = RendezvousTestHelper
 				.getItemsFromSyncIQ(response);
 		Assert.assertEquals(100, itemsAlive.getManagers().size());
-		Assert.assertEquals(100, itemsAlive.getNeighbors().size());
 	}
 
 	@Test
@@ -271,72 +270,22 @@ public class TestRendezvousSyncronization {
 		RendezvousResponseItem itemsAlive = RendezvousTestHelper
 				.getItemsFromSyncIQ(response);
 		Assert.assertEquals(100, itemsAlive.getManagers().size());
-		Assert.assertEquals(100, itemsAlive.getNeighbors().size());
-
-		String lastNeighbor = rendezvousTestHelper
-				.getNeighborsSetElementsFromSyncIQ("last", response);
-		Assert.assertEquals("neighbor101", rendezvousTestHelper
-				.getNeighborsSetElementsFromSyncIQ("first", response));
-		Assert.assertEquals("neighbor200", lastNeighbor);
 
 		String lastManager = rendezvousTestHelper
 				.getManagersSetElementsFromSyncIQ("last", response);
 
 		response = (IQ) xmppClient.syncSend(RendezvousTestHelper
-				.createWhoIsAliveSyncIQ(lastManager, lastNeighbor));
+				.createWhoIsAliveSyncIQ(lastManager));
+		
 		RendezvousResponseItem itemsAlive2 = RendezvousTestHelper
 				.getItemsFromSyncIQ(response);
 		Assert.assertEquals(99, itemsAlive2.getManagers().size());
-		Assert.assertEquals(100, itemsAlive2.getNeighbors().size());
 
 		Assert.assertNotEquals(itemsAlive.getManagers(),
 				itemsAlive2.getManagers());
-		Assert.assertNotEquals(itemsAlive.getNeighbors(),
-				itemsAlive2.getNeighbors());
-		Assert.assertEquals("neighbor201", rendezvousTestHelper
-				.getNeighborsSetElementsFromSyncIQ("first", response));
-		Assert.assertEquals("user299@test.com", rendezvousTestHelper
-				.getNeighborsSetElementsFromSyncIQ("last", response));
-	}
-
-	@Test
-	public void testWhoIsAliveSyncRSMReturnEmptyPage() throws Exception {
-		List<String> neighborsList = new LinkedList<String>();
-		for (int i = 101; i <= 299; i++) {
-			neighborsList.add("neighbor" + i);
-		}
-		String[] neighbors = new String[neighborsList.size()];
-		neighbors = neighborsList.toArray(neighbors);
-		ScheduledExecutorService executor = Mockito
-				.mock(ScheduledExecutorService.class);
-
-		rendezvousTestHelper.initializeXMPPRendezvousComponent(
-				RendezvousTestHelper.TEST_DEFAULT_TIMEOUT, neighbors, executor);
-		// sending i am alives
-		sendIAmAlives(XMPP_CLIENT_COUNT - 1);
-		// sending whois alive sync
-		IQ iq = RendezvousTestHelper.createWhoIsAliveSyncIQ();
-		XMPPClient xmppClient = rendezvousTestHelper.createXMPPClient();
-		IQ response = (IQ) xmppClient.syncSend(iq);
-
-		String lastNeighbor = rendezvousTestHelper
-				.getNeighborsSetElementsFromSyncIQ("last", response);
-		String lastManager = rendezvousTestHelper
-				.getManagersSetElementsFromSyncIQ("last", response);
-		response = (IQ) xmppClient.syncSend(RendezvousTestHelper
-				.createWhoIsAliveSyncIQ(lastManager, lastNeighbor));
-		lastNeighbor = rendezvousTestHelper.getNeighborsSetElementsFromSyncIQ(
-				"last", response);
-		lastManager = rendezvousTestHelper.getManagersSetElementsFromSyncIQ(
-				"last", response);
-		response = (IQ) xmppClient.syncSend(RendezvousTestHelper
-				.createWhoIsAliveSyncIQ(lastManager, lastNeighbor));
-		Assert.assertNull(rendezvousTestHelper
-				.getNeighborsSetElementsFromSyncIQ("last", response));
-		Assert.assertEquals("0", rendezvousTestHelper
-				.getNeighborsSetElementsFromSyncIQ("count", response));
 	}
 	
+	@SuppressWarnings("unused")
 	@Test
 	public void testWhoIsAliveSyncRSMReturnItemNotFoundError() throws Exception {
 		List<String> neighborsList = new LinkedList<String>();
@@ -358,8 +307,7 @@ public class TestRendezvousSyncronization {
 		IQ response = (IQ) xmppClient.syncSend(iq);
 		
 		try {
-			response = (IQ) xmppClient.syncSend(RendezvousTestHelper
-					.createWhoIsAliveSyncIQ("NotFoundManager", "NotFoundNeighbor"));
+			response = (IQ) xmppClient.syncSend(RendezvousTestHelper.createWhoIsAliveSyncIQ("NotFoundManager"));
 			Assert.fail();
 		} catch(XMPPException e) {
 			Assert.assertTrue(PacketError.Type.cancel.equals(e.getXMPPError().getType()));
@@ -389,15 +337,9 @@ public class TestRendezvousSyncronization {
 		IQ response = (IQ) xmppClient.syncSend(iq);
 
 		Assert.assertNull(rendezvousTestHelper
-				.getNeighborsSetElementsFromSyncIQ("last", response));
-		Assert.assertNull(rendezvousTestHelper
-				.getNeighborsSetElementsFromSyncIQ("first", response));
-		Assert.assertNull(rendezvousTestHelper
 				.getManagersSetElementsFromSyncIQ("first", response));
 		Assert.assertNull(rendezvousTestHelper
 				.getManagersSetElementsFromSyncIQ("last", response));
-		Assert.assertEquals("0", rendezvousTestHelper
-				.getNeighborsSetElementsFromSyncIQ("count", response));
 		Assert.assertEquals("0", rendezvousTestHelper
 				.getManagersSetElementsFromSyncIQ("count", response));
 	}
@@ -425,7 +367,6 @@ public class TestRendezvousSyncronization {
 		RendezvousResponseItem itemsAlive = RendezvousTestHelper
 				.getItemsFromSyncIQ(response);
 		Assert.assertEquals(100, itemsAlive.getManagers().size());
-		Assert.assertEquals(100, itemsAlive.getNeighbors().size());
 	}
 	
 	private void sendIAmAlives(int numberOfClients) throws InterruptedException {
@@ -503,9 +444,13 @@ public class TestRendezvousSyncronization {
 		aliveIDs = RendezvousTestHelper.getAliveIds((IQ) xmppClient1.syncSend(iqWho));
 		Assert.assertEquals(3, aliveIDs.size());
 
-		// Expected to expire
-		Thread.sleep(testDefaultTimeout);
-
+		// Expected to expire?
+		DateUtils dateMock = Mockito.mock(DateUtils.class);
+		Mockito.when(dateMock.currentTimeMillis()).thenReturn(
+				System.currentTimeMillis() + testDefaultTimeout * RendezvousTestHelper.DEFAULT_WAIT_FREQUENCY_TIMES);
+		RendezvousImpl rendezvous = (RendezvousImpl) rendezvousTestHelper.getRendezvousXmppComponent().getRendezvous();
+		rendezvous.setDateUnit(dateMock);		
+		
 		// IAmALive Rendezvous One
 		rendezvousTestHelper.createXMPPClient().syncSend(iqRendezvousOne);
 		// IAmALive Rendezvous One
@@ -517,6 +462,86 @@ public class TestRendezvousSyncronization {
 		Assert.assertEquals(2, aliveIDs.size());
 	}
 
+	@Test
+	public void testSyncThreeRendezvous() throws Exception {
+		int testDefaultTimeout = 1000;
+
+		String nameRendezvousOne = RendezvousTestHelper.RENDEZVOUS_COMPONENT_URL;
+		String nameRendezvousTwo = "rendezvous2.test.com";
+		String nameRendezvousThree = "rendezvous3.test.com";
+
+		rendezvousTestHelper.initializeTwoXMPPRendezvousComponent(testDefaultTimeout,
+				nameRendezvousOne, nameRendezvousTwo, nameRendezvousThree);
+
+		XMPPClient xmppClient1 = rendezvousTestHelper.createXMPPClient();
+		XMPPClient xmppClient2 = rendezvousTestHelper.createXMPPClient();
+		XMPPClient xmppClient3 = rendezvousTestHelper.createXMPPClient();
+		String clientJIDWanted = "wanted";
+		XMPPClient xmppClient4 = rendezvousTestHelper.createXMPPClient(clientJIDWanted);
+		XMPPClient xmppClient5 = rendezvousTestHelper.createXMPPClient("last");
+
+		IQ iqRendezvousOne = createIAmAliveIQ(nameRendezvousOne);
+		IQ iqRendezvousTwo = createIAmAliveIQ(nameRendezvousTwo);
+		IQ iqRendezvousThree = createIAmAliveIQ(nameRendezvousThree);
+
+		// IAmALive Rendezvous One
+		xmppClient1.syncSend(iqRendezvousOne);
+		// IAmALive Rendezvous One
+		xmppClient2.syncSend(iqRendezvousOne);
+		// IAmALive Rendezvous One		
+		xmppClient4.syncSend(iqRendezvousOne);
+
+		IQ iqWho = RendezvousTestHelper.createWhoIsAliveIQ();
+		ArrayList<String> aliveIDs = RendezvousTestHelper.getAliveIds((IQ) xmppClient1
+				.syncSend(iqWho));
+		Assert.assertEquals(3, aliveIDs.size());
+
+		// IAmALive Rendezvous Two
+		xmppClient3.syncSend(iqRendezvousTwo);
+
+		// IAmALive Rendezvous Three		
+		xmppClient5.syncSend(iqRendezvousThree);
+		
+		RendezvousImpl rendezvousOne = (RendezvousImpl) rendezvousTestHelper
+				.getRendezvousXmppComponent().getRendezvous();
+		RendezvousImpl rendezvousTwo = (RendezvousImpl) rendezvousTestHelper
+				.getRendezvousXmppComponentNumberTwo().getRendezvous();
+		RendezvousImpl rendezvousThree = (RendezvousImpl) rendezvousTestHelper
+				.getRendezvousXmppComponentNumberThree().getRendezvous();		
+		// First cycle of checking and synchronization
+		checkAndSyncBothRendezvous(Arrays.asList(new RendezvousImpl[] { rendezvousOne,
+				rendezvousTwo, rendezvousThree }));
+
+		aliveIDs = RendezvousTestHelper.getAliveIds((IQ) xmppClient1.syncSend(iqWho));
+		Assert.assertEquals(4, aliveIDs.size());	
+
+		DateUtils dateMock = Mockito.mock(DateUtils.class);
+		Mockito.when(dateMock.currentTimeMillis()).thenReturn(
+				System.currentTimeMillis() + testDefaultTimeout * RendezvousTestHelper.DEFAULT_WAIT_FREQUENCY_TIMES);
+		RendezvousImpl rendezvous = (RendezvousImpl) rendezvousTestHelper.getRendezvousXmppComponent().getRendezvous();
+		rendezvous.setDateUnit(dateMock);	
+		
+		// IAmALive Rendezvous One
+		rendezvousTestHelper.createXMPPClient().syncSend(iqRendezvousOne);
+		// IAmALive Rendezvous One
+		rendezvousTestHelper.createXMPPClient().syncSend(iqRendezvousOne);
+		// Second cycle of checking and synchronization
+		checkAndSyncBothRendezvous(Arrays.asList(new RendezvousImpl[] { rendezvousOne,
+				rendezvousTwo, rendezvousThree }));
+
+		aliveIDs = RendezvousTestHelper.getAliveIds((IQ) xmppClient1.syncSend(iqWho));
+		Assert.assertEquals(2, aliveIDs.size());
+	}
+
+	private void checkAndSyncBothRendezvous(List<RendezvousImpl> rendezvousImpls) {
+		for (int i = 0; i < 4; i++) {
+			for (RendezvousImpl rendezvousImpl : rendezvousImpls) {
+				rendezvousImpl.checkExpiredAliveIDs();
+				rendezvousImpl.syncNeighbors();
+			}			
+		}
+	}
+	
 	private void checkAndSyncBothRendezvous(RendezvousImpl rendezvousOne,
 			RendezvousImpl rendezvousTwo) {
 		rendezvousOne.checkExpiredAliveIDs();
@@ -528,16 +553,11 @@ public class TestRendezvousSyncronization {
 	private IQ createIAmAliveIQ(String nameRendezvous) {
 		IQ iq2 = new IQ(Type.get);
 		iq2.setTo(nameRendezvous);
+		@SuppressWarnings("unused")
 		Element statusEl2 = iq2.getElement()
 				.addElement("query", "http://fogbowcloud.org/rendezvous/iamalive")
 				.addElement("status");
-		iq2.getElement().element("query").addElement("cert").setText("cert");
-		statusEl2.addElement("cpu-idle").setText("1");
-		statusEl2.addElement("cpu-inuse").setText("2");
-		statusEl2.addElement("mem-idle").setText("3");
-		statusEl2.addElement("mem-inuse").setText("4");
-		statusEl2.addElement("instances-idle").setText("5");
-		statusEl2.addElement("instances-inuse").setText("6");		
+		iq2.getElement().element("query").addElement("cert").setText("cert");	
 		return iq2;
 	}
 }

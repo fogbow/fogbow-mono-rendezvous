@@ -46,7 +46,7 @@ public class RSM {
 		int afterIndex = -1;
 		if (after != null) {
 			for (int i = 0; i < size; i++) {
-				if (this.after.equals(orderedList.get(i).getId())) {
+				if (this.after.equals(orderedList.get(i).getMemberId())) {
 					afterIndex = i + 1;
 					break;
 				}
@@ -73,8 +73,8 @@ public class RSM {
 		String last = null;
 		Integer count = 0;
 		if (!list.isEmpty()) {
-			first = list.get(0).getId();
-			last = list.get(list.size() - 1).getId();
+			first = list.get(0).getMemberId();
+			last = list.get(list.size() - 1).getMemberId();
 			count = list.size();
 		}
 
