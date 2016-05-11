@@ -18,6 +18,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.rendezvous.core.model.DateUtils;
+import org.fogbowcloud.rendezvous.core.plugins.WhiteListPlugin;
+import org.fogbowcloud.rendezvous.core.plugins.whitelist.AcceptAnyWhiteListPlugin;
 import org.fogbowcloud.rendezvous.xmpp.RendezvousPacketHelper;
 import org.fogbowcloud.rendezvous.xmpp.model.RendezvousResponseItem;
 import org.jamppa.component.PacketSender;
@@ -51,13 +53,22 @@ public class RendezvousImpl implements Rendezvous {
 	private int maxWhoisalivesyncManagerCount;
 	private int maxWhoisalivesyncNeighborCount;
 	private Properties properties;
+	private WhiteListPlugin whiteListPlugin;
 
 	public RendezvousImpl(PacketSender packetSender, Properties properties,
-			ScheduledExecutorService executor) {
+						  ScheduledExecutorService executor) {
+		this(packetSender, properties, executor, new AcceptAnyWhiteListPlugin());
+	}
+
+	public RendezvousImpl(PacketSender packetSender, Properties properties,
+						  ScheduledExecutorService executor,
+						  WhiteListPlugin whiteListPlugin) {
+
 		this.properties = properties;
 		this.dateUnit = new DateUtils();
 		this.packetSender = packetSender;
 		this.executor = executor;
+		this.whiteListPlugin = whiteListPlugin;
 		this.neighborsIds = new HashSet<String>(
 				Arrays.asList(getNeighborsFromProperties()));
 		this.maxWhoisaliveManagerCount = (int) parseLongFromConfiguration(
@@ -97,12 +108,20 @@ public class RendezvousImpl implements Rendezvous {
 	}
 
 	public void iAmAlive(RendezvousItem rendezvousItem) {
+
 		if (rendezvousItem == null) {
 			throw new IllegalArgumentException();
-		}	
-	
-		LOGGER.info("Receiving iAmAlive from '" + rendezvousItem.getMemberId() + "'");		
-		aliveManagers.put(rendezvousItem.getMemberId(), rendezvousItem);
+		}
+
+		String memberId = rendezvousItem.getMemberId();
+
+		LOGGER.info("Receiving iAmAlive from " + memberId);
+
+		if (whiteListPlugin.contains(memberId)) {
+			aliveManagers.put(memberId, rendezvousItem);
+		} else {
+			LOGGER.info("Ignoring iAmAlive from unknown " + memberId);
+		}
 	}
 
 	public List<RendezvousItem> whoIsAlive() {

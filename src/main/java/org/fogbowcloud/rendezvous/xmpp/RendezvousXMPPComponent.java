@@ -6,6 +6,8 @@ import java.util.concurrent.ScheduledExecutorService;
 
 import org.fogbowcloud.rendezvous.core.Rendezvous;
 import org.fogbowcloud.rendezvous.core.RendezvousImpl;
+import org.fogbowcloud.rendezvous.core.plugins.WhiteListPlugin;
+import org.fogbowcloud.rendezvous.core.plugins.whitelist.AcceptAnyWhiteListPlugin;
 import org.fogbowcloud.rendezvous.xmpp.handler.IAmAliveHandler;
 import org.fogbowcloud.rendezvous.xmpp.handler.WhoIsAliveHandler;
 import org.fogbowcloud.rendezvous.xmpp.handler.WhoIsAliveSyncHandler;
@@ -23,9 +25,21 @@ public class RendezvousXMPPComponent extends XMPPComponent {
 	}
 
 	public RendezvousXMPPComponent(String jid, String password, String server,
+								   int port, Properties properties, WhiteListPlugin whiteListPlugin) {
+		this(jid, password, server, port, properties, Executors
+				.newScheduledThreadPool(10), whiteListPlugin);
+	}
+
+	public RendezvousXMPPComponent(String jid, String password, String server,
 			int port, Properties properties, ScheduledExecutorService executor) {
+		this(jid, password, server, port, properties, executor, new AcceptAnyWhiteListPlugin());
+	}
+
+	public RendezvousXMPPComponent(String jid, String password, String server,
+								   int port, Properties properties, ScheduledExecutorService executor,
+								   WhiteListPlugin whiteListPlugin) {
 		super(jid, password, server, port);
-		rendezvous = new RendezvousImpl(this, properties, executor);
+		rendezvous = new RendezvousImpl(this, properties, executor, whiteListPlugin);
 		addGetHandlers(properties);
 	}
 
