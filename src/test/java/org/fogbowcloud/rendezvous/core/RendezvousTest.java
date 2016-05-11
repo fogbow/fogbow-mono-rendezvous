@@ -1,5 +1,6 @@
 package org.fogbowcloud.rendezvous.core;
 
+import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
@@ -386,7 +387,7 @@ public class RendezvousTest {
 		rendezvous.iAmAlive(new RendezvousItem(unKnownMemberId, "cert"));
 		Assert.assertEquals(1, rendezvous.whoIsAlive().size());
 	}
-	
+
 	@Test
 	public void testMerge() {
 		RendezvousImpl rendezvousImpl = new RendezvousImpl(null, properties, executor);
