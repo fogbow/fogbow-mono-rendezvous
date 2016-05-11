@@ -36,8 +36,8 @@ public class FileBasedWhiteListPlugin implements WhiteListPlugin {
 
             String member;
             while ((member = bufferedReader.readLine()) != null) {
-                if (member.trim().isEmpty()) {
-                    lines.add(member);
+                if (!member.trim().isEmpty()) {
+                    lines.add(member.trim());
                 }
             }
 
