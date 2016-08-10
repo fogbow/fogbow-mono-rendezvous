@@ -8,3 +8,9 @@ max_whoisalivesync_manager_count=101
 max_whoisalivesync_neighbor_count=101
 iamalive_period=30000
 iamalive_max_message_lost=3
+
+# White list plugins configuration
+white_list_class=org.fogbowcloud.rendezvous.core.plugins.whitelist.AcceptAnyWhiteListPlugin
+# file based white list configuration
+# white_list_class=org.fogbowcloud.rendezvous.core.plugins.whitelist.FileBasedWhiteListPlugin
+# white_list_file_path=/path/to/ca/directory

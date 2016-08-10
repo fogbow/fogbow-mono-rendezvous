@@ -1,5 +1,6 @@
 package org.fogbowcloud.rendezvous.core;
 
+import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedList;
@@ -8,6 +9,7 @@ import java.util.Properties;
 import java.util.concurrent.ScheduledExecutorService;
 
 import org.fogbowcloud.rendezvous.core.model.DateUtils;
+import org.fogbowcloud.rendezvous.core.plugins.WhiteListPlugin;
 import org.fogbowcloud.rendezvous.xmpp.model.RendezvousResponseItem;
 import org.junit.Assert;
 import org.junit.Before;
@@ -19,7 +21,6 @@ public class RendezvousTest {
 	private final static int TIMEOUT = 1000;
 	private final static int TIMEOUT_GRACE = 500;
 	private RendezvousItem rendezvousItem;
-//	private List<Flavor> flavors;
 	@SuppressWarnings("unused")
 	private String[] neighbors;
 	ScheduledExecutorService executor;
@@ -29,8 +30,6 @@ public class RendezvousTest {
 
 	@Before
 	public void set() {
-//		flavors = new LinkedList<Flavor>();
-//		flavors.add(new Flavor("small", "cpu", "mem", 2));
 		rendezvousItem = new RendezvousItem("abc", "cert", TIMEOUT);
 		
 		this.neighbors = new String[] {};
@@ -56,8 +55,6 @@ public class RendezvousTest {
 	@Test
 	public void testImAliveSingleElement() {
 
-//		List<Flavor> flavors = new LinkedList<Flavor>();
-//		flavors.add(new Flavor("small", "cpu", "mem", 2));
 		rendezvous.iAmAlive(rendezvousItem);
 		List<RendezvousItem> element = rendezvous.whoIsAlive();
 		Assert.assertEquals(1, element.size());
@@ -366,7 +363,31 @@ public class RendezvousTest {
 
 		Assert.assertFalse(rendezvous.getInError());
 	}
-	
+
+	@Test
+	public void testRendezvousWhiteList() throws InterruptedException {
+
+		Mockito.when(properties.getProperty(PROP_EXPIRATION)).thenReturn(TIMEOUT + "");
+
+		String knownMemberId = "knownMemberId";
+		String unKnownMemberId = "unknownMemberId";
+
+		WhiteListPlugin whiteListPlugin = Mockito.mock(WhiteListPlugin.class);
+
+		Mockito.when(whiteListPlugin.contains(knownMemberId)).thenReturn(true);
+		Mockito.when(whiteListPlugin.contains(unKnownMemberId)).thenReturn(false);
+
+		rendezvous = new RendezvousImpl(null, properties, executor, whiteListPlugin);
+
+		Assert.assertEquals(0, rendezvous.whoIsAlive().size());
+
+		rendezvous.iAmAlive(new RendezvousItem(knownMemberId, "cert"));
+		Assert.assertEquals(1, rendezvous.whoIsAlive().size());
+
+		rendezvous.iAmAlive(new RendezvousItem(unKnownMemberId, "cert"));
+		Assert.assertEquals(1, rendezvous.whoIsAlive().size());
+	}
+
 	@Test
 	public void testMerge() {
 		RendezvousImpl rendezvousImpl = new RendezvousImpl(null, properties, executor);

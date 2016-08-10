@@ -5,11 +5,15 @@ import java.io.FileNotFoundException;
 import java.util.Properties;
 
 import org.apache.log4j.Logger;
+import org.fogbowcloud.rendezvous.core.ConfigurationConstants;
+import org.fogbowcloud.rendezvous.core.plugins.WhiteListPlugin;
+import org.fogbowcloud.rendezvous.core.plugins.whitelist.AcceptAnyWhiteListPlugin;
 
 public class Main {
 
 	private static final Logger LOGGER = Logger.getLogger(Main.class);
-	
+
+	//FIXME: move to the config constants class
 	private static final String PROP_JID = "xmpp_jid";
 	private static final String PROP_PASSWORD = "xmpp_password";
 	private static final String PROP_HOST = "xmpp_host";
@@ -39,9 +43,20 @@ public class Main {
 		String password = getPassword(properties);
 		String server = getServer(properties);
 		int port = getPort(properties);
+
+
+		WhiteListPlugin whiteListPlugin = null;
+		try {
+			whiteListPlugin = (WhiteListPlugin) createInstance(
+					ConfigurationConstants.WHITE_LIST_PLUGIN_CLASS, properties);
+		} catch (Exception e) {
+			LOGGER.warn("White list plugin not specified in the properties. Failing back to AcceptAnyWhiteListPlugin",
+					e);
+			whiteListPlugin = new AcceptAnyWhiteListPlugin();
+		}
 		
 		rendezvousXmppComponent = new RendezvousXMPPComponent(jid, password,
-				server, port, properties);
+				server, port, properties, whiteListPlugin);
 		rendezvousXmppComponent.setDescription(DESCRIPTION);
 		rendezvousXmppComponent.setName(NAME);
 		
@@ -57,7 +72,12 @@ public class Main {
 		
 		rendezvousXmppComponent.process();
 	}
-	
+
+	private static Object createInstance(String propName, Properties properties) throws Exception {
+		return Class.forName(properties.getProperty(propName)).getConstructor(Properties.class)
+				.newInstance(properties);
+	}
+
 	private static void waitRetryInterval(Properties properties) {
 		try {
 			Thread.sleep(getRetryInterval(properties));
