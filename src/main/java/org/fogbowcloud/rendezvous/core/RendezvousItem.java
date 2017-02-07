@@ -89,7 +89,7 @@ public class RendezvousItem extends FederationMember {
 
 	public boolean isOlderThan(RendezvousItem rendezvousItem) {
 		long now = dateUtils.currentTimeMillis();
-		if ((now - lastTime) > (now - rendezvousItem.getLastTime())) {
+		if ((now - lastTime) < (now - rendezvousItem.getLastTime())) {
 			return true;
 		}
 		return false;
