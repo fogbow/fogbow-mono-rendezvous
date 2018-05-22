@@ -8,8 +8,12 @@ import org.apache.log4j.Logger;
 import org.fogbowcloud.rendezvous.core.ConfigurationConstants;
 import org.fogbowcloud.rendezvous.core.plugins.WhiteListPlugin;
 import org.fogbowcloud.rendezvous.core.plugins.whitelist.AcceptAnyWhiteListPlugin;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
+import org.springframework.stereotype.Component;
 
-public class Main {
+@Component
+public class Main implements ApplicationRunner{
 
 	private static final Logger LOGGER = Logger.getLogger(Main.class);
 
@@ -153,7 +157,8 @@ public class Main {
 		return neighborIds;
 	}
 
-	public static void main(String[] args) {
-		initializeRendezvousXMPPComponent(args[0]);
+	@Override
+	public void run(ApplicationArguments args) throws Exception {
+		initializeRendezvousXMPPComponent(args.getSourceArgs()[0]);
 	}
 }
