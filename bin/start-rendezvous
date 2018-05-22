@@ -1,4 +1,4 @@
 #!/bin/bash
 DIRNAME=`dirname $0`
 cd $DIRNAME/..
-java -Dlog4j.configuration=file:log4j.properties -cp target/rendezvous-0.0.1-SNAPSHOT.jar:target/lib/* org.fogbowcloud.rendezvous.xmpp.Main rendezvous.conf &
+java -Dlog4j.configuration=file:log4j.properties -cp target/rendezvous-0.0.1-SNAPSHOT.jar:target/lib/* org.fogbowcloud.rendezvous.RendezvousApplication rendezvous.conf &

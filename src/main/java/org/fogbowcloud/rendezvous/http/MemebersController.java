@@ -15,13 +15,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping(value = "members")
 public class MemebersController {
+
 	private Rendezvous rendezvous;
 	
 	public MemebersController() {
 		// TODO: instantiate rendezvous
+		this.rendezvous = null;
 	}
-	
-	
+
 	@GetMapping
 	public ResponseEntity<List<RendezvousItem>> getMembers() {
 		return new ResponseEntity<List<RendezvousItem>>(this.rendezvous.whoIsAlive(), HttpStatus.OK);

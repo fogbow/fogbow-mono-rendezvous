@@ -13,7 +13,7 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
 @Component
-public class Main implements ApplicationRunner{
+public class Main implements ApplicationRunner {
 
 	private static final Logger LOGGER = Logger.getLogger(Main.class);
 
